@@ -16,7 +16,6 @@ class StoryProvider extends ChangeNotifier {
   String? _selectedSceneId;
   bool _isEventPoolOpen = true;
   String _eventSearchQuery = '';
-  EmotionalCharge? _filterCharge;
 
   static const _uuid = Uuid();
 
@@ -32,7 +31,6 @@ class StoryProvider extends ChangeNotifier {
   String? get selectedSceneId => _selectedSceneId;
   bool get isEventPoolOpen => _isEventPoolOpen;
   String get eventSearchQuery => _eventSearchQuery;
-  EmotionalCharge? get filterCharge => _filterCharge;
 
   BeatDefinition? get selectedBeat {
     if (_selectedBeatId == null) return null;
@@ -190,11 +188,6 @@ class StoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setFilterCharge(EmotionalCharge? charge) {
-    _filterCharge = charge;
-    notifyListeners();
-  }
-
   void selectBeat(String? beatId) {
     _selectedBeatId = beatId;
     if (beatId != null) {
@@ -234,7 +227,6 @@ class StoryProvider extends ChangeNotifier {
     required String title,
     String description = '',
     String? beatId,
-    EmotionalCharge emotionalCharge = EmotionalCharge.neutral,
     List<String>? characters,
     String location = '',
   }) {
@@ -243,7 +235,6 @@ class StoryProvider extends ChangeNotifier {
       title: title,
       description: description,
       beatId: beatId,
-      emotionalCharge: emotionalCharge,
       characters: characters ?? [],
       location: location,
       orderIndex: beatId != null ? _project.getEventsForBeat(beatId).length : 0,

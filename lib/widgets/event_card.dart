@@ -43,26 +43,6 @@ class EventCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Emotional Charge Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Color(event.emotionalCharge.colorValue).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: Color(event.emotionalCharge.colorValue).withOpacity(0.6),
-                        ),
-                      ),
-                      child: Text(
-                        event.emotionalCharge.symbol,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Color(event.emotionalCharge.colorValue),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         event.title,
@@ -208,22 +188,6 @@ class EventCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Color(event.emotionalCharge.colorValue).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      event.emotionalCharge.symbol,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        color: Color(event.emotionalCharge.colorValue),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       event.title,

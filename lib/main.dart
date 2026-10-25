@@ -357,7 +357,6 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                         title: newEv.title,
                                         description: newEv.description,
                                         beatId: newEv.beatId,
-                                        emotionalCharge: newEv.emotionalCharge,
                                         characters: newEv.characters,
                                         location: newEv.location,
                                       );

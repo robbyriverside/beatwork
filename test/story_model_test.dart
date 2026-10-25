@@ -1,10 +1,24 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:beatwork/models/beat_model.dart';
 import 'package:beatwork/models/scene_model.dart';
+import 'package:beatwork/models/story_event.dart';
 import 'package:beatwork/models/story_project.dart';
 import 'package:beatwork/services/export_service.dart';
 
 void main() {
+  group('Story Event Tests', () {
+    test('Ignores legacy emotional charge when loading saved events', () {
+      final event = StoryEvent.fromJson({
+        'id': 'event-1',
+        'title': 'A story event',
+        'emotionalCharge': 'negative',
+      });
+
+      expect(event.title, 'A story event');
+      expect(event.toJson().containsKey('emotionalCharge'), isFalse);
+    });
+  });
+
   group('Save the Cat Beat Model Tests', () {
     test('Has exactly 15 canonical Save the Cat beats', () {
       expect(BeatDefinition.saveTheCatBeats.length, 15);

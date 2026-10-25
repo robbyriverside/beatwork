@@ -28,10 +28,6 @@ class EventPoolSidebar extends StatelessWidget {
         final matchChars = ev.characters.any((c) => c.toLowerCase().contains(q));
         if (!matchTitle && !matchDesc && !matchLoc && !matchChars) return false;
       }
-      if (provider.filterCharge != null &&
-          ev.emotionalCharge != provider.filterCharge) {
-        return false;
-      }
       return true;
     }).toList();
 
@@ -99,7 +95,7 @@ class EventPoolSidebar extends StatelessWidget {
             ),
           ),
 
-          // Search & Filter Bar
+          // Search Bar
           Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -118,50 +114,6 @@ class EventPoolSidebar extends StatelessWidget {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   ),
                   onChanged: (val) => provider.setEventSearchQuery(val),
-                ),
-                const SizedBox(height: 8),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      FilterChip(
-                        selected: provider.filterCharge == null,
-                        label: const Text('All Charges'),
-                        onSelected: (_) => provider.setFilterCharge(null),
-                        backgroundColor: AppTheme.surfaceElevated,
-                        selectedColor: AppTheme.goldAccent.withOpacity(0.2),
-                        labelStyle: TextStyle(
-                          fontSize: 11,
-                          color: provider.filterCharge == null
-                              ? AppTheme.goldAccent
-                              : AppTheme.textSecondary,
-                        ),
-                        padding: EdgeInsets.zero,
-                      ),
-                      const SizedBox(width: 6),
-                      ...EmotionalCharge.values.map(
-                        (charge) => Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: FilterChip(
-                            selected: provider.filterCharge == charge,
-                            label: Text('${charge.symbol} ${charge.label}'),
-                            onSelected: (sel) =>
-                                provider.setFilterCharge(sel ? charge : null),
-                            backgroundColor: AppTheme.surfaceElevated,
-                            selectedColor: Color(charge.colorValue).withOpacity(0.25),
-                            labelStyle: TextStyle(
-                              fontSize: 11,
-                              color: Color(charge.colorValue),
-                              fontWeight: provider.filterCharge == charge
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                            padding: EdgeInsets.zero,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ],
             ),
@@ -291,7 +243,6 @@ class EventPoolSidebar extends StatelessWidget {
                     title: newEv.title,
                     description: newEv.description,
                     beatId: newEv.beatId,
-                    emotionalCharge: newEv.emotionalCharge,
                     characters: newEv.characters,
                     location: newEv.location,
                   );

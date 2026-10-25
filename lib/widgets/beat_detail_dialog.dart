@@ -347,7 +347,6 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                     title: newEv.title,
                     description: newEv.description,
                     beatId: widget.beat.id,
-                    emotionalCharge: newEv.emotionalCharge,
                     characters: newEv.characters,
                     location: newEv.location,
                   );

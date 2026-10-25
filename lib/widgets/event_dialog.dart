@@ -37,7 +37,6 @@ class _EventDialogState extends State<EventDialog> {
   late TextEditingController _descController;
   late TextEditingController _charactersController;
   late TextEditingController _locationController;
-  late EmotionalCharge _charge;
   String? _selectedBeatId;
 
   @override
@@ -49,7 +48,6 @@ class _EventDialogState extends State<EventDialog> {
     _charactersController =
         TextEditingController(text: ev?.characters.join(', ') ?? '');
     _locationController = TextEditingController(text: ev?.location ?? '');
-    _charge = ev?.emotionalCharge ?? EmotionalCharge.neutral;
     _selectedBeatId = ev?.beatId ?? widget.initialBeatId;
   }
 
@@ -141,52 +139,6 @@ class _EventDialogState extends State<EventDialog> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Emotional Charge
-                  const Text(
-                    'Emotional Polarity / Story Value Charge',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: EmotionalCharge.values.map((charge) {
-                      final isSelected = _charge == charge;
-                      final color = Color(charge.colorValue);
-                      return ChoiceChip(
-                        selected: isSelected,
-                        label: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              charge.symbol,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: isSelected ? Colors.black : color,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(charge.label),
-                          ],
-                        ),
-                        selectedColor: color,
-                        backgroundColor: AppTheme.surface,
-                        labelStyle: TextStyle(
-                          color: isSelected ? Colors.black : AppTheme.textPrimary,
-                          fontSize: 12,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                        onSelected: (selected) {
-                          if (selected) setState(() => _charge = charge);
-                        },
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-
                   // Assigned Beat Dropdown
                   DropdownButtonFormField<String?>(
                     initialValue: _selectedBeatId,
@@ -274,7 +226,6 @@ class _EventDialogState extends State<EventDialog> {
                             description: _descController.text.trim(),
                             beatId: _selectedBeatId,
                             clearBeatId: _selectedBeatId == null,
-                            emotionalCharge: _charge,
                             characters: chars,
                             location: _locationController.text.trim(),
                           );

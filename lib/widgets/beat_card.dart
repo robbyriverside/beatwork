@@ -231,17 +231,6 @@ class BeatCard extends StatelessWidget {
                                   ),
                                   child: Row(
                                     children: [
-                                      Text(
-                                        ev.emotionalCharge.symbol,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(
-                                            ev.emotionalCharge.colorValue,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
                                       Expanded(
                                         child: Text(
                                           ev.title,

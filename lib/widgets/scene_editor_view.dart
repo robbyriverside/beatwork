@@ -243,25 +243,7 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                                 padding: const EdgeInsets.only(right: 6),
                                 child: FilterChip(
                                   selected: isMapped,
-                                  label: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        ev.emotionalCharge.symbol,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: isMapped
-                                              ? Colors.black
-                                              : Color(
-                                                  ev.emotionalCharge.colorValue,
-                                                ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(ev.title),
-                                    ],
-                                  ),
+                                  label: Text(ev.title),
                                   selectedColor: AppTheme.goldAccent,
                                   backgroundColor: AppTheme.surface,
                                   labelStyle: TextStyle(
