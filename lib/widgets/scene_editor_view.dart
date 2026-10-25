@@ -545,6 +545,7 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
                       fillColor: Colors.transparent,
+                      hoverColor: Colors.transparent,
                     ),
                     onChanged: (_) => _saveCurrentVersion(),
                   ),
