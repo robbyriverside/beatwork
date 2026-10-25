@@ -27,7 +27,7 @@ class BeatWorkApp extends StatelessWidget {
     return MaterialApp(
       title: 'BeatWork - Save the Cat Screenplay Beats',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme,
       home: BeatWorkHomeScreen(initialProject: initialProject),
     );
   }
@@ -59,7 +59,8 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
   void initState() {
     super.initState();
     _provider = StoryProvider(
-      initialProject: widget.initialProject ?? StoryProject.createSampleProject(),
+      initialProject:
+          widget.initialProject ?? StoryProject.createSampleProject(),
     );
   }
 
@@ -86,7 +87,9 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
             children: [
               TextField(
                 controller: titleCtrl,
-                decoration: const InputDecoration(labelText: 'Screenplay Title'),
+                decoration: const InputDecoration(
+                  labelText: 'Screenplay Title',
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -94,7 +97,8 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                 maxLines: 2,
                 decoration: const InputDecoration(
                   labelText: 'Logline / Premise',
-                  hintText: 'A one-sentence summary with protagonist, conflict, and stakes.',
+                  hintText:
+                      'A one-sentence summary with protagonist, conflict, and stakes.',
                 ),
               ),
               const SizedBox(height: 12),
@@ -103,14 +107,18 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                   Expanded(
                     child: TextField(
                       controller: genreCtrl,
-                      decoration: const InputDecoration(labelText: 'Genre / Format'),
+                      decoration: const InputDecoration(
+                        labelText: 'Genre / Format',
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextField(
                       controller: authorCtrl,
-                      decoration: const InputDecoration(labelText: 'Screenwriter'),
+                      decoration: const InputDecoration(
+                        labelText: 'Screenwriter',
+                      ),
                     ),
                   ),
                 ],
@@ -163,7 +171,9 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                     return SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: ConstrainedBox(
-                        constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                        constraints: BoxConstraints(
+                          minWidth: constraints.maxWidth,
+                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -172,16 +182,23 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                               borderRadius: BorderRadius.circular(6),
                               onTap: () => _openProjectSettings(context),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 4,
+                                ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.all(6),
                                       decoration: BoxDecoration(
-                                        color: AppTheme.goldAccent.withValues(alpha: 0.2),
+                                        color: AppTheme.goldAccent.withValues(
+                                          alpha: 0.2,
+                                        ),
                                         borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(color: AppTheme.goldAccent),
+                                        border: Border.all(
+                                          color: AppTheme.goldAccent,
+                                        ),
                                       ),
                                       child: const Icon(
                                         Icons.movie_outlined,
@@ -191,8 +208,10 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                     ),
                                     const SizedBox(width: 8),
                                     Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -208,13 +227,20 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                             ),
                                             const SizedBox(width: 6),
                                             ConstrainedBox(
-                                              constraints: const BoxConstraints(maxWidth: 160),
+                                              constraints: const BoxConstraints(
+                                                maxWidth: 160,
+                                              ),
                                               child: Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                    horizontal: 6, vertical: 1.5),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 6,
+                                                      vertical: 1.5,
+                                                    ),
                                                 decoration: BoxDecoration(
-                                                  color: AppTheme.surfaceLighter,
-                                                  borderRadius: BorderRadius.circular(4),
+                                                  color:
+                                                      AppTheme.surfaceLighter,
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
                                                 ),
                                                 child: Text(
                                                   _provider.project.title,
@@ -223,7 +249,8 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                                     fontWeight: FontWeight.w600,
                                                     color: AppTheme.textPrimary,
                                                   ),
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ),
                                             ),
@@ -259,11 +286,16 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                   final isSelected = _viewMode == mode;
                                   return InkWell(
                                     borderRadius: BorderRadius.circular(6),
-                                    onTap: () => setState(() => _viewMode = mode),
+                                    onTap: () =>
+                                        setState(() => _viewMode = mode),
                                     child: AnimatedContainer(
-                                      duration: const Duration(milliseconds: 150),
+                                      duration: const Duration(
+                                        milliseconds: 150,
+                                      ),
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 6),
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: isSelected
                                             ? AppTheme.goldAccent
@@ -312,10 +344,14 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                   label: const Text('New Event'),
                                   style: OutlinedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 8),
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
                                   ),
                                   onPressed: () async {
-                                    final newEv = await EventDialog.show(context);
+                                    final newEv = await EventDialog.show(
+                                      context,
+                                    );
                                     if (newEv != null) {
                                       _provider.createEvent(
                                         title: newEv.title,
@@ -353,14 +389,17 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                     ),
                                     style: OutlinedButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 8),
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
                                       side: BorderSide(
                                         color: _provider.isEventPoolOpen
                                             ? AppTheme.goldAccent
                                             : AppTheme.border,
                                       ),
                                     ),
-                                    onPressed: () => _provider.toggleEventPool(),
+                                    onPressed: () =>
+                                        _provider.toggleEventPool(),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
@@ -371,10 +410,15 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                   label: const Text('Export Script'),
                                   style: ElevatedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 8),
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
                                   ),
                                   onPressed: () {
-                                    ExportDialog.show(context, provider: _provider);
+                                    ExportDialog.show(
+                                      context,
+                                      provider: _provider,
+                                    );
                                   },
                                 ),
                                 const SizedBox(width: 8),
@@ -388,7 +432,10 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                       value: 'settings',
                                       child: Row(
                                         children: [
-                                          Icon(Icons.settings_outlined, size: 16),
+                                          Icon(
+                                            Icons.settings_outlined,
+                                            size: 16,
+                                          ),
                                           SizedBox(width: 8),
                                           Text('Project Settings'),
                                         ],
@@ -398,9 +445,15 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                       value: 'sample',
                                       child: Row(
                                         children: [
-                                          Icon(Icons.auto_awesome, size: 16, color: AppTheme.goldAccent),
+                                          Icon(
+                                            Icons.auto_awesome,
+                                            size: 16,
+                                            color: AppTheme.goldAccent,
+                                          ),
                                           SizedBox(width: 8),
-                                          Text('Reload Sample Project (Chronos Cipher)'),
+                                          Text(
+                                            'Reload Sample Project (Chronos Cipher)',
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -408,7 +461,10 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                       value: 'new',
                                       child: Row(
                                         children: [
-                                          Icon(Icons.note_add_outlined, size: 16),
+                                          Icon(
+                                            Icons.note_add_outlined,
+                                            size: 16,
+                                          ),
                                           SizedBox(width: 8),
                                           Text('Start Fresh Screenplay'),
                                         ],
@@ -420,13 +476,25 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                       _openProjectSettings(context);
                                     } else if (val == 'sample') {
                                       _provider.loadSampleProject();
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Sample project reloaded.')),
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Sample project reloaded.',
+                                          ),
+                                        ),
                                       );
                                     } else if (val == 'new') {
                                       _provider.createNewProject();
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Created new empty screenplay.')),
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Created new empty screenplay.',
+                                          ),
+                                        ),
                                       );
                                     }
                                   },

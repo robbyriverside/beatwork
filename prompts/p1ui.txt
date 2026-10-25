@@ -1,0 +1,13 @@
+the primary UI pane has a row of three panes.
+
+The three panes are:
+- a array of ALL the beats
+- a list of Events
+
+First:
+
+Add sizers between the panes so that the user can adjust the relative widths of the panes by dragging the sizers.
+
+At the top of each sizer is a snap button.  Whenever the sizer is manually resized, the prior size
+is remembered and the snap button will restore the width of the pane to the prior size.  The 
+

@@ -1,0 +1,19 @@
+The project content should be saved using Protocol buffers.
+
+Use a traditional "File" menu, where New is a new project.
+Open, Save and Save As items open a file open and save dialog.
+Keep recent projects and add an "Open Recent" sub-menu item in the File menu.
+
+Remove menu or items that currently create a new project.
+
+Save projects in the users home Documents directory 
+unless the users saves the file some other folder.
+
+Allow opening of projects from the command line.
+So that opening the project file opens the application and loads the project.
+
+Use the native file open and save dialogs for the platform.
+On macOS we should use the standard open command line utility.
+
+use a unique extension for the project files, such as ".beats".
+

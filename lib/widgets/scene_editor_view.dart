@@ -87,7 +87,9 @@ class _SceneEditorViewState extends State<SceneEditorView> {
   void _insertFormattingSnippet(String prefix, String suffix) {
     final text = _scriptController.text;
     final selection = _scriptController.selection;
-    final selectedText = selection.isCollapsed ? '' : text.substring(selection.start, selection.end);
+    final selectedText = selection.isCollapsed
+        ? ''
+        : text.substring(selection.start, selection.end);
     final replacement = '$prefix$selectedText$suffix';
 
     final newText = text.replaceRange(
@@ -99,7 +101,9 @@ class _SceneEditorViewState extends State<SceneEditorView> {
     _scriptController.value = TextEditingValue(
       text: newText,
       selection: TextSelection.collapsed(
-        offset: (selection.isValid ? selection.start : text.length) + replacement.length,
+        offset:
+            (selection.isValid ? selection.start : text.length) +
+            replacement.length,
       ),
     );
     _saveCurrentVersion();
@@ -113,7 +117,9 @@ class _SceneEditorViewState extends State<SceneEditorView> {
     SceneVersion? refVersion;
     if (_isReferenceMode && _referenceVersionId != null) {
       try {
-        refVersion = widget.scene.versions.firstWhere((v) => v.id == _referenceVersionId);
+        refVersion = widget.scene.versions.firstWhere(
+          (v) => v.id == _referenceVersionId,
+        );
       } catch (_) {
         refVersion = null;
       }
@@ -148,7 +154,10 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                         decoration: const InputDecoration(
                           labelText: 'Scene Title',
                           isDense: true,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                         ),
                         onChanged: (val) {
                           widget.scene.title = val;
@@ -166,7 +175,10 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                           labelText: 'Scene Heading / Slugline',
                           hintText: 'e.g. INT. COFFEE SHOP - DAY',
                           isDense: true,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                         ),
                         onChanged: (_) => _saveCurrentVersion(),
                       ),
@@ -177,12 +189,16 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                       icon: Icon(
                         _isReferenceMode ? Icons.splitscreen : Icons.history,
                         size: 16,
-                        color: _isReferenceMode ? AppTheme.goldAccent : AppTheme.textSecondary,
+                        color: _isReferenceMode
+                            ? AppTheme.goldAccent
+                            : AppTheme.textSecondary,
                       ),
                       label: Text(
                         _isReferenceMode ? 'Hide Reference' : 'Reference Mode',
                         style: TextStyle(
-                          color: _isReferenceMode ? AppTheme.goldAccent : AppTheme.textSecondary,
+                          color: _isReferenceMode
+                              ? AppTheme.goldAccent
+                              : AppTheme.textSecondary,
                         ),
                       ),
                       onPressed: () {
@@ -209,7 +225,11 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                     if (beatEvents.isEmpty)
                       const Text(
                         'No events in this beat yet. Add events to map this scene.',
-                        style: TextStyle(fontSize: 11.5, color: AppTheme.textMuted, fontStyle: FontStyle.italic),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          color: AppTheme.textMuted,
+                          fontStyle: FontStyle.italic,
+                        ),
                       )
                     else
                       Expanded(
@@ -217,7 +237,8 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                           scrollDirection: Axis.horizontal,
                           child: Row(
                             children: beatEvents.map((ev) {
-                              final isMapped = widget.scene.mappedEventIds.contains(ev.id);
+                              final isMapped = widget.scene.mappedEventIds
+                                  .contains(ev.id);
                               return Padding(
                                 padding: const EdgeInsets.only(right: 6),
                                 child: FilterChip(
@@ -230,7 +251,11 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                                         style: TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold,
-                                          color: isMapped ? Colors.black : Color(ev.emotionalCharge.colorValue),
+                                          color: isMapped
+                                              ? Colors.black
+                                              : Color(
+                                                  ev.emotionalCharge.colorValue,
+                                                ),
                                         ),
                                       ),
                                       const SizedBox(width: 4),
@@ -241,8 +266,12 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                                   backgroundColor: AppTheme.surface,
                                   labelStyle: TextStyle(
                                     fontSize: 11,
-                                    fontWeight: isMapped ? FontWeight.bold : FontWeight.normal,
-                                    color: isMapped ? Colors.black : AppTheme.textPrimary,
+                                    fontWeight: isMapped
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    color: isMapped
+                                        ? Colors.black
+                                        : AppTheme.textPrimary,
                                   ),
                                   padding: EdgeInsets.zero,
                                   onSelected: (_) {
@@ -272,7 +301,11 @@ class _SceneEditorViewState extends State<SceneEditorView> {
             ),
             child: Row(
               children: [
-                const Icon(Icons.source_outlined, size: 16, color: AppTheme.goldAccent),
+                const Icon(
+                  Icons.source_outlined,
+                  size: 16,
+                  color: AppTheme.goldAccent,
+                ),
                 const SizedBox(width: 8),
                 const Text(
                   'Versions:',
@@ -296,12 +329,18 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                             label: Text(
                               'v${ver.versionNumber}: ${ver.label.isNotEmpty ? ver.label : "Draft"}',
                             ),
-                            selectedColor: AppTheme.goldAccent.withOpacity(0.25),
+                            selectedColor: AppTheme.goldAccent.withOpacity(
+                              0.25,
+                            ),
                             backgroundColor: AppTheme.surfaceElevated,
                             labelStyle: TextStyle(
                               fontSize: 11,
-                              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                              color: isActive ? AppTheme.goldAccent : AppTheme.textSecondary,
+                              fontWeight: isActive
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isActive
+                                  ? AppTheme.goldAccent
+                                  : AppTheme.textSecondary,
                             ),
                             padding: EdgeInsets.zero,
                             onSelected: (selected) {
@@ -323,7 +362,10 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                   icon: const Icon(Icons.add, size: 14),
                   label: const Text('New Version'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     textStyle: const TextStyle(fontSize: 11.5),
                   ),
                   onPressed: () => _promptNewVersion(context),
@@ -341,18 +383,27 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                       Expanded(
                         child: Container(
                           decoration: const BoxDecoration(
-                            border: Border(right: BorderSide(color: AppTheme.border)),
-                            color: Color(0xFF13151D),
+                            border: Border(
+                              right: BorderSide(color: AppTheme.border),
+                            ),
+                            color: AppTheme.surface,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
                                 color: AppTheme.surfaceElevated,
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.history_edu, size: 16, color: AppTheme.cyanAccent),
+                                    const Icon(
+                                      Icons.history_edu,
+                                      size: 16,
+                                      color: AppTheme.cyanAccent,
+                                    ),
                                     const SizedBox(width: 8),
                                     const Text(
                                       'REFERENCE VERSION',
@@ -368,15 +419,22 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                                       value: _referenceVersionId,
                                       isDense: true,
                                       dropdownColor: AppTheme.surfaceElevated,
-                                      style: const TextStyle(fontSize: 11.5, color: AppTheme.textPrimary),
+                                      style: const TextStyle(
+                                        fontSize: 11.5,
+                                        color: AppTheme.textPrimary,
+                                      ),
                                       items: widget.scene.versions.map((v) {
                                         return DropdownMenuItem<String>(
                                           value: v.id,
-                                          child: Text('v${v.versionNumber}: ${v.label}'),
+                                          child: Text(
+                                            'v${v.versionNumber}: ${v.label}',
+                                          ),
                                         );
                                       }).toList(),
                                       onChanged: (val) {
-                                        setState(() => _referenceVersionId = val);
+                                        setState(
+                                          () => _referenceVersionId = val,
+                                        );
                                       },
                                     ),
                                   ],
@@ -386,18 +444,26 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                                 child: SingleChildScrollView(
                                   padding: const EdgeInsets.all(16),
                                   child: refVersion == null
-                                      ? const Center(child: Text('No reference version chosen'))
+                                      ? const Center(
+                                          child: Text(
+                                            'No reference version chosen',
+                                          ),
+                                        )
                                       : Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               refVersion.slugline.toUpperCase(),
-                                              style: AppTheme.screenplaySlugline.copyWith(
-                                                color: AppTheme.cyanAccent,
-                                              ),
+                                              style: AppTheme.screenplaySlugline
+                                                  .copyWith(
+                                                    color: AppTheme.cyanAccent,
+                                                  ),
                                             ),
                                             const SizedBox(height: 12),
-                                            if (refVersion.summary.isNotEmpty) ...[
+                                            if (refVersion
+                                                .summary
+                                                .isNotEmpty) ...[
                                               Text(
                                                 'Summary: ${refVersion.summary}',
                                                 style: const TextStyle(
@@ -414,9 +480,13 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                                                   : refVersion.scriptContent,
                                               style: AppTheme.screenplayAction,
                                             ),
-                                            if (refVersion.notes.isNotEmpty) ...[
+                                            if (refVersion
+                                                .notes
+                                                .isNotEmpty) ...[
                                               const SizedBox(height: 16),
-                                              const Divider(color: AppTheme.border),
+                                              const Divider(
+                                                color: AppTheme.border,
+                                              ),
                                               Text(
                                                 'Notes: ${refVersion.notes}',
                                                 style: const TextStyle(
@@ -435,9 +505,7 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                       ),
 
                       // Active Version Editor (Right)
-                      Expanded(
-                        child: _buildActiveEditor(activeVersion),
-                      ),
+                      Expanded(child: _buildActiveEditor(activeVersion)),
                     ],
                   )
                 : _buildActiveEditor(activeVersion),
@@ -489,7 +557,8 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                     expands: true,
                     style: AppTheme.screenplayAction,
                     decoration: const InputDecoration(
-                      hintText: 'Write your scene in screenplay format...\n\nKAEL\nI knew you were listening.\n\nHe leans against the console, fingers hovering over the red wire.',
+                      hintText:
+                          'Write your scene in screenplay format...\n\nKAEL\nI knew you were listening.\n\nHe leans against the console, fingers hovering over the red wire.',
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
@@ -511,7 +580,10 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                         decoration: const InputDecoration(
                           labelText: 'Scene Objective / Summary',
                           isDense: true,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                         ),
                         onChanged: (_) => _saveCurrentVersion(),
                       ),
@@ -523,7 +595,10 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                         decoration: const InputDecoration(
                           labelText: 'Writer Notes & Revision Thoughts',
                           isDense: true,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
                         ),
                         onChanged: (_) => _saveCurrentVersion(),
                       ),
@@ -594,12 +669,16 @@ class _SceneEditorViewState extends State<SceneEditorView> {
             const SizedBox(height: 16),
             TextField(
               controller: labelCtrl,
-              decoration: const InputDecoration(labelText: 'Version Label / Focus'),
+              decoration: const InputDecoration(
+                labelText: 'Version Label / Focus',
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: notesCtrl,
-              decoration: const InputDecoration(labelText: 'Revision Intent / Notes'),
+              decoration: const InputDecoration(
+                labelText: 'Revision Intent / Notes',
+              ),
             ),
           ],
         ),

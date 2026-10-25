@@ -10,7 +10,10 @@ class ExportDialog extends StatefulWidget {
 
   const ExportDialog({super.key, required this.provider});
 
-  static Future<void> show(BuildContext context, {required StoryProvider provider}) {
+  static Future<void> show(
+    BuildContext context, {
+    required StoryProvider provider,
+  }) {
     return showDialog(
       context: context,
       builder: (context) => ExportDialog(provider: provider),
@@ -21,7 +24,8 @@ class ExportDialog extends StatefulWidget {
   State<ExportDialog> createState() => _ExportDialogState();
 }
 
-class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderStateMixin {
+class _ExportDialogState extends State<ExportDialog>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isExporting = false;
   String? _statusMessage;
@@ -47,7 +51,9 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
     });
 
     try {
-      final path = await ExportService.saveFinalDraftToFile(widget.provider.project);
+      final path = await ExportService.saveFinalDraftToFile(
+        widget.provider.project,
+      );
       setState(() {
         _isExporting = false;
         if (path != null) {
@@ -101,7 +107,9 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
     });
 
     try {
-      final path = await ExportService.saveFountainToFile(widget.provider.project);
+      final path = await ExportService.saveFountainToFile(
+        widget.provider.project,
+      );
       setState(() {
         _isExporting = false;
         if (path != null) {
@@ -123,8 +131,12 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     final collected = widget.provider.project.getCollectedTimeline();
-    final fdxPreview = ExportService.generateFinalDraftFdx(widget.provider.project);
-    final fountainPreview = ExportService.generateFountain(widget.provider.project);
+    final fdxPreview = ExportService.generateFinalDraftFdx(
+      widget.provider.project,
+    );
+    final fountainPreview = ExportService.generateFountain(
+      widget.provider.project,
+    );
 
     return Dialog(
       backgroundColor: AppTheme.surfaceElevated,
@@ -142,7 +154,11 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
               // Header
               Row(
                 children: [
-                  const Icon(Icons.file_download, color: AppTheme.goldAccent, size: 24),
+                  const Icon(
+                    Icons.file_download,
+                    color: AppTheme.goldAccent,
+                    size: 24,
+                  ),
                   const SizedBox(width: 10),
                   const Text(
                     'Export Screenplay Timeline',
@@ -162,7 +178,10 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
               const SizedBox(height: 6),
               Text(
                 'Collects all ${collected.length} scenes across your 15 Save the Cat beat timelines into industry-standard screenwriting formats.',
-                style: const TextStyle(fontSize: 12.5, color: AppTheme.textSecondary),
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  color: AppTheme.textSecondary,
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -173,7 +192,8 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
                   Expanded(
                     child: _buildExportCard(
                       title: 'Final Draft (.fdx)',
-                      description: 'Industry standard XML format used in Final Draft 8-12',
+                      description:
+                          'Industry standard XML format used in Final Draft 8-12',
                       icon: Icons.movie_outlined,
                       accentColor: AppTheme.goldAccent,
                       onExport: _isExporting ? null : _exportFinalDraft,
@@ -186,7 +206,8 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
                   Expanded(
                     child: _buildExportCard(
                       title: 'Screenplay PDF',
-                      description: 'Formatted letter page layout with standard Courier typography',
+                      description:
+                          'Formatted letter page layout with standard Courier typography',
                       icon: Icons.picture_as_pdf_outlined,
                       accentColor: AppTheme.crimsonAccent,
                       onExport: _isExporting ? null : _exportPdf,
@@ -199,7 +220,8 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
                   Expanded(
                     child: _buildExportCard(
                       title: 'Fountain (.fountain)',
-                      description: 'Universal plain-text screenplay format for Highland & Scrivener',
+                      description:
+                          'Universal plain-text screenplay format for Highland & Scrivener',
                       icon: Icons.text_snippet_outlined,
                       accentColor: AppTheme.cyanAccent,
                       onExport: _isExporting ? null : _exportFountain,
@@ -213,18 +235,23 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
               if (_statusMessage != null) ...[
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: _isSuccess
                         ? AppTheme.emeraldAccent.withOpacity(0.15)
                         : (_isExporting
-                            ? AppTheme.goldAccent.withOpacity(0.15)
-                            : AppTheme.crimsonAccent.withOpacity(0.15)),
+                              ? AppTheme.goldAccent.withOpacity(0.15)
+                              : AppTheme.crimsonAccent.withOpacity(0.15)),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(
                       color: _isSuccess
                           ? AppTheme.emeraldAccent
-                          : (_isExporting ? AppTheme.goldAccent : AppTheme.crimsonAccent),
+                          : (_isExporting
+                                ? AppTheme.goldAccent
+                                : AppTheme.crimsonAccent),
                     ),
                   ),
                   child: Row(
@@ -239,7 +266,9 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
                         Icon(
                           _isSuccess ? Icons.check_circle : Icons.info_outline,
                           size: 18,
-                          color: _isSuccess ? AppTheme.emeraldAccent : AppTheme.crimsonAccent,
+                          color: _isSuccess
+                              ? AppTheme.emeraldAccent
+                              : AppTheme.crimsonAccent,
                         ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -250,7 +279,9 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
                             fontWeight: FontWeight.w500,
                             color: _isSuccess
                                 ? AppTheme.emeraldAccent
-                                : (_isExporting ? AppTheme.goldAccent : AppTheme.crimsonAccent),
+                                : (_isExporting
+                                      ? AppTheme.goldAccent
+                                      : AppTheme.crimsonAccent),
                           ),
                         ),
                       ),
@@ -360,11 +391,14 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildCodePreview({required String content, required String copyLabel}) {
+  Widget _buildCodePreview({
+    required String content,
+    required String copyLabel,
+  }) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF10121A),
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppTheme.border),
       ),
@@ -396,7 +430,7 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
                 style: const TextStyle(
                   fontFamily: 'Courier',
                   fontSize: 11.5,
-                  color: Color(0xFFD1D5DB),
+                  color: AppTheme.textPrimary,
                 ),
               ),
             ),
@@ -407,11 +441,11 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
   }
 
   Widget _buildStatsTab(List<CollectedSceneEntry> collected) {
-    final eventsAssigned =
-        widget.provider.project.events.where((e) => e.beatId != null).length;
+    final eventsAssigned = widget.provider.project.events
+        .where((e) => e.beatId != null)
+        .length;
     final eventsInPool = widget.provider.project.getUnassignedEvents().length;
-    final beatsWithScenes =
-        collected.map((c) => c.beat.id).toSet().length;
+    final beatsWithScenes = collected.map((c) => c.beat.id).toSet().length;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -430,7 +464,12 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
           _statRow('Beats with Scenes', '$beatsWithScenes of 15 beats active'),
           _statRow('Events Assigned to Beats', '$eventsAssigned events'),
           _statRow('Events in Unassigned Pool', '$eventsInPool events'),
-          _statRow('Last Modified', widget.provider.project.lastModified.toLocal().toString().split('.')[0]),
+          _statRow(
+            'Last Modified',
+            widget.provider.project.lastModified.toLocal().toString().split(
+              '.',
+            )[0],
+          ),
         ],
       ),
     );
@@ -442,7 +481,13 @@ class _ExportDialogState extends State<ExportDialog> with SingleTickerProviderSt
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12.5, color: AppTheme.textSecondary)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: AppTheme.textSecondary,
+            ),
+          ),
           Text(
             value,
             style: const TextStyle(

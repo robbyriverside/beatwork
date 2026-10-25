@@ -2,34 +2,35 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   // Color Palette
-  static const Color background = Color(0xFF0F1117);
-  static const Color surface = Color(0xFF181B24);
-  static const Color surfaceElevated = Color(0xFF222634);
-  static const Color surfaceLighter = Color(0xFF2D3346);
-  static const Color border = Color(0xFF2C3242);
-  static const Color borderHighlight = Color(0xFF3F4860);
+  static const Color background = Color(0xFFF6F4EF);
+  static const Color surface = Color(0xFFFFFEFA);
+  static const Color surfaceElevated = Color(0xFFF0EEE8);
+  static const Color surfaceLighter = Color(0xFFE7E4DC);
+  static const Color border = Color(0xFFDDD9CF);
+  static const Color borderHighlight = Color(0xFFBDB6A8);
 
   // Screenplay & Cinema Accents
-  static const Color goldAccent = Color(0xFFF59E0B);
-  static const Color goldLight = Color(0xFFFDE68A);
-  static const Color cyanAccent = Color(0xFF06B6D4);
-  static const Color emeraldAccent = Color(0xFF10B981);
-  static const Color crimsonAccent = Color(0xFFF43F5E);
-  static const Color purpleAccent = Color(0xFF8B5CF6);
+  static const Color goldAccent = Color(0xFFD59A32);
+  static const Color goldLight = Color(0xFF91600D);
+  static const Color cyanAccent = Color(0xFF087E8B);
+  static const Color emeraldAccent = Color(0xFF16805D);
+  static const Color crimsonAccent = Color(0xFFBF4052);
+  static const Color purpleAccent = Color(0xFF7355A3);
 
   // Text Colors
-  static const Color textPrimary = Color(0xFFF3F4F6);
-  static const Color textSecondary = Color(0xFF9CA3AF);
-  static const Color textMuted = Color(0xFF6B7280);
+  static const Color textPrimary = Color(0xFF282A27);
+  static const Color textSecondary = Color(0xFF62645F);
+  static const Color textMuted = Color(0xFF85867F);
 
-  static ThemeData get darkTheme {
+  static ThemeData get lightTheme {
     return ThemeData(
-      brightness: Brightness.dark,
+      brightness: Brightness.light,
+      fontFamily: 'Avenir Next',
       scaffoldBackgroundColor: background,
       primaryColor: goldAccent,
       cardColor: surface,
       dividerColor: border,
-      colorScheme: const ColorScheme.dark(
+      colorScheme: const ColorScheme.light(
         primary: goldAccent,
         secondary: cyanAccent,
         surface: surface,
@@ -71,7 +72,10 @@ class AppTheme {
         fillColor: surfaceElevated,
         hintStyle: const TextStyle(color: textMuted, fontSize: 13),
         labelStyle: const TextStyle(color: textSecondary, fontSize: 13),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: border),
@@ -141,7 +145,7 @@ class AppTheme {
     fontFamily: 'Courier',
     fontSize: 13.5,
     height: 1.45,
-    color: Color(0xFFE5E7EB),
+    color: textPrimary,
   );
 
   static const TextStyle screenplayCharacter = TextStyle(

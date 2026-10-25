@@ -17,10 +17,16 @@ class ScriptReaderView extends StatelessWidget {
     int totalWords = 0;
     for (final item in collected) {
       final text = item.scene.activeVersion.scriptContent;
-      totalWords += text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).length;
+      totalWords += text
+          .split(RegExp(r'\s+'))
+          .where((w) => w.isNotEmpty)
+          .length;
     }
     // Estimated script pages (~200 words per formatted screenplay page)
-    final estimatedPages = (totalWords / 200).ceil().clamp(collected.isEmpty ? 0 : 1, 999);
+    final estimatedPages = (totalWords / 200).ceil().clamp(
+      collected.isEmpty ? 0 : 1,
+      999,
+    );
 
     return Column(
       children: [
@@ -33,7 +39,11 @@ class ScriptReaderView extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.auto_stories, color: AppTheme.goldAccent, size: 20),
+              const Icon(
+                Icons.auto_stories,
+                color: AppTheme.goldAccent,
+                size: 20,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -51,7 +61,10 @@ class ScriptReaderView extends StatelessWidget {
                     ),
                     const Text(
                       'All beat timelines unified into a single screenplay draft',
-                      style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.textSecondary,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -59,9 +72,15 @@ class ScriptReaderView extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               // Stats
-              _buildStatPill(Icons.movie_outlined, '${collected.length} Scenes'),
+              _buildStatPill(
+                Icons.movie_outlined,
+                '${collected.length} Scenes',
+              ),
               const SizedBox(width: 8),
-              _buildStatPill(Icons.description_outlined, '~$estimatedPages Pages'),
+              _buildStatPill(
+                Icons.description_outlined,
+                '~$estimatedPages Pages',
+              ),
               const SizedBox(width: 8),
               _buildStatPill(Icons.text_fields, '$totalWords Words'),
               const SizedBox(width: 16),
@@ -104,26 +123,35 @@ class ScriptReaderView extends StatelessWidget {
                         const Text(
                           'Open any beat in the Beat Sheet, add scenes to the beat timeline, and they will collect here automatically.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textSecondary,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 )
               : SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 32,
+                  ),
                   child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 820),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 56, vertical: 48),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 56,
+                          vertical: 48,
+                        ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF141720),
+                          color: AppTheme.surface,
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(color: AppTheme.border),
                           boxShadow: const [
                             BoxShadow(
-                              color: Colors.black45,
+                              color: Colors.black12,
                               blurRadius: 24,
                               offset: Offset(0, 12),
                             ),
@@ -172,7 +200,10 @@ class ScriptReaderView extends StatelessWidget {
                               ),
                             ],
                             const SizedBox(height: 32),
-                            const Divider(color: AppTheme.border, thickness: 1.5),
+                            const Divider(
+                              color: AppTheme.border,
+                              thickness: 1.5,
+                            ),
                             const SizedBox(height: 24),
 
                             // Script content broken down by beat timeline
@@ -228,7 +259,9 @@ class ScriptReaderView extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildTimelineScriptElements(List<CollectedSceneEntry> collected) {
+  List<Widget> _buildTimelineScriptElements(
+    List<CollectedSceneEntry> collected,
+  ) {
     final List<Widget> list = [];
     String? currentBeatId;
 
@@ -339,10 +372,7 @@ class ScriptReaderView extends StatelessWidget {
           list.add(
             Container(
               margin: const EdgeInsets.only(top: 14, left: 160),
-              child: Text(
-                upper,
-                style: AppTheme.screenplayCharacter,
-              ),
+              child: Text(upper, style: AppTheme.screenplayCharacter),
             ),
           );
         } else if (line.startsWith('(') && line.endsWith(')')) {
@@ -367,10 +397,7 @@ class ScriptReaderView extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(
-                  upper,
-                  style: AppTheme.screenplaySlugline,
-                ),
+                child: Text(upper, style: AppTheme.screenplaySlugline),
               ),
             ),
           );
@@ -379,10 +406,7 @@ class ScriptReaderView extends StatelessWidget {
           list.add(
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
-              child: Text(
-                line,
-                style: AppTheme.screenplayAction,
-              ),
+              child: Text(line, style: AppTheme.screenplayAction),
             ),
           );
         }
