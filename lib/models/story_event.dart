@@ -17,8 +17,8 @@ class StoryEvent {
     this.location = '',
     this.orderIndex = 0,
     DateTime? createdAt,
-  })  : characters = characters ?? [],
-        createdAt = createdAt ?? DateTime.now();
+  }) : characters = characters ?? [],
+       createdAt = createdAt ?? DateTime.now();
 
   StoryEvent copyWith({
     String? id,
@@ -62,7 +62,8 @@ class StoryEvent {
       title: json['title'] as String,
       description: json['description'] as String? ?? '',
       beatId: json['beatId'] as String?,
-      characters: (json['characters'] as List<dynamic>?)
+      characters:
+          (json['characters'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],

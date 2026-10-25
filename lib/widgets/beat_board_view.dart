@@ -26,8 +26,8 @@ class _BeatBoardViewState extends State<BeatBoardView> {
     final filteredBeats = _selectedActFilter == null
         ? BeatDefinition.saveTheCatBeats
         : BeatDefinition.saveTheCatBeats
-            .where((b) => b.act == _selectedActFilter)
-            .toList();
+              .where((b) => b.act == _selectedActFilter)
+              .toList();
 
     return Column(
       children: [
@@ -40,7 +40,6 @@ class _BeatBoardViewState extends State<BeatBoardView> {
           ),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final isWide = constraints.maxWidth > 950;
               return Row(
                 children: [
                   const Text(
@@ -61,13 +60,20 @@ class _BeatBoardViewState extends State<BeatBoardView> {
                           ChoiceChip(
                             selected: _selectedActFilter == null,
                             label: const Text('All 15 Beats'),
-                            onSelected: (_) => setState(() => _selectedActFilter = null),
+                            onSelected: (_) =>
+                                setState(() => _selectedActFilter = null),
                             backgroundColor: AppTheme.surfaceElevated,
-                            selectedColor: AppTheme.goldAccent.withValues(alpha: 0.2),
+                            selectedColor: AppTheme.goldAccent.withValues(
+                              alpha: 0.2,
+                            ),
                             labelStyle: TextStyle(
                               fontSize: 11.5,
-                              fontWeight: _selectedActFilter == null ? FontWeight.bold : FontWeight.normal,
-                              color: _selectedActFilter == null ? AppTheme.goldAccent : AppTheme.textSecondary,
+                              fontWeight: _selectedActFilter == null
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: _selectedActFilter == null
+                                  ? AppTheme.goldAccent
+                                  : AppTheme.textSecondary,
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -77,14 +83,21 @@ class _BeatBoardViewState extends State<BeatBoardView> {
                               child: ChoiceChip(
                                 selected: _selectedActFilter == act,
                                 label: Text('${act.title}: ${act.subtitle}'),
-                                onSelected: (sel) =>
-                                    setState(() => _selectedActFilter = sel ? act : null),
+                                onSelected: (sel) => setState(
+                                  () => _selectedActFilter = sel ? act : null,
+                                ),
                                 backgroundColor: AppTheme.surfaceElevated,
-                                selectedColor: act.accentColor.withValues(alpha: 0.2),
+                                selectedColor: act.accentColor.withValues(
+                                  alpha: 0.2,
+                                ),
                                 labelStyle: TextStyle(
                                   fontSize: 11.5,
-                                  fontWeight: _selectedActFilter == act ? FontWeight.bold : FontWeight.normal,
-                                  color: _selectedActFilter == act ? act.accentColor : AppTheme.textSecondary,
+                                  fontWeight: _selectedActFilter == act
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: _selectedActFilter == act
+                                      ? act.accentColor
+                                      : AppTheme.textSecondary,
                                 ),
                               ),
                             ),
@@ -93,28 +106,6 @@ class _BeatBoardViewState extends State<BeatBoardView> {
                       ),
                     ),
                   ),
-                  if (isWide) ...[
-                    const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.surfaceElevated,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: AppTheme.border),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.touch_app_outlined, size: 14, color: AppTheme.goldAccent),
-                          SizedBox(width: 4),
-                          Text(
-                            'Drag events into beats',
-                            style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
                 ],
               );
             },

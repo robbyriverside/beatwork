@@ -35,110 +35,6 @@ class _ProjectManagerDialogState extends State<ProjectManagerDialog> {
     widget.provider.refreshRecentProjects();
   }
 
-  void _showNewProjectDialog() {
-    final titleCtrl = TextEditingController(text: 'Untitled Screenplay');
-    final loglineCtrl = TextEditingController();
-    final genreCtrl = TextEditingController(text: 'Feature Film');
-    final authorCtrl = TextEditingController(text: 'Screenwriter');
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.add_box_outlined, color: AppTheme.goldAccent),
-            SizedBox(width: 8),
-            Text('Create New Screenplay Project'),
-          ],
-        ),
-        content: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: titleCtrl,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Screenplay Title *',
-                  hintText: 'e.g. Midnight Horizon',
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: loglineCtrl,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Logline / Core Premise',
-                  hintText:
-                      'Protagonist, inciting incident, goal, and central conflict.',
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: genreCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Genre / Format',
-                        hintText: 'e.g. Sci-Fi Thriller',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: authorCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Screenwriter',
-                        hintText: 'Your name',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          OutlinedButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final title = titleCtrl.text.trim();
-              if (title.isEmpty) return;
-
-              Navigator.of(ctx).pop(); // Close create dialog
-              await widget.provider.createNewProject(
-                title: title,
-                logline: loglineCtrl.text.trim(),
-                genre: genreCtrl.text.trim().isEmpty
-                    ? 'Feature Film'
-                    : genreCtrl.text.trim(),
-                author: authorCtrl.text.trim().isEmpty
-                    ? 'Screenwriter'
-                    : authorCtrl.text.trim(),
-              );
-
-              if (mounted) {
-                Navigator.of(context).pop(); // Close manager dialog
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Created and opened screenplay "$title"'),
-                  ),
-                );
-              }
-            },
-            child: const Text('Create & Open'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _confirmDeleteProject(ProjectMetadata meta) {
     showDialog(
       context: context,
@@ -324,11 +220,6 @@ class _ProjectManagerDialogState extends State<ProjectManagerDialog> {
                       ],
                     ),
                   ),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.add, size: 16),
-                    label: const Text('New Screenplay'),
-                    onPressed: _showNewProjectDialog,
-                  ),
                 ],
               ),
             ),
@@ -420,11 +311,6 @@ class _ProjectManagerDialogState extends State<ProjectManagerDialog> {
                             style: TextStyle(color: AppTheme.textSecondary),
                           ),
                           const SizedBox(height: 12),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.add, size: 16),
-                            label: const Text('Create New Screenplay'),
-                            onPressed: _showNewProjectDialog,
-                          ),
                         ],
                       ),
                     )
@@ -434,7 +320,8 @@ class _ProjectManagerDialogState extends State<ProjectManagerDialog> {
                         vertical: 16,
                       ),
                       itemCount: projects.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final meta = projects[index];
                         final isCurrent = meta.id == currentId;

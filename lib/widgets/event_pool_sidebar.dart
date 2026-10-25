@@ -25,7 +25,9 @@ class EventPoolSidebar extends StatelessWidget {
         final matchTitle = ev.title.toLowerCase().contains(q);
         final matchDesc = ev.description.toLowerCase().contains(q);
         final matchLoc = ev.location.toLowerCase().contains(q);
-        final matchChars = ev.characters.any((c) => c.toLowerCase().contains(q));
+        final matchChars = ev.characters.any(
+          (c) => c.toLowerCase().contains(q),
+        );
         if (!matchTitle && !matchDesc && !matchLoc && !matchChars) return false;
       }
       return true;
@@ -48,7 +50,11 @@ class EventPoolSidebar extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.inventory_2_outlined, size: 20, color: AppTheme.goldAccent),
+                const Icon(
+                  Icons.inventory_2_outlined,
+                  size: 20,
+                  color: AppTheme.goldAccent,
+                ),
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Column(
@@ -64,13 +70,19 @@ class EventPoolSidebar extends StatelessWidget {
                       ),
                       Text(
                         'Unassigned story beats & ideas',
-                        style: TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.textSecondary,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: AppTheme.surfaceElevated,
                     borderRadius: BorderRadius.circular(12),
@@ -95,6 +107,35 @@ class EventPoolSidebar extends StatelessWidget {
             ),
           ),
 
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceElevated,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: AppTheme.border),
+              ),
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.touch_app_outlined,
+                    size: 14,
+                    color: AppTheme.goldAccent,
+                  ),
+                  SizedBox(width: 6),
+                  Text(
+                    'Drag events into beats',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           // Search Bar
           Padding(
             padding: const EdgeInsets.all(12),
@@ -111,7 +152,10 @@ class EventPoolSidebar extends StatelessWidget {
                           )
                         : null,
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                   ),
                   onChanged: (val) => provider.setEventSearchQuery(val),
                 ),
@@ -130,7 +174,10 @@ class EventPoolSidebar extends StatelessWidget {
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 12,
+                ),
                 decoration: BoxDecoration(
                   color: isHovered
                       ? AppTheme.goldAccent.withOpacity(0.15)
@@ -147,7 +194,9 @@ class EventPoolSidebar extends StatelessWidget {
                     Icon(
                       Icons.move_to_inbox_outlined,
                       size: 16,
-                      color: isHovered ? AppTheme.goldAccent : AppTheme.textMuted,
+                      color: isHovered
+                          ? AppTheme.goldAccent
+                          : AppTheme.textMuted,
                     ),
                     const SizedBox(width: 8),
                     Flexible(
@@ -157,8 +206,12 @@ class EventPoolSidebar extends StatelessWidget {
                             : 'Drop events here to unassign',
                         style: TextStyle(
                           fontSize: 11,
-                          color: isHovered ? AppTheme.goldAccent : AppTheme.textMuted,
-                          fontWeight: isHovered ? FontWeight.bold : FontWeight.normal,
+                          color: isHovered
+                              ? AppTheme.goldAccent
+                              : AppTheme.textMuted,
+                          fontWeight: isHovered
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -198,14 +251,20 @@ class EventPoolSidebar extends StatelessWidget {
                           const Text(
                             'Write down story moments, twists, and character actions to build your story foundation.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
                           ),
                         ],
                       ),
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     itemCount: filteredEvents.length,
                     itemBuilder: (context, index) {
                       final ev = filteredEvents[index];

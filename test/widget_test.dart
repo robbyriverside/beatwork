@@ -5,8 +5,64 @@ import 'package:beatwork/main.dart';
 import 'package:beatwork/models/story_project.dart';
 
 void main() {
-  testWidgets('BeatWork desktop app loads beat sheet and sample project',
-      (WidgetTester tester) async {
+  testWidgets('saving an unchanged named project reports it is up to date', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(
+      BeatWorkApp(
+        initialProject: StoryProject.createSampleProject(),
+        initialDocumentPath: '/tmp/current.beats',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('The Chronos Cipher'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Project up to date'), findsOneWidget);
+  });
+
+  testWidgets('assigned events can be dragged between beat cards', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    final project = StoryProject.createSampleProject();
+    await tester.pumpWidget(BeatWorkApp(initialProject: project));
+    await tester.pumpAndSettle();
+
+    final eventTitle = 'Kael hacks a sub-orbital drone to pay back debts';
+    final eventFinder = find.text(eventTitle);
+    expect(eventFinder, findsOneWidget);
+
+    await tester.drag(eventFinder, const Offset(520, 0));
+    await tester.pumpAndSettle();
+
+    expect(
+      project
+          .getEventsForBeat('opening_image')
+          .any((event) => event.title == eventTitle),
+      isFalse,
+    );
+    expect(
+      project
+          .getEventsForBeat('theme_stated')
+          .any((event) => event.title == eventTitle),
+      isTrue,
+    );
+  });
+
+  testWidgets('BeatWork desktop app loads beat sheet and sample project', (
+    WidgetTester tester,
+  ) async {
     // Provide sample project
     final sample = StoryProject.createSampleProject();
 
@@ -21,6 +77,19 @@ void main() {
     // Verify brand title and project title are visible
     expect(find.text('BEATWORK'), findsOneWidget);
     expect(find.text('The Chronos Cipher'), findsOneWidget);
+
+    await tester.tap(find.text('The Chronos Cipher'));
+    await tester.pumpAndSettle();
+    expect(find.text('New'), findsOneWidget);
+    expect(find.text('Open...'), findsOneWidget);
+    expect(find.text('Save As...'), findsOneWidget);
+    expect(find.text('Open Recent'), findsOneWidget);
+    expect(find.text('Info'), findsOneWidget);
+    await tester.tap(find.text('Info'));
+    await tester.pumpAndSettle();
+    expect(find.text('Screenplay Project Settings'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
 
     // Verify Save the Cat header and beats
     expect(find.text('SAVE THE CAT!'), findsOneWidget);

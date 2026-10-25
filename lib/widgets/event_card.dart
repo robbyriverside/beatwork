@@ -83,12 +83,19 @@ class EventCard extends StatelessWidget {
                 Row(
                   children: [
                     if (event.location.isNotEmpty) ...[
-                      const Icon(Icons.place_outlined, size: 12, color: AppTheme.textMuted),
+                      const Icon(
+                        Icons.place_outlined,
+                        size: 12,
+                        color: AppTheme.textMuted,
+                      ),
                       const SizedBox(width: 2),
                       Flexible(
                         child: Text(
                           event.location,
-                          style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.textMuted,
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -108,7 +115,11 @@ class EventCard extends StatelessWidget {
                       ),
                     // Action popup
                     PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_horiz, size: 16, color: AppTheme.textMuted),
+                      icon: const Icon(
+                        Icons.more_horiz,
+                        size: 16,
+                        color: AppTheme.textMuted,
+                      ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       itemBuilder: (context) => [
@@ -139,9 +150,18 @@ class EventCard extends StatelessWidget {
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete_outline, size: 16, color: AppTheme.crimsonAccent),
+                                Icon(
+                                  Icons.delete_outline,
+                                  size: 16,
+                                  color: AppTheme.crimsonAccent,
+                                ),
                                 SizedBox(width: 8),
-                                Text('Delete', style: TextStyle(color: AppTheme.crimsonAccent)),
+                                Text(
+                                  'Delete',
+                                  style: TextStyle(
+                                    color: AppTheme.crimsonAccent,
+                                  ),
+                                ),
                               ],
                             ),
                           ),

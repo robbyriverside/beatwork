@@ -7,11 +7,7 @@ class EventDialog extends StatefulWidget {
   final StoryEvent? initialEvent;
   final String? initialBeatId;
 
-  const EventDialog({
-    super.key,
-    this.initialEvent,
-    this.initialBeatId,
-  });
+  const EventDialog({super.key, this.initialEvent, this.initialBeatId});
 
   static Future<StoryEvent?> show(
     BuildContext context, {
@@ -20,10 +16,8 @@ class EventDialog extends StatefulWidget {
   }) {
     return showDialog<StoryEvent>(
       context: context,
-      builder: (context) => EventDialog(
-        initialEvent: initialEvent,
-        initialBeatId: initialBeatId,
-      ),
+      builder: (context) =>
+          EventDialog(initialEvent: initialEvent, initialBeatId: initialBeatId),
     );
   }
 
@@ -45,8 +39,9 @@ class _EventDialogState extends State<EventDialog> {
     final ev = widget.initialEvent;
     _titleController = TextEditingController(text: ev?.title ?? '');
     _descController = TextEditingController(text: ev?.description ?? '');
-    _charactersController =
-        TextEditingController(text: ev?.characters.join(', ') ?? '');
+    _charactersController = TextEditingController(
+      text: ev?.characters.join(', ') ?? '',
+    );
     _locationController = TextEditingController(text: ev?.location ?? '');
     _selectedBeatId = ev?.beatId ?? widget.initialBeatId;
   }
@@ -107,7 +102,10 @@ class _EventDialogState extends State<EventDialog> {
                   const SizedBox(height: 16),
                   const Text(
                     'Events represent things that happen in the story. You can create them freely and drag them into Save the Cat beats.',
-                    style: TextStyle(fontSize: 12.5, color: AppTheme.textSecondary),
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                   const SizedBox(height: 20),
 
@@ -116,8 +114,13 @@ class _EventDialogState extends State<EventDialog> {
                     controller: _titleController,
                     decoration: const InputDecoration(
                       labelText: 'Event Title *',
-                      hintText: 'e.g. Kael discovers the quantum key in the courier\'s bag',
-                      prefixIcon: Icon(Icons.bolt, size: 18, color: AppTheme.goldAccent),
+                      hintText:
+                          'e.g. Kael discovers the quantum key in the courier\'s bag',
+                      prefixIcon: Icon(
+                        Icons.bolt,
+                        size: 18,
+                        color: AppTheme.goldAccent,
+                      ),
                     ),
                     validator: (val) {
                       if (val == null || val.trim().isEmpty) {
@@ -134,7 +137,8 @@ class _EventDialogState extends State<EventDialog> {
                     maxLines: 3,
                     decoration: const InputDecoration(
                       labelText: 'Detailed Narrative Description',
-                      hintText: 'What happens? What are the stakes, obstacles, or emotional undercurrents?',
+                      hintText:
+                          'What happens? What are the stakes, obstacles, or emotional undercurrents?',
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -144,7 +148,10 @@ class _EventDialogState extends State<EventDialog> {
                     initialValue: _selectedBeatId,
                     decoration: const InputDecoration(
                       labelText: 'Assign to Beat',
-                      prefixIcon: Icon(Icons.dashboard_customize_outlined, size: 18),
+                      prefixIcon: Icon(
+                        Icons.dashboard_customize_outlined,
+                        size: 18,
+                      ),
                     ),
                     items: [
                       const DropdownMenuItem<String?>(
@@ -206,7 +213,9 @@ class _EventDialogState extends State<EventDialog> {
                       const SizedBox(width: 12),
                       ElevatedButton.icon(
                         icon: const Icon(Icons.check, size: 18),
-                        label: Text(isEditing ? 'Save Changes' : 'Create Event'),
+                        label: Text(
+                          isEditing ? 'Save Changes' : 'Create Event',
+                        ),
                         onPressed: () {
                           if (!_formKey.currentState!.validate()) return;
 
@@ -216,19 +225,17 @@ class _EventDialogState extends State<EventDialog> {
                               .where((c) => c.isNotEmpty)
                               .toList();
 
-                          final result = (widget.initialEvent ??
-                                  StoryEvent(
-                                    id: '',
-                                    title: '',
-                                  ))
-                              .copyWith(
-                            title: _titleController.text.trim(),
-                            description: _descController.text.trim(),
-                            beatId: _selectedBeatId,
-                            clearBeatId: _selectedBeatId == null,
-                            characters: chars,
-                            location: _locationController.text.trim(),
-                          );
+                          final result =
+                              (widget.initialEvent ??
+                                      StoryEvent(id: '', title: ''))
+                                  .copyWith(
+                                    title: _titleController.text.trim(),
+                                    description: _descController.text.trim(),
+                                    beatId: _selectedBeatId,
+                                    clearBeatId: _selectedBeatId == null,
+                                    characters: chars,
+                                    location: _locationController.text.trim(),
+                                  );
 
                           Navigator.of(context).pop(result);
                         },

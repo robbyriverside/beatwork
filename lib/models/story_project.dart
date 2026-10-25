@@ -24,9 +24,9 @@ class StoryProject {
     List<StoryEvent>? events,
     List<Scene>? scenes,
     DateTime? lastModified,
-  })  : events = events ?? [],
-        scenes = scenes ?? [],
-        lastModified = lastModified ?? DateTime.now();
+  }) : events = events ?? [],
+       scenes = scenes ?? [],
+       lastModified = lastModified ?? DateTime.now();
 
   List<StoryEvent> getUnassignedEvents() {
     return events.where((e) => e.beatId == null || e.beatId!.isEmpty).toList();
@@ -99,11 +99,13 @@ class StoryProject {
       genre: json['genre'] as String? ?? 'Feature Film',
       author: json['author'] as String? ?? 'Screenwriter',
       isSample: json['isSample'] as bool? ?? false,
-      events: (json['events'] as List<dynamic>?)
+      events:
+          (json['events'] as List<dynamic>?)
               ?.map((e) => StoryEvent.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      scenes: (json['scenes'] as List<dynamic>?)
+      scenes:
+          (json['scenes'] as List<dynamic>?)
               ?.map((s) => Scene.fromJson(s as Map<String, dynamic>))
               .toList() ??
           [],
@@ -139,7 +141,8 @@ class StoryProject {
     final e1 = StoryEvent(
       id: 'ev-open-1',
       title: 'Kael hacks a sub-orbital drone to pay back debts',
-      description: 'Dangling from a skyscraper antenna in Neo-Chicago, Kael risks his life for pocket money.',
+      description:
+          'Dangling from a skyscraper antenna in Neo-Chicago, Kael risks his life for pocket money.',
       beatId: 'opening_image',
       characters: ['Kael'],
       location: 'Antenna Spire, Neo-Chicago',
@@ -148,7 +151,8 @@ class StoryProject {
     final e2 = StoryEvent(
       id: 'ev-open-2',
       title: 'Kael looks at an old photo of his estranged sister Maya',
-      description: 'Establishes his internal emotional wound and motivation to reconnect.',
+      description:
+          'Establishes his internal emotional wound and motivation to reconnect.',
       beatId: 'opening_image',
       characters: ['Kael'],
       location: 'Kael\'s Rooftop Shanty',
@@ -158,7 +162,8 @@ class StoryProject {
     final e3 = StoryEvent(
       id: 'ev-theme-1',
       title: 'Elena remarks that "Code has no conscience; people do"',
-      description: 'Elena warns Kael that algorithms will never save his family if he keeps running solo.',
+      description:
+          'Elena warns Kael that algorithms will never save his family if he keeps running solo.',
       beatId: 'theme_stated',
       characters: ['Elena', 'Kael'],
       location: 'The Rusty Relay Bar',
@@ -168,7 +173,8 @@ class StoryProject {
     final e4 = StoryEvent(
       id: 'ev-setup-1',
       title: 'The Syndicates tighten control over black-market memory drives',
-      description: 'Showcasing the world rules: memory drives are currency, and Kael is drowning in debt.',
+      description:
+          'Showcasing the world rules: memory drives are currency, and Kael is drowning in debt.',
       beatId: 'set_up',
       characters: ['Kael', 'Baron Voss'],
       location: 'Underground Bazaar',
@@ -177,7 +183,8 @@ class StoryProject {
     final e5 = StoryEvent(
       id: 'ev-setup-2',
       title: 'Kael visits Maya in the quarantine ward',
-      description: 'Maya\'s neurological decay gives Kael a ticking clock to find a cure.',
+      description:
+          'Maya\'s neurological decay gives Kael a ticking clock to find a cure.',
       beatId: 'set_up',
       characters: ['Kael', 'Maya'],
       location: 'Metro General Quarantine',
@@ -187,7 +194,8 @@ class StoryProject {
     final e6 = StoryEvent(
       id: 'ev-cat-1',
       title: 'A dying courier drops the Chronos Core in Kael\'s lap',
-      description: 'A bleeding courier stumbles into Kael\'s workshop and transfers an encrypted quantum drive.',
+      description:
+          'A bleeding courier stumbles into Kael\'s workshop and transfers an encrypted quantum drive.',
       beatId: 'catalyst',
       characters: ['Kael', 'Courier Jax'],
       location: 'Kael\'s Workshop Alley',
@@ -197,7 +205,8 @@ class StoryProject {
     final e7 = StoryEvent(
       id: 'ev-deb-1',
       title: 'Kael tries to pawn the drive, but every fence flees in terror',
-      description: 'Debating whether to ditch the drive or figure out what is inside.',
+      description:
+          'Debating whether to ditch the drive or figure out what is inside.',
       beatId: 'debate',
       characters: ['Kael', 'Pawn Broker'],
       location: 'Chrome Alley Pawn',
@@ -216,7 +225,8 @@ class StoryProject {
     final e9 = StoryEvent(
       id: 'ev-b2-1',
       title: 'Kael decides to infiltrate the Chronos Summit with Elena',
-      description: 'Actively choosing to cross into the corporate lion\'s den to decrypt the drive.',
+      description:
+          'Actively choosing to cross into the corporate lion\'s den to decrypt the drive.',
       beatId: 'break_into_two',
       characters: ['Kael', 'Elena'],
       location: 'Monorail Terminal',
@@ -227,7 +237,8 @@ class StoryProject {
     final pool1 = StoryEvent(
       id: 'ev-pool-1',
       title: 'High-speed hovercraft chase through magnetic train tunnels',
-      description: 'Visual spectacle idea: EMP grenades causing neon train sparks.',
+      description:
+          'Visual spectacle idea: EMP grenades causing neon train sparks.',
       beatId: null,
       characters: ['Kael', 'Elena', 'Pursuers'],
       location: 'Mag-Lev Tunnels',
@@ -243,15 +254,18 @@ class StoryProject {
     final pool3 = StoryEvent(
       id: 'ev-pool-3',
       title: 'Power grid blackout across the Lower Quarter',
-      description: 'Atmospheric beat: complete silence followed by red emergency flares.',
+      description:
+          'Atmospheric beat: complete silence followed by red emergency flares.',
       beatId: null,
       characters: ['Civilians', 'Kael'],
       location: 'Lower Ward',
     );
     final pool4 = StoryEvent(
       id: 'ev-pool-4',
-      title: 'Kael discovers the Core contains a backup of Maya\'s lost consciousness',
-      description: 'Emotional revelation that turns the heist into a personal rescue.',
+      title:
+          'Kael discovers the Core contains a backup of Maya\'s lost consciousness',
+      description:
+          'Emotional revelation that turns the heist into a personal rescue.',
       beatId: null,
       characters: ['Kael'],
       location: 'Server Room',
@@ -287,7 +301,8 @@ Three seconds to bypass. Two seconds to live. One second to regret my career cho
 He jams the pry-tool into the drone's optic port. BLUE LIGHT FLASHES.
 
 The drone's rotors sputter, then whir dead. Kael grabs the memory spool just as the frame plunges into the abyss.''',
-      notes: 'Initial scene draft. Needs more focus on his worn-out gloves to highlight poverty.',
+      notes:
+          'Initial scene draft. Needs more focus on his worn-out gloves to highlight poverty.',
     );
 
     final s1v2 = SceneVersion(
@@ -295,7 +310,8 @@ The drone's rotors sputter, then whir dead. Kael grabs the memory spool just as 
       versionNumber: 2,
       label: 'Draft 2 (Screenplay Polish)',
       slugline: 'EXT. SPIDERTOWER ANTENNA - NIGHT',
-      summary: 'Tightened pacing, introduced the ticking rain and his sister\'s lucky coin.',
+      summary:
+          'Tightened pacing, introduced the ticking rain and his sister\'s lucky coin.',
       scriptContent: '''EXT. SPIDERTOWER ANTENNA - NIGHT
 
 Rain lashes like buckshot. Eighty stories above the neon sludge of Neo-Chicago.
@@ -317,7 +333,8 @@ ALARM KLAXONS SHRIEK. The drone pitches sideways, dragging Kael into free air!
 Kael wrenches the core drive free. SNAP!
 
 The drone spirals into the smog below. Kael swings back, slamming hard into the concrete wall, clutching the glowing glass cylinder to his chest.''',
-      notes: 'Latest polished version. Emphasizes his prosthetic hook and cinematic stakes.',
+      notes:
+          'Latest polished version. Emphasizes his prosthetic hook and cinematic stakes.',
     );
 
     final scene1 = Scene(
@@ -387,7 +404,8 @@ ELENA
 You think you can purchase your sister's salvation with stolen corporate telemetry? Code has no conscience, Kael. Only people do.
 
 Kael looks away, unable to meet her gaze.''',
-      notes: 'States the central theme: community/conscience vs cold algorithm.',
+      notes:
+          'States the central theme: community/conscience vs cold algorithm.',
     );
 
     final scene3 = Scene(
@@ -405,7 +423,8 @@ Kael looks away, unable to meet her gaze.''',
       versionNumber: 1,
       label: 'Draft 1',
       slugline: 'EXT. KAEL\'S WORKSHOP ALLEY - RAIN',
-      summary: 'Courier Jax collapses in the trash and delivers the Chronos Cipher.',
+      summary:
+          'Courier Jax collapses in the trash and delivers the Chronos Cipher.',
       scriptContent: '''EXT. KAEL'S WORKSHOP ALLEY - RAIN
 
 Steam curls from ventilation grates.
@@ -442,11 +461,27 @@ Jax's ocular implants go dark. His hand falls limp in the gutter.''',
     return StoryProject(
       id: id ?? 'sample-chronos-cipher',
       title: 'The Chronos Cipher',
-      logline: 'When an outlaw cyberpunk data-thief intercepts an impossible quantum drive containing the uploaded consciousness of his comatose sister, he must join forces with a rogue corporate architect to pull off the ultimate digital heist before an all-seeing Syndicate wipes her existence.',
+      logline:
+          'When an outlaw cyberpunk data-thief intercepts an impossible quantum drive containing the uploaded consciousness of his comatose sister, he must join forces with a rogue corporate architect to pull off the ultimate digital heist before an all-seeing Syndicate wipes her existence.',
       genre: 'Sci-Fi / Heist Thriller',
       author: 'Antigravity Screenwriter',
       isSample: true,
-      events: [e1, e2, e3, e4, e5, e6, e7, e8, e9, pool1, pool2, pool3, pool4, pool5],
+      events: [
+        e1,
+        e2,
+        e3,
+        e4,
+        e5,
+        e6,
+        e7,
+        e8,
+        e9,
+        pool1,
+        pool2,
+        pool3,
+        pool4,
+        pool5,
+      ],
       scenes: [scene1, scene2, scene3, scene4],
     );
   }
@@ -504,18 +539,19 @@ class ProjectMetadata {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'logline': logline,
-        'genre': genre,
-        'author': author,
-        'eventCount': eventCount,
-        'sceneCount': sceneCount,
-        'isSample': isSample,
-        'lastModified': lastModified.toIso8601String(),
-      };
+    'id': id,
+    'title': title,
+    'logline': logline,
+    'genre': genre,
+    'author': author,
+    'eventCount': eventCount,
+    'sceneCount': sceneCount,
+    'isSample': isSample,
+    'lastModified': lastModified.toIso8601String(),
+  };
 
-  factory ProjectMetadata.fromJson(Map<String, dynamic> json) => ProjectMetadata(
+  factory ProjectMetadata.fromJson(Map<String, dynamic> json) =>
+      ProjectMetadata(
         id: json['id'] as String,
         title: json['title'] as String,
         logline: json['logline'] as String? ?? '',
@@ -525,7 +561,8 @@ class ProjectMetadata {
         sceneCount: json['sceneCount'] as int? ?? 0,
         isSample: json['isSample'] as bool? ?? false,
         lastModified: json['lastModified'] != null
-            ? DateTime.tryParse(json['lastModified'] as String) ?? DateTime.now()
+            ? DateTime.tryParse(json['lastModified'] as String) ??
+                  DateTime.now()
             : DateTime.now(),
       );
 }

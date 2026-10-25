@@ -4,6 +4,7 @@ import 'package:beatwork/models/scene_model.dart';
 import 'package:beatwork/models/story_event.dart';
 import 'package:beatwork/models/story_project.dart';
 import 'package:beatwork/services/export_service.dart';
+import 'package:beatwork/services/project_codec.dart';
 
 void main() {
   group('Story Event Tests', () {
@@ -48,6 +49,14 @@ void main() {
   });
 
   group('Story Project & Scene Versioning Tests', () {
+    test('Project Protobuf round-trip preserves nested project content', () {
+      final project = StoryProject.createSampleProject();
+
+      final decoded = ProjectCodec.decode(ProjectCodec.encode(project));
+
+      expect(decoded.toJson(), project.toJson());
+    });
+
     test('Sample project contains pre-populated events and scenes', () {
       final project = StoryProject.createSampleProject();
       expect(project.events.isNotEmpty, true);
@@ -89,44 +98,44 @@ void main() {
       expect(v1.versionNumber, 1);
     });
 
-    test('Collected timeline collects scenes in beat order and timeline order', () {
-      final project = StoryProject(
-        id: 'proj-1',
-        title: 'Timeline Test',
-      );
+    test(
+      'Collected timeline collects scenes in beat order and timeline order',
+      () {
+        final project = StoryProject(id: 'proj-1', title: 'Timeline Test');
 
-      // Scene in Beat 4 (Catalyst)
-      final sCat = Scene(
-        id: 'sc-cat',
-        beatId: 'catalyst',
-        title: 'The Explosion',
-        timelineOrder: 0,
-      );
+        // Scene in Beat 4 (Catalyst)
+        final sCat = Scene(
+          id: 'sc-cat',
+          beatId: 'catalyst',
+          title: 'The Explosion',
+          timelineOrder: 0,
+        );
 
-      // Scenes in Beat 1 (Opening Image)
-      final sOpen2 = Scene(
-        id: 'sc-open-2',
-        beatId: 'opening_image',
-        title: 'Waking Up',
-        timelineOrder: 1,
-      );
-      final sOpen1 = Scene(
-        id: 'sc-open-1',
-        beatId: 'opening_image',
-        title: 'Alarm Ringing',
-        timelineOrder: 0,
-      );
+        // Scenes in Beat 1 (Opening Image)
+        final sOpen2 = Scene(
+          id: 'sc-open-2',
+          beatId: 'opening_image',
+          title: 'Waking Up',
+          timelineOrder: 1,
+        );
+        final sOpen1 = Scene(
+          id: 'sc-open-1',
+          beatId: 'opening_image',
+          title: 'Alarm Ringing',
+          timelineOrder: 0,
+        );
 
-      project.scenes.addAll([sCat, sOpen2, sOpen1]);
+        project.scenes.addAll([sCat, sOpen2, sOpen1]);
 
-      final collected = project.getCollectedTimeline();
-      expect(collected.length, 3);
+        final collected = project.getCollectedTimeline();
+        expect(collected.length, 3);
 
-      // Should order Beat 1 scenes first (sOpen1 then sOpen2), then Beat 4 scene (sCat)
-      expect(collected[0].scene.id, 'sc-open-1');
-      expect(collected[1].scene.id, 'sc-open-2');
-      expect(collected[2].scene.id, 'sc-cat');
-    });
+        // Should order Beat 1 scenes first (sOpen1 then sOpen2), then Beat 4 scene (sCat)
+        expect(collected[0].scene.id, 'sc-open-1');
+        expect(collected[1].scene.id, 'sc-open-2');
+        expect(collected[2].scene.id, 'sc-cat');
+      },
+    );
   });
 
   group('Export Service Tests', () {

@@ -5,12 +5,19 @@ import '../models/beat_model.dart';
 import '../models/story_event.dart';
 import '../models/scene_model.dart';
 import '../models/story_project.dart';
+import '../services/project_codec.dart';
 import '../services/storage_service.dart';
 
 class StoryProvider extends ChangeNotifier {
   StoryProject _project;
+  String? _documentPath;
+  bool _hasUnsavedChanges = false;
+  int _changeVersion = 0;
+  Future<void> _saveQueue = Future<void>.value();
+  List<RecentDocument> _recentDocuments = [];
   List<ProjectMetadata> _recentProjects = [];
   bool _isLoading = false;
+  bool _disposed = false;
 
   String? _selectedBeatId;
   String? _selectedSceneId;
@@ -19,18 +26,106 @@ class StoryProvider extends ChangeNotifier {
 
   static const _uuid = Uuid();
 
-  StoryProvider({StoryProject? initialProject})
-      : _project = initialProject ?? StoryProject.createSampleProject() {
-    refreshRecentProjects();
+  StoryProvider({StoryProject? initialProject, String? documentPath})
+    : _project = initialProject ?? StoryProject.createSampleProject(),
+      _documentPath = documentPath {
+    refreshRecentDocuments();
   }
 
   StoryProject get project => _project;
+  String? get documentPath => _documentPath;
+  bool get hasUnsavedChanges => _hasUnsavedChanges;
+  List<RecentDocument> get recentDocuments => _recentDocuments;
   List<ProjectMetadata> get recentProjects => _recentProjects;
   bool get isLoading => _isLoading;
   String? get selectedBeatId => _selectedBeatId;
   String? get selectedSceneId => _selectedSceneId;
   bool get isEventPoolOpen => _isEventPoolOpen;
   String get eventSearchQuery => _eventSearchQuery;
+
+  Future<void> refreshRecentDocuments() async {
+    final documents = await StorageService.listRecentDocuments();
+    if (_disposed) return;
+    _recentDocuments = documents;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  void newDocument() {
+    _project = StoryProject.createEmptyProject();
+    _documentPath = null;
+    _hasUnsavedChanges = false;
+    _selectedBeatId = null;
+    _selectedSceneId = null;
+    notifyListeners();
+  }
+
+  Future<bool> openDocument(String path) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _saveQueue;
+      _project = await StorageService.openDocument(path);
+      _documentPath = path;
+      _hasUnsavedChanges = false;
+      _selectedBeatId = null;
+      _selectedSceneId = null;
+      await refreshRecentDocuments();
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (error) {
+      debugPrint('Failed to open BeatWork document: $error');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> saveDocument() async {
+    final path = _documentPath;
+    if (path == null) return false;
+    try {
+      await _saveQueue;
+      await StorageService.saveDocumentToPath(_project, path);
+      _hasUnsavedChanges = false;
+      await refreshRecentDocuments();
+      notifyListeners();
+      return true;
+    } catch (error) {
+      debugPrint('Failed to save BeatWork document: $error');
+      return false;
+    }
+  }
+
+  Future<bool> saveDocumentAs({String? initialDirectory}) async {
+    try {
+      await _saveQueue;
+      final path = await StorageService.saveDocumentAs(
+        _project,
+        initialDirectory: initialDirectory,
+      );
+      if (path == null) return false;
+      _documentPath = path;
+      _hasUnsavedChanges = false;
+      await refreshRecentDocuments();
+      notifyListeners();
+      return true;
+    } catch (error) {
+      debugPrint('Failed to save BeatWork document as: $error');
+      return false;
+    }
+  }
+
+  Future<bool> openDocumentPicker() async {
+    final path = await StorageService.pickDocumentPath();
+    return path == null ? false : openDocument(path);
+  }
 
   BeatDefinition? get selectedBeat {
     if (_selectedBeatId == null) return null;
@@ -120,7 +215,10 @@ class StoryProvider extends ChangeNotifier {
 
     await StorageService.saveProject(_project);
 
-    final dup = await StorageService.duplicateProject(_project, newTitle: newTitle);
+    final dup = await StorageService.duplicateProject(
+      _project,
+      newTitle: newTitle,
+    );
     _project = dup;
     _selectedBeatId = null;
     _selectedSceneId = null;
@@ -160,7 +258,9 @@ class StoryProvider extends ChangeNotifier {
 
     await StorageService.saveProject(_project);
 
-    final sample = await StorageService.restoreSampleProject(asNewCopy: asNewCopy);
+    final sample = await StorageService.restoreSampleProject(
+      asNewCopy: asNewCopy,
+    );
     _project = sample;
     _selectedBeatId = null;
     _selectedSceneId = null;
@@ -452,6 +552,22 @@ class StoryProvider extends ChangeNotifier {
   }
 
   void _save() {
-    StorageService.saveProject(_project);
+    _hasUnsavedChanges = true;
+    final version = ++_changeVersion;
+    final path = _documentPath;
+    if (path == null) return;
+    final snapshot = ProjectCodec.decode(ProjectCodec.encode(_project));
+
+    _saveQueue = _saveQueue
+        .then((_) async {
+          await StorageService.saveDocumentToPath(snapshot, path);
+          if (version == _changeVersion) {
+            _hasUnsavedChanges = false;
+            notifyListeners();
+          }
+        })
+        .catchError((Object error) {
+          debugPrint('Autosave failed for $path: $error');
+        });
   }
 }

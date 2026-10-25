@@ -39,6 +39,8 @@ dependencies:
   file_picker: ^13.1.0
   uuid: ^4.6.0
   image: 4.5.2
+  protobuf: ^6.1.0
+  fixnum: ^1.1.1
 
 dev_dependencies:
   flutter_test:
@@ -50,6 +52,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  protoc_plugin: ^25.1.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

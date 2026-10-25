@@ -216,7 +216,7 @@ class BeatCard extends StatelessWidget {
                                   : beatEvents.length,
                               itemBuilder: (context, idx) {
                                 final ev = beatEvents[idx];
-                                return Container(
+                                final preview = Container(
                                   margin: const EdgeInsets.only(bottom: 4),
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8,
@@ -231,6 +231,12 @@ class BeatCard extends StatelessWidget {
                                   ),
                                   child: Row(
                                     children: [
+                                      const Icon(
+                                        Icons.drag_indicator,
+                                        size: 14,
+                                        color: AppTheme.textMuted,
+                                      ),
+                                      const SizedBox(width: 4),
                                       Expanded(
                                         child: Text(
                                           ev.title,
@@ -244,6 +250,45 @@ class BeatCard extends StatelessWidget {
                                       ),
                                     ],
                                   ),
+                                );
+                                return Draggable<StoryEvent>(
+                                  data: ev,
+                                  feedback: Material(
+                                    color: Colors.transparent,
+                                    child: Container(
+                                      width: 240,
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.surfaceElevated,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: beat.act.accentColor,
+                                          width: 2,
+                                        ),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Colors.black45,
+                                            blurRadius: 12,
+                                            offset: Offset(0, 6),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Text(
+                                        ev.title,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  childWhenDragging: Opacity(
+                                    opacity: 0.35,
+                                    child: preview,
+                                  ),
+                                  child: preview,
                                 );
                               },
                             ),

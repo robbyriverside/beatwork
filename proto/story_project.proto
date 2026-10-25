@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package beatwork;
+
+message StoryProjectDocument {
+  string id = 1;
+  string title = 2;
+  string logline = 3;
+  string genre = 4;
+  string author = 5;
+  bool is_sample = 6;
+  repeated StoryEventDocument events = 7;
+  repeated SceneDocument scenes = 8;
+  int64 last_modified_micros = 9;
+}
+
+message StoryEventDocument {
+  string id = 1;
+  string title = 2;
+  string description = 3;
+  optional string beat_id = 4;
+  repeated string characters = 5;
+  string location = 6;
+  int32 order_index = 7;
+  int64 created_at_micros = 8;
+}
+
+message SceneDocument {
+  string id = 1;
+  string beat_id = 2;
+  string title = 3;
+  int32 timeline_order = 4;
+  repeated string mapped_event_ids = 5;
+  repeated SceneVersionDocument versions = 6;
+  optional string active_version_id = 7;
+}
+
+message SceneVersionDocument {
+  string id = 1;
+  int32 version_number = 2;
+  string label = 3;
+  string slugline = 4;
+  string summary = 5;
+  string script_content = 6;
+  string notes = 7;
+  int64 created_at_micros = 8;
+}

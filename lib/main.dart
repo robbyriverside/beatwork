@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'dart:io';
 import 'models/story_project.dart';
 import 'services/storage_service.dart';
 import 'state/story_provider.dart';
@@ -10,17 +12,44 @@ import 'widgets/event_pool_sidebar.dart';
 import 'widgets/export_dialog.dart';
 import 'widgets/script_reader_view.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final savedProject = await StorageService.loadProject();
+const _documentChannel = MethodChannel('beatwork/documents');
 
-  runApp(BeatWorkApp(initialProject: savedProject));
+void main(List<String> args) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  StoryProject? savedProject;
+  String? documentPath;
+  final launchPath = args.cast<String?>().firstWhere(
+    (path) => path != null && path.toLowerCase().endsWith('.beats'),
+    orElse: () => null,
+  );
+  try {
+    if (launchPath != null) {
+      savedProject = await StorageService.openDocument(launchPath);
+      documentPath = launchPath;
+    } else {
+      final recent = await StorageService.listRecentDocuments();
+      if (recent.isNotEmpty) {
+        savedProject = await StorageService.openDocument(recent.first.path);
+        documentPath = recent.first.path;
+      }
+    }
+  } catch (error) {
+    debugPrint('Could not open launch document: $error');
+  }
+
+  runApp(
+    BeatWorkApp(
+      initialProject: savedProject ?? StoryProject.createSampleProject(),
+      initialDocumentPath: documentPath,
+    ),
+  );
 }
 
 class BeatWorkApp extends StatelessWidget {
   final StoryProject? initialProject;
+  final String? initialDocumentPath;
 
-  const BeatWorkApp({super.key, this.initialProject});
+  const BeatWorkApp({super.key, this.initialProject, this.initialDocumentPath});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +57,10 @@ class BeatWorkApp extends StatelessWidget {
       title: 'BeatWork - Save the Cat Screenplay Beats',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: BeatWorkHomeScreen(initialProject: initialProject),
+      home: BeatWorkHomeScreen(
+        initialProject: initialProject,
+        initialDocumentPath: initialDocumentPath,
+      ),
     );
   }
 }
@@ -44,8 +76,13 @@ enum AppViewMode {
 
 class BeatWorkHomeScreen extends StatefulWidget {
   final StoryProject? initialProject;
+  final String? initialDocumentPath;
 
-  const BeatWorkHomeScreen({super.key, this.initialProject});
+  const BeatWorkHomeScreen({
+    super.key,
+    this.initialProject,
+    this.initialDocumentPath,
+  });
 
   @override
   State<BeatWorkHomeScreen> createState() => _BeatWorkHomeScreenState();
@@ -61,7 +98,108 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
     _provider = StoryProvider(
       initialProject:
           widget.initialProject ?? StoryProject.createSampleProject(),
+      documentPath: widget.initialDocumentPath,
     );
+    _documentChannel.setMethodCallHandler(_handlePlatformMethodCall);
+    if (Platform.isMacOS) {
+      _documentChannel.invokeMethod<void>('ready').catchError((_) {});
+    }
+  }
+
+  Future<void> _handlePlatformMethodCall(MethodCall call) async {
+    if (call.method == 'openDocument' && call.arguments is String) {
+      await _openRecentDocument(call.arguments as String);
+    }
+  }
+
+  @override
+  void dispose() {
+    _documentChannel.setMethodCallHandler(null);
+    _provider.dispose();
+    super.dispose();
+  }
+
+  Future<bool> _confirmDocumentReplacement() async {
+    if (!_provider.hasUnsavedChanges) return true;
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Unsaved Project'),
+        content: const Text('Save your changes before replacing this project?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Discard'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final saved = _provider.documentPath == null
+                  ? await _provider.saveDocumentAs()
+                  : await _provider.saveDocument();
+              if (dialogContext.mounted) {
+                Navigator.pop(dialogContext, saved);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<void> _newDocument() async {
+    if (await _confirmDocumentReplacement()) _provider.newDocument();
+  }
+
+  Future<void> _openDocument() async {
+    final path = await StorageService.pickDocumentPath();
+    if (path == null) return;
+    if (!await _confirmDocumentReplacement()) return;
+    if (!await _provider.openDocument(path) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the selected project.')),
+      );
+    }
+  }
+
+  Future<void> _openRecentDocument(String path) async {
+    if (!await _confirmDocumentReplacement()) return;
+    if (!await _provider.openDocument(path) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the recent project.')),
+      );
+    }
+  }
+
+  Future<void> _saveDocument({bool saveAs = false}) async {
+    if (!saveAs &&
+        _provider.documentPath != null &&
+        !_provider.hasUnsavedChanges) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Project up to date')));
+      }
+      return;
+    }
+
+    final saved = saveAs || _provider.documentPath == null
+        ? await _provider.saveDocumentAs(
+            initialDirectory: _provider.documentPath == null
+                ? null
+                : File(_provider.documentPath!).parent.path,
+          )
+        : await _provider.saveDocument();
+    if (!saved && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Project was not saved.')));
+    }
   }
 
   void _openProjectSettings(BuildContext context) {
@@ -178,94 +316,171 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             // Brand / Logo
-                            InkWell(
-                              borderRadius: BorderRadius.circular(6),
-                              onTap: () => _openProjectSettings(context),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 4,
+                            MenuAnchor(
+                              menuChildren: [
+                                MenuItemButton(
+                                  onPressed: _newDocument,
+                                  child: const Text('New'),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.goldAccent.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(
-                                          color: AppTheme.goldAccent,
-                                        ),
+                                MenuItemButton(
+                                  onPressed: _openDocument,
+                                  child: const Text('Open...'),
+                                ),
+                                MenuItemButton(
+                                  onPressed: () => _saveDocument(),
+                                  child: const Text('Save'),
+                                ),
+                                MenuItemButton(
+                                  onPressed: () => _saveDocument(saveAs: true),
+                                  child: const Text('Save As...'),
+                                ),
+                                SubmenuButton(
+                                  menuChildren:
+                                      _provider.recentDocuments.isEmpty
+                                      ? [
+                                          const MenuItemButton(
+                                            onPressed: null,
+                                            child: Text('No Recent Projects'),
+                                          ),
+                                        ]
+                                      : _provider.recentDocuments
+                                            .map(
+                                              (document) => MenuItemButton(
+                                                onPressed: () =>
+                                                    _openRecentDocument(
+                                                      document.path,
+                                                    ),
+                                                child: Text(document.title),
+                                              ),
+                                            )
+                                            .toList(),
+                                  child: const Text('Open Recent'),
+                                ),
+                                const Divider(height: 1),
+                                MenuItemButton(
+                                  onPressed: () =>
+                                      _openProjectSettings(context),
+                                  child: const Text('Info'),
+                                ),
+                              ],
+                              builder: (context, controller, child) => SizedBox(
+                                height: 56,
+                                child: Center(
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(6),
+                                    onTap: () => controller.isOpen
+                                        ? controller.close()
+                                        : controller.open(),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
                                       ),
-                                      child: const Icon(
-                                        Icons.movie_outlined,
-                                        size: 18,
-                                        color: AppTheme.goldAccent,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Text(
-                                              'BEATWORK',
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w900,
-                                                letterSpacing: 1.2,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(6),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.goldAccent
+                                                  .withValues(alpha: 0.2),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
+                                              border: Border.all(
                                                 color: AppTheme.goldAccent,
                                               ),
                                             ),
-                                            const SizedBox(width: 6),
-                                            ConstrainedBox(
-                                              constraints: const BoxConstraints(
-                                                maxWidth: 160,
-                                              ),
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 6,
-                                                      vertical: 1.5,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color:
-                                                      AppTheme.surfaceLighter,
-                                                  borderRadius:
-                                                      BorderRadius.circular(4),
-                                                ),
-                                                child: Text(
-                                                  _provider.project.title,
-                                                  style: const TextStyle(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: AppTheme.textPrimary,
-                                                  ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
+                                            child: const Icon(
+                                              Icons.movie_outlined,
+                                              size: 18,
+                                              color: AppTheme.goldAccent,
                                             ),
-                                          ],
-                                        ),
-                                        Text(
-                                          _provider.project.genre,
-                                          style: const TextStyle(
-                                            fontSize: 10,
-                                            color: AppTheme.textSecondary,
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(width: 8),
+                                          Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Text(
+                                                    'BEATWORK',
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w900,
+                                                      letterSpacing: 1.2,
+                                                      color:
+                                                          AppTheme.goldAccent,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 34),
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      ConstrainedBox(
+                                                        constraints:
+                                                            const BoxConstraints(
+                                                              maxWidth: 160,
+                                                            ),
+                                                        child: Container(
+                                                          padding:
+                                                              const EdgeInsets.symmetric(
+                                                                horizontal: 6,
+                                                                vertical: 1.5,
+                                                              ),
+                                                          decoration: BoxDecoration(
+                                                            color: AppTheme
+                                                                .surfaceLighter,
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  4,
+                                                                ),
+                                                          ),
+                                                          child: Text(
+                                                            _provider
+                                                                .project
+                                                                .title,
+                                                            style: const TextStyle(
+                                                              fontSize: 11,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: AppTheme
+                                                                  .textPrimary,
+                                                            ),
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        _provider.project.genre,
+                                                        style: const TextStyle(
+                                                          fontSize: 10,
+                                                          color: AppTheme
+                                                              .textSecondary,
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -418,84 +633,6 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                       context,
                                       provider: _provider,
                                     );
-                                  },
-                                ),
-                                const SizedBox(width: 8),
-
-                                // Project Menu popup
-                                PopupMenuButton<String>(
-                                  icon: const Icon(Icons.more_vert, size: 18),
-                                  tooltip: 'Project Options',
-                                  itemBuilder: (ctx) => [
-                                    const PopupMenuItem(
-                                      value: 'settings',
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.settings_outlined,
-                                            size: 16,
-                                          ),
-                                          SizedBox(width: 8),
-                                          Text('Project Settings'),
-                                        ],
-                                      ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'sample',
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.auto_awesome,
-                                            size: 16,
-                                            color: AppTheme.goldAccent,
-                                          ),
-                                          SizedBox(width: 8),
-                                          Text(
-                                            'Reload Sample Project (Chronos Cipher)',
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'new',
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.note_add_outlined,
-                                            size: 16,
-                                          ),
-                                          SizedBox(width: 8),
-                                          Text('Start Fresh Screenplay'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                  onSelected: (val) {
-                                    if (val == 'settings') {
-                                      _openProjectSettings(context);
-                                    } else if (val == 'sample') {
-                                      _provider.loadSampleProject();
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Sample project reloaded.',
-                                          ),
-                                        ),
-                                      );
-                                    } else if (val == 'new') {
-                                      _provider.createNewProject();
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Created new empty screenplay.',
-                                          ),
-                                        ),
-                                      );
-                                    }
                                   },
                                 ),
                               ],
