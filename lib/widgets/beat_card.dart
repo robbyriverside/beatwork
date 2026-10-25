@@ -37,8 +37,10 @@ class BeatCard extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
             color: isHovered
-                ? beat.act.accentColor.withOpacity(0.12)
-                : (isSelected ? AppTheme.surfaceElevated : AppTheme.surface),
+                ? beat.act.accentColor.withValues(alpha: 0.16)
+                : beat.act.accentColor.withValues(
+                    alpha: isSelected ? 0.11 : 0.06,
+                  ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isHovered
@@ -70,7 +72,10 @@ class BeatCard extends StatelessWidget {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: beat.act.accentColor.withOpacity(0.18),
                             borderRadius: BorderRadius.circular(6),
@@ -99,7 +104,10 @@ class BeatCard extends StatelessWidget {
                         ),
                         const Spacer(),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: AppTheme.surfaceElevated,
                             borderRadius: BorderRadius.circular(4),
@@ -180,72 +188,76 @@ class BeatCard extends StatelessWidget {
                               ),
                             )
                           : beatEvents.isEmpty
-                              ? Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
+                          ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.add_to_photos_outlined,
+                                    size: 24,
+                                    color: AppTheme.textMuted.withOpacity(0.5),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  const Text(
+                                    'Drag events here\n(or click to open)',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: AppTheme.textMuted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.builder(
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: beatEvents.length > 3
+                                  ? 3
+                                  : beatEvents.length,
+                              itemBuilder: (context, idx) {
+                                final ev = beatEvents[idx];
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.surfaceElevated,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: AppTheme.border.withOpacity(0.5),
+                                    ),
+                                  ),
+                                  child: Row(
                                     children: [
-                                      Icon(
-                                        Icons.add_to_photos_outlined,
-                                        size: 24,
-                                        color: AppTheme.textMuted.withOpacity(0.5),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      const Text(
-                                        'Drag events here\n(or click to open)',
-                                        textAlign: TextAlign.center,
+                                      Text(
+                                        ev.emotionalCharge.symbol,
                                         style: TextStyle(
-                                          fontSize: 11,
-                                          color: AppTheme.textMuted,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(
+                                            ev.emotionalCharge.colorValue,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          ev.title,
+                                          style: const TextStyle(
+                                            fontSize: 11,
+                                            color: AppTheme.textPrimary,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ],
                                   ),
-                                )
-                              : ListView.builder(
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: beatEvents.length > 3 ? 3 : beatEvents.length,
-                                  itemBuilder: (context, idx) {
-                                    final ev = beatEvents[idx];
-                                    return Container(
-                                      margin: const EdgeInsets.only(bottom: 4),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.surfaceElevated,
-                                        borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(
-                                          color: AppTheme.border.withOpacity(0.5),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Text(
-                                            ev.emotionalCharge.symbol,
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(ev.emotionalCharge.colorValue),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Expanded(
-                                            child: Text(
-                                              ev.title,
-                                              style: const TextStyle(
-                                                fontSize: 11,
-                                                color: AppTheme.textPrimary,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
+                                );
+                              },
+                            ),
                     ),
 
                     // Card Footer: Event Count & Scene Count Badges
@@ -255,7 +267,8 @@ class BeatCard extends StatelessWidget {
                         _buildCounterBadge(
                           icon: Icons.bolt,
                           label: '${beatEvents.length} Events',
-                          isOptimal: beatEvents.length >= 3 && beatEvents.length <= 5,
+                          isOptimal:
+                              beatEvents.length >= 3 && beatEvents.length <= 5,
                           color: beat.act.accentColor,
                         ),
                         const SizedBox(width: 8),
