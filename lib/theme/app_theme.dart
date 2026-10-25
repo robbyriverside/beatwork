@@ -4,7 +4,7 @@ class AppTheme {
   // Color Palette
   static const Color background = Color(0xFFF6F4EF);
   static const Color surface = Color(0xFFFFFEFA);
-  static const Color surfaceElevated = Color(0xFFF0EEE8);
+  static const Color surfaceElevated = Color(0xFFF5EBD3);
   static const Color surfaceLighter = Color(0xFFE7E4DC);
   static const Color border = Color(0xFFDDD9CF);
   static const Color borderHighlight = Color(0xFFBDB6A8);

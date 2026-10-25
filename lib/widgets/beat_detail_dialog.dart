@@ -42,7 +42,7 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 2, initialIndex: 1, vsync: this);
   }
 
   @override
@@ -56,12 +56,19 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
     return ListenableBuilder(
       listenable: widget.provider,
       builder: (context, _) {
-        final beatEvents = widget.provider.project.getEventsForBeat(widget.beat.id);
-        final beatScenes = widget.provider.project.getScenesForBeat(widget.beat.id);
+        final beatEvents = widget.provider.project.getEventsForBeat(
+          widget.beat.id,
+        );
+        final beatScenes = widget.provider.project.getScenesForBeat(
+          widget.beat.id,
+        );
         final selectedScene = widget.provider.selectedScene;
 
         return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
           backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -88,7 +95,9 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                           child: Container(
                             decoration: const BoxDecoration(
                               color: AppTheme.surfaceElevated,
-                              border: Border(right: BorderSide(color: AppTheme.border)),
+                              border: Border(
+                                right: BorderSide(color: AppTheme.border),
+                              ),
                             ),
                             child: Column(
                               children: [
@@ -98,26 +107,36 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                                   child: TabBar(
                                     controller: _tabController,
                                     labelColor: AppTheme.goldAccent,
-                                    unselectedLabelColor: AppTheme.textSecondary,
+                                    unselectedLabelColor:
+                                        AppTheme.textSecondary,
                                     indicatorColor: AppTheme.goldAccent,
                                     tabs: [
                                       Tab(
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
                                             const Icon(Icons.bolt, size: 16),
                                             const SizedBox(width: 6),
-                                            Text('Events (${beatEvents.length})'),
+                                            Text(
+                                              'Events (${beatEvents.length})',
+                                            ),
                                           ],
                                         ),
                                       ),
                                       Tab(
                                         child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
-                                            const Icon(Icons.timeline, size: 16),
+                                            const Icon(
+                                              Icons.timeline,
+                                              size: 16,
+                                            ),
                                             const SizedBox(width: 6),
-                                            Text('Timeline (${beatScenes.length})'),
+                                            Text(
+                                              'Timeline (${beatScenes.length})',
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -194,7 +213,11 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                 ),
               ),
               const SizedBox(width: 10),
-              Icon(widget.beat.icon, size: 20, color: widget.beat.act.accentColor),
+              Icon(
+                widget.beat.icon,
+                size: 20,
+                color: widget.beat.act.accentColor,
+              ),
               const SizedBox(width: 8),
               Text(
                 widget.beat.name,
@@ -214,7 +237,10 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                 ),
                 child: Text(
                   '${widget.beat.targetPage} (${widget.beat.percentage})',
-                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
               ),
               const Spacer(),
@@ -254,12 +280,19 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
           ),
           child: Row(
             children: [
-              const Icon(Icons.info_outline, size: 16, color: AppTheme.goldAccent),
+              const Icon(
+                Icons.info_outline,
+                size: 16,
+                color: AppTheme.goldAccent,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   '${beatEvents.length} events assigned. Usually 3 to 5 events belong in this beat.',
-                  style: const TextStyle(fontSize: 11.5, color: AppTheme.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
               ),
             ],
@@ -275,7 +308,11 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.post_add, size: 36, color: AppTheme.textMuted),
+                        const Icon(
+                          Icons.post_add,
+                          size: 36,
+                          color: AppTheme.textMuted,
+                        ),
                         const SizedBox(height: 12),
                         const Text(
                           'No Events In This Beat Yet',
@@ -289,14 +326,20 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                         const Text(
                           'Drag events here from the Event Pool or add a new event below.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 11.5, color: AppTheme.textSecondary),
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: AppTheme.textSecondary,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 )
               : ReorderableListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   itemCount: beatEvents.length,
                   onReorder: (oldIndex, newIndex) {
                     widget.provider.reorderEventsInBeat(
@@ -378,7 +421,10 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
               Expanded(
                 child: Text(
                   'The beat timeline is the sequence of scenes executing this beat.',
-                  style: TextStyle(fontSize: 11.5, color: AppTheme.textSecondary),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
               ),
             ],
@@ -394,8 +440,11 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.movie_creation_outlined,
-                            size: 36, color: AppTheme.textMuted),
+                        const Icon(
+                          Icons.movie_creation_outlined,
+                          size: 36,
+                          color: AppTheme.textMuted,
+                        ),
                         const SizedBox(height: 12),
                         const Text(
                           'No Scenes in Beat Timeline',
@@ -409,14 +458,20 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                         const Text(
                           'Add scenes to translate beat events into playable drama.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 11.5, color: AppTheme.textSecondary),
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            color: AppTheme.textSecondary,
+                          ),
                         ),
                       ],
                     ),
                   ),
                 )
               : ReorderableListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   itemCount: beatScenes.length,
                   onReorder: (oldIndex, newIndex) {
                     widget.provider.reorderScenesInBeat(
@@ -448,8 +503,10 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                         ),
                         child: ListTile(
                           dense: true,
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 2,
+                          ),
                           leading: CircleAvatar(
                             radius: 12,
                             backgroundColor: isSelected
@@ -460,7 +517,9 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: isSelected ? Colors.black : AppTheme.textSecondary,
+                                color: isSelected
+                                    ? Colors.black
+                                    : AppTheme.textSecondary,
                               ),
                             ),
                           ),
@@ -468,8 +527,9 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                             sc.title,
                             style: TextStyle(
                               fontSize: 13,
-                              fontWeight:
-                                  isSelected ? FontWeight.bold : FontWeight.w600,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.w600,
                               color: isSelected
                                   ? AppTheme.goldAccent
                                   : AppTheme.textPrimary,
@@ -518,8 +578,12 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                             itemBuilder: (ctx) => [
                               const PopupMenuItem(
                                 value: 'delete',
-                                child: Text('Delete Scene',
-                                    style: TextStyle(color: AppTheme.crimsonAccent)),
+                                child: Text(
+                                  'Delete Scene',
+                                  style: TextStyle(
+                                    color: AppTheme.crimsonAccent,
+                                  ),
+                                ),
                               ),
                             ],
                             onSelected: (val) {
@@ -563,8 +627,11 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.movie_filter_outlined,
-              size: 48, color: AppTheme.textMuted.withOpacity(0.5)),
+          Icon(
+            Icons.movie_filter_outlined,
+            size: 48,
+            color: AppTheme.textMuted.withOpacity(0.5),
+          ),
           const SizedBox(height: 16),
           const Text(
             'Select a Scene to Write or Edit',

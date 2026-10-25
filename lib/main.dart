@@ -436,7 +436,7 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                                               ),
                                                           decoration: BoxDecoration(
                                                             color: AppTheme
-                                                                .surfaceLighter,
+                                                                .surfaceElevated,
                                                             borderRadius:
                                                                 BorderRadius.circular(
                                                                   4,
