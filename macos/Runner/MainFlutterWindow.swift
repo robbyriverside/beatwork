@@ -6,9 +6,14 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
 
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
-    let windowFrame = self.frame
+    let defaultFrame = NSRect(
+      origin: self.frame.origin,
+      size: NSSize(width: 850, height: 700)
+    )
     self.contentViewController = flutterViewController
-    self.setFrame(windowFrame, display: true)
+    self.minSize = NSSize(width: 850, height: 700)
+    self.setFrame(defaultFrame, display: true)
+    self.setFrameAutosaveName("BeatWorkMainWindow")
     self.delegate = self
 
     RegisterGeneratedPlugins(registry: flutterViewController)

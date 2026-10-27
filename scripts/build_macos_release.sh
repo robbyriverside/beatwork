@@ -11,4 +11,5 @@ if [ -z "$release_tag" ]; then
 fi
 
 release_version=${release_tag#v}
-exec flutter build macos --release --build-name "$release_version" "$@"
+flutter build macos --release --build-name "$release_version" "$@"
+touch build/macos/Build/Products/Release/beatwork.app

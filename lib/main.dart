@@ -9,7 +9,6 @@ import 'widgets/beat_board_view.dart';
 import 'widgets/beat_detail_dialog.dart';
 import 'widgets/event_dialog.dart';
 import 'widgets/event_pool_sidebar.dart';
-import 'widgets/export_dialog.dart';
 import 'widgets/script_reader_view.dart';
 
 const _documentChannel = MethodChannel('beatwork/documents');
@@ -692,33 +691,6 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    // New Event Button
-                                    OutlinedButton.icon(
-                                      icon: const Icon(Icons.add, size: 15),
-                                      label: const Text('New Event'),
-                                      style: OutlinedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 8,
-                                        ),
-                                      ),
-                                      onPressed: () async {
-                                        final newEv = await EventDialog.show(
-                                          context,
-                                        );
-                                        if (newEv != null) {
-                                          _provider.createEvent(
-                                            title: newEv.title,
-                                            description: newEv.description,
-                                            beatId: newEv.beatId,
-                                            characters: newEv.characters,
-                                            location: newEv.location,
-                                          );
-                                        }
-                                      },
-                                    ),
-                                    const SizedBox(width: 8),
-
                                     // Toggle Event Pool Sidebar
                                     Tooltip(
                                       message: 'Toggle Unassigned Event Pool',
@@ -754,28 +726,6 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                         onPressed: () =>
                                             _provider.toggleEventPool(),
                                       ),
-                                    ),
-                                    const SizedBox(width: 8),
-
-                                    // Export Button
-                                    ElevatedButton.icon(
-                                      icon: const Icon(
-                                        Icons.download,
-                                        size: 15,
-                                      ),
-                                      label: const Text('Export Script'),
-                                      style: ElevatedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 8,
-                                        ),
-                                      ),
-                                      onPressed: () {
-                                        ExportDialog.show(
-                                          context,
-                                          provider: _provider,
-                                        );
-                                      },
                                     ),
                                     const SizedBox(width: 4),
                                     PopupMenuButton<String>(
