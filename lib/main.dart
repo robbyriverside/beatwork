@@ -109,6 +109,11 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
   Future<void> _handlePlatformMethodCall(MethodCall call) async {
     if (call.method == 'openDocument' && call.arguments is String) {
       await _openRecentDocument(call.arguments as String);
+    } else if (call.method == 'showEventPool') {
+      _provider.setEventPoolOpen(true);
+      if (_viewMode != AppViewMode.beatSheet) {
+        setState(() => _viewMode = AppViewMode.beatSheet);
+      }
     }
   }
 

@@ -28,6 +28,10 @@ enum DocumentOpenBridge {
     flush()
   }
 
+  static func showEventPool() {
+    channel?.invokeMethod("showEventPool", arguments: nil)
+  }
+
   private static func flush() {
     guard isReady, let channel else { return }
     let paths = pendingPaths
@@ -40,6 +44,10 @@ enum DocumentOpenBridge {
 
 @main
 class AppDelegate: FlutterAppDelegate {
+  @IBAction func showEventPool(_ sender: Any?) {
+    DocumentOpenBridge.showEventPool()
+  }
+
   override func application(_ sender: NSApplication, openFiles filenames: [String]) {
     DocumentOpenBridge.open(paths: filenames)
     sender.reply(toOpenOrPrint: .success)
