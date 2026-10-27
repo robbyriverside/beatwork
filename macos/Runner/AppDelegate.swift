@@ -32,6 +32,16 @@ enum DocumentOpenBridge {
     channel?.invokeMethod("showEventPool", arguments: nil)
   }
 
+  static func requestExit(completion: @escaping (Bool) -> Void) {
+    guard isReady, let channel else {
+      completion(false)
+      return
+    }
+    channel.invokeMethod("requestExit", arguments: nil) { result in
+      completion((result as? Bool) ?? false)
+    }
+  }
+
   private static func flush() {
     guard isReady, let channel else { return }
     let paths = pendingPaths
@@ -44,8 +54,34 @@ enum DocumentOpenBridge {
 
 @main
 class AppDelegate: FlutterAppDelegate {
+  private var exitPromptPending = false
+  private var terminationApproved = false
+
   @IBAction func showEventPool(_ sender: Any?) {
     DocumentOpenBridge.showEventPool()
+  }
+
+  func requestExit(onApproval: @escaping () -> Void) {
+    guard !exitPromptPending else { return }
+    exitPromptPending = true
+    DocumentOpenBridge.requestExit { [weak self] shouldExit in
+      guard let self else { return }
+      self.exitPromptPending = false
+      guard shouldExit else { return }
+      self.terminationApproved = true
+      onApproval()
+    }
+  }
+
+  override func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+    if terminationApproved {
+      terminationApproved = false
+      return .terminateNow
+    }
+    requestExit {
+      sender.terminate(nil)
+    }
+    return .terminateCancel
   }
 
   override func application(_ sender: NSApplication, openFiles filenames: [String]) {

@@ -106,15 +106,20 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
     }
   }
 
-  Future<void> _handlePlatformMethodCall(MethodCall call) async {
+  Future<Object?> _handlePlatformMethodCall(MethodCall call) async {
     if (call.method == 'openDocument' && call.arguments is String) {
       await _openRecentDocument(call.arguments as String);
+      return null;
     } else if (call.method == 'showEventPool') {
       _provider.setEventPoolOpen(true);
       if (_viewMode != AppViewMode.beatSheet) {
         setState(() => _viewMode = AppViewMode.beatSheet);
       }
+      return null;
+    } else if (call.method == 'requestExit') {
+      return await _confirmExit();
     }
+    return null;
   }
 
   @override
@@ -131,6 +136,39 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Unsaved Project'),
         content: const Text('Save your changes before replacing this project?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Discard'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final saved = _provider.documentPath == null
+                  ? await _provider.saveDocumentAs()
+                  : await _provider.saveDocument();
+              if (dialogContext.mounted) {
+                Navigator.pop(dialogContext, saved);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
+
+  Future<bool> _confirmExit() async {
+    if (!_provider.hasUnsavedChanges) return true;
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Save before quitting?'),
+        content: const Text('Your project has unsaved changes.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
