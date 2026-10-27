@@ -8,12 +8,14 @@ class BeatCard extends StatelessWidget {
   final BeatDefinition beat;
   final StoryProvider provider;
   final VoidCallback onTap;
+  final ValueChanged<StoryEvent> onOpenEvent;
 
   const BeatCard({
     super.key,
     required this.beat,
     required this.provider,
     required this.onTap,
+    required this.onOpenEvent,
   });
 
   @override
@@ -288,7 +290,11 @@ class BeatCard extends StatelessWidget {
                                     opacity: 0.35,
                                     child: preview,
                                   ),
-                                  child: preview,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(4),
+                                    onTap: () => onOpenEvent(ev),
+                                    child: preview,
+                                  ),
                                 );
                               },
                             ),

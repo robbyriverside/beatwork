@@ -2,15 +2,22 @@ import 'package:flutter/material.dart';
 import '../models/story_project.dart';
 import '../state/story_provider.dart';
 import '../theme/app_theme.dart';
+import 'beat_detail_dialog.dart';
 import 'export_dialog.dart';
 
-class ScriptReaderView extends StatelessWidget {
+class ScriptReaderView extends StatefulWidget {
   final StoryProvider provider;
 
   const ScriptReaderView({super.key, required this.provider});
 
   @override
+  State<ScriptReaderView> createState() => _ScriptReaderViewState();
+}
+
+class _ScriptReaderViewState extends State<ScriptReaderView> {
+  @override
   Widget build(BuildContext context) {
+    final provider = widget.provider;
     final collected = provider.project.getCollectedTimeline();
 
     // Calculate approximate stats
@@ -269,37 +276,48 @@ class ScriptReaderView extends StatelessWidget {
       if (currentBeatId != entry.beat.id) {
         currentBeatId = entry.beat.id;
         list.add(
-          Container(
-            margin: const EdgeInsets.only(top: 28, bottom: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: entry.beat.act.accentColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(
-                color: entry.beat.act.accentColor.withOpacity(0.4),
+          InkWell(
+            borderRadius: BorderRadius.circular(4),
+            onTap: () async {
+              await BeatDetailDialog.show(
+                context,
+                beat: entry.beat,
+                provider: widget.provider,
+              );
+              if (mounted) setState(() {});
+            },
+            child: Container(
+              margin: const EdgeInsets.only(top: 28, bottom: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: entry.beat.act.accentColor.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: entry.beat.act.accentColor.withOpacity(0.4),
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'SAVE THE CAT: BEAT ${entry.beat.number} - ${entry.beat.name.toUpperCase()}',
-                  style: TextStyle(
-                    fontFamily: 'Courier',
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: entry.beat.act.accentColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'SAVE THE CAT: BEAT ${entry.beat.number} - ${entry.beat.name.toUpperCase()}',
+                    style: TextStyle(
+                      fontFamily: 'Courier',
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: entry.beat.act.accentColor,
+                    ),
                   ),
-                ),
-                Text(
-                  '${entry.beat.act.title} • ${entry.beat.targetPage}',
-                  style: const TextStyle(
-                    fontFamily: 'Courier',
-                    fontSize: 11,
-                    color: AppTheme.textSecondary,
+                  Text(
+                    '${entry.beat.act.title} • ${entry.beat.targetPage}',
+                    style: const TextStyle(
+                      fontFamily: 'Courier',
+                      fontSize: 11,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/beat_model.dart';
+import '../models/story_event.dart';
 import '../state/story_provider.dart';
 import '../theme/app_theme.dart';
 import 'beat_card.dart';
@@ -7,11 +8,13 @@ import 'beat_card.dart';
 class BeatBoardView extends StatefulWidget {
   final StoryProvider provider;
   final Function(BeatDefinition) onOpenBeat;
+  final ValueChanged<StoryEvent> onOpenEvent;
 
   const BeatBoardView({
     super.key,
     required this.provider,
     required this.onOpenBeat,
+    required this.onOpenEvent,
   });
 
   @override
@@ -143,6 +146,7 @@ class _BeatBoardViewState extends State<BeatBoardView> {
                     beat: beat,
                     provider: widget.provider,
                     onTap: () => widget.onOpenBeat(beat),
+                    onOpenEvent: widget.onOpenEvent,
                   );
                 },
               );

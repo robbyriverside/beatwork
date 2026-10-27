@@ -118,6 +118,26 @@ void main() {
     );
   });
 
+  testWidgets('tapping an event in a beat opens the event editor', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    final project = StoryProject.createSampleProject();
+    await tester.pumpWidget(BeatWorkApp(initialProject: project));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.text('Kael hacks a sub-orbital drone to pay back debts'),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Edit Story Event'), findsOneWidget);
+    expect(find.text('BEAT 01: ACT I'), findsNothing);
+  });
+
   testWidgets('BeatWork desktop app loads beat sheet and sample project', (
     WidgetTester tester,
   ) async {
@@ -167,5 +187,20 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('COLLECTED STORY TIMELINE'), findsOneWidget);
+
+    final beatHeading = find.textContaining(
+      'SAVE THE CAT: BEAT 1 - OPENING IMAGE',
+    );
+    await tester.ensureVisible(beatHeading);
+    await tester.tap(beatHeading);
+    await tester.pumpAndSettle();
+
+    expect(find.text('BEAT 1: Act 1'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Close Workspace'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('COLLECTED STORY TIMELINE'), findsOneWidget);
+    expect(beatHeading, findsOneWidget);
   });
 }

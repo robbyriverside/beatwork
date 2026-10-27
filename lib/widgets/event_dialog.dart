@@ -146,6 +146,7 @@ class _EventDialogState extends State<EventDialog> {
                   // Assigned Beat Dropdown
                   DropdownButtonFormField<String?>(
                     initialValue: _selectedBeatId,
+                    isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'Assign to Beat',
                       prefixIcon: Icon(
@@ -164,6 +165,8 @@ class _EventDialogState extends State<EventDialog> {
                           child: Text(
                             'Beat ${b.number}: ${b.name} (${b.act.title})',
                             style: const TextStyle(fontSize: 13),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ),

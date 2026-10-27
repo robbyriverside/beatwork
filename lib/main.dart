@@ -834,6 +834,15 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                       provider: _provider,
                                     );
                                   },
+                                  onOpenEvent: (event) async {
+                                    final updated = await EventDialog.show(
+                                      context,
+                                      initialEvent: event,
+                                    );
+                                    if (updated != null) {
+                                      _provider.updateEvent(updated);
+                                    }
+                                  },
                                 )
                               : ScriptReaderView(provider: _provider),
                         ),

@@ -118,8 +118,12 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                                           children: [
                                             const Icon(Icons.bolt, size: 16),
                                             const SizedBox(width: 6),
-                                            Text(
-                                              'Events (${beatEvents.length})',
+                                            Flexible(
+                                              child: Text(
+                                                'Events (${beatEvents.length})',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -134,8 +138,12 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                                               size: 16,
                                             ),
                                             const SizedBox(width: 6),
-                                            Text(
-                                              'Timeline (${beatScenes.length})',
+                                            Flexible(
+                                              child: Text(
+                                                'Timeline (${beatScenes.length})',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -553,11 +561,15 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                               const SizedBox(height: 2),
                               Row(
                                 children: [
-                                  Text(
-                                    '${sc.mappedEventIds.length} Events Mapped',
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: AppTheme.cyanAccent,
+                                  Expanded(
+                                    child: Text(
+                                      '${sc.mappedEventIds.length} Events Mapped',
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        color: AppTheme.cyanAccent,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -567,6 +579,8 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                                       fontSize: 10,
                                       color: AppTheme.textMuted,
                                     ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
