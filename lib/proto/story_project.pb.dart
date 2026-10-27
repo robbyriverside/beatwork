@@ -28,6 +28,7 @@ class StoryProjectDocument extends $pb.GeneratedMessage {
     $core.Iterable<StoryEventDocument>? events,
     $core.Iterable<SceneDocument>? scenes,
     $fixnum.Int64? lastModifiedMicros,
+    $core.String? authorEmail,
   }) {
     final result = StoryProjectDocument._();
     if (id != null) result.id = id;
@@ -40,6 +41,7 @@ class StoryProjectDocument extends $pb.GeneratedMessage {
     if (scenes != null) result.scenes.addAll(scenes);
     if (lastModifiedMicros != null)
       result.lastModifiedMicros = lastModifiedMicros;
+    if (authorEmail != null) result.authorEmail = authorEmail;
     return result;
   }
 
@@ -67,6 +69,7 @@ class StoryProjectDocument extends $pb.GeneratedMessage {
     ..pPM<SceneDocument>(8, _omitFieldNames ? '' : 'scenes',
         subBuilder: SceneDocument.$_createMessage)
     ..aInt64(9, _omitFieldNames ? '' : 'lastModifiedMicros')
+    ..aOS(10, _omitFieldNames ? '' : 'authorEmail')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -160,6 +163,15 @@ class StoryProjectDocument extends $pb.GeneratedMessage {
   $core.bool hasLastModifiedMicros() => $_has(8);
   @$pb.TagNumber(9)
   void clearLastModifiedMicros() => $_clearField(9);
+
+  @$pb.TagNumber(10)
+  $core.String get authorEmail => $_getSZ(9);
+  @$pb.TagNumber(10)
+  set authorEmail($core.String value) => $_setString(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasAuthorEmail() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearAuthorEmail() => $_clearField(10);
 }
 
 class StoryEventDocument extends $pb.GeneratedMessage {

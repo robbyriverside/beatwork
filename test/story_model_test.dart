@@ -51,10 +51,12 @@ void main() {
   group('Story Project & Scene Versioning Tests', () {
     test('Project Protobuf round-trip preserves nested project content', () {
       final project = StoryProject.createSampleProject();
+      project.authorEmail = 'writer@example.com';
 
       final decoded = ProjectCodec.decode(ProjectCodec.encode(project));
 
       expect(decoded.toJson(), project.toJson());
+      expect(decoded.authorEmail, 'writer@example.com');
     });
 
     test('Sample project contains pre-populated events and scenes', () {
@@ -141,10 +143,16 @@ void main() {
   group('Export Service Tests', () {
     test('Generates valid Final Draft (.fdx) XML content', () {
       final project = StoryProject.createSampleProject();
+      project.authorEmail = 'writer@example.com';
       final fdx = ExportService.generateFinalDraftFdx(project);
 
       expect(fdx.contains('<?xml version="1.0"'), true);
       expect(fdx.contains('<FinalDraft DocumentType="Script"'), true);
+      expect(fdx.contains('<TitlePage>'), true);
+      expect(fdx.contains('<Paragraph Type="Author">'), true);
+      expect(fdx.contains('<Paragraph Type="Contact">'), true);
+      expect(fdx.contains('Antigravity Screenwriter'), true);
+      expect(fdx.contains('writer@example.com'), true);
       expect(fdx.contains('<Paragraph Type="Scene Heading">'), true);
       expect(fdx.contains('</FinalDraft>'), true);
       expect(fdx.contains('The Chronos Cipher'), true);
@@ -152,9 +160,12 @@ void main() {
 
     test('Generates valid Fountain plain text content', () {
       final project = StoryProject.createSampleProject();
+      project.authorEmail = 'writer@example.com';
       final fountain = ExportService.generateFountain(project);
 
       expect(fountain.contains('Title: The Chronos Cipher'), true);
+      expect(fountain.contains('Author: Antigravity Screenwriter'), true);
+      expect(fountain.contains('Contact: writer@example.com'), true);
       expect(fountain.contains('SAVE THE CAT:'), true);
       expect(fountain.contains('EXT. SPIDERTOWER ANTENNA - NIGHT'), true);
     });

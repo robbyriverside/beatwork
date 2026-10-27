@@ -249,7 +249,6 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
     final titleCtrl = TextEditingController(text: _provider.project.title);
     final loglineCtrl = TextEditingController(text: _provider.project.logline);
     final genreCtrl = TextEditingController(text: _provider.project.genre);
-    final authorCtrl = TextEditingController(text: _provider.project.author);
 
     showDialog(
       context: context,
@@ -258,7 +257,7 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
           children: [
             Icon(Icons.movie_filter_outlined, color: AppTheme.goldAccent),
             SizedBox(width: 8),
-            Text('Screenplay Project Settings'),
+            Text('System'),
           ],
         ),
         content: ConstrainedBox(
@@ -294,14 +293,6 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: authorCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Screenwriter',
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ],
@@ -318,7 +309,6 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                 title: titleCtrl.text.trim(),
                 logline: loglineCtrl.text.trim(),
                 genre: genreCtrl.text.trim(),
-                author: authorCtrl.text.trim(),
               );
               Navigator.of(ctx).pop();
             },
@@ -329,190 +319,296 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
     );
   }
 
+  void _openAuthorSettings(BuildContext context) {
+    final authorCtrl = TextEditingController(text: _provider.project.author);
+    final emailCtrl = TextEditingController(
+      text: _provider.project.authorEmail,
+    );
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.person_outline, color: AppTheme.goldAccent),
+            SizedBox(width: 8),
+            Text('Author'),
+          ],
+        ),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                key: const ValueKey('author-name-field'),
+                controller: authorCtrl,
+                autofocus: true,
+                decoration: const InputDecoration(labelText: 'Author name'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                key: const ValueKey('author-email-field'),
+                controller: emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(labelText: 'Email'),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _provider.updateProjectMeta(
+                author: authorCtrl.text.trim(),
+                authorEmail: emailCtrl.text.trim(),
+              );
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAbout(BuildContext context) {
+    showAboutDialog(
+      context: context,
+      applicationName: 'BeatWork',
+      applicationLegalese: 'Save the Cat! Screenwriting Workflow',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: _provider,
       builder: (context, _) {
         final unassignedCount = _provider.project.getUnassignedEvents().length;
+        final usesMetaModifier = Platform.isMacOS;
+        SingleActivator menuShortcut(
+          LogicalKeyboardKey key, {
+          bool shift = false,
+        }) => SingleActivator(
+          key,
+          meta: usesMetaModifier,
+          control: !usesMetaModifier,
+          shift: shift,
+        );
+        final newShortcut = menuShortcut(LogicalKeyboardKey.keyN);
+        final openShortcut = menuShortcut(LogicalKeyboardKey.keyO);
+        final saveShortcut = menuShortcut(LogicalKeyboardKey.keyS);
+        final saveAsShortcut = menuShortcut(
+          LogicalKeyboardKey.keyS,
+          shift: true,
+        );
+        final infoShortcut = menuShortcut(LogicalKeyboardKey.keyI);
 
-        return Scaffold(
-          body: Column(
-            children: [
-              // Global Desktop App Bar
-              Container(
-                height: 56,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: const BoxDecoration(
-                  color: AppTheme.surfaceElevated,
-                  border: Border(bottom: BorderSide(color: AppTheme.border)),
-                ),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minWidth: constraints.maxWidth,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // Brand / Logo
-                            MenuAnchor(
-                              menuChildren: [
-                                MenuItemButton(
-                                  onPressed: _newDocument,
-                                  child: const Text('New'),
-                                ),
-                                MenuItemButton(
-                                  onPressed: _openDocument,
-                                  child: const Text('Open...'),
-                                ),
-                                MenuItemButton(
-                                  onPressed: () => _saveDocument(),
-                                  child: const Text('Save'),
-                                ),
-                                MenuItemButton(
-                                  onPressed: () => _saveDocument(saveAs: true),
-                                  child: const Text('Save As...'),
-                                ),
-                                SubmenuButton(
-                                  menuChildren:
-                                      _provider.recentDocuments.isEmpty
-                                      ? [
-                                          const MenuItemButton(
-                                            onPressed: null,
-                                            child: Text('No Recent Projects'),
-                                          ),
-                                        ]
-                                      : _provider.recentDocuments
-                                            .map(
-                                              (document) => MenuItemButton(
-                                                onPressed: () =>
-                                                    _openRecentDocument(
-                                                      document.path,
-                                                    ),
-                                                child: Text(document.title),
+        return CallbackShortcuts(
+          bindings: {
+            newShortcut: _newDocument,
+            openShortcut: _openDocument,
+            saveShortcut: () => _saveDocument(),
+            saveAsShortcut: () => _saveDocument(saveAs: true),
+            infoShortcut: () => _openProjectSettings(context),
+          },
+          child: Focus(
+            autofocus: true,
+            child: Scaffold(
+              body: Column(
+                children: [
+                  // Global Desktop App Bar
+                  Container(
+                    height: 56,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: const BoxDecoration(
+                      color: AppTheme.surfaceElevated,
+                      border: Border(
+                        bottom: BorderSide(color: AppTheme.border),
+                      ),
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minWidth: constraints.maxWidth,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                // Brand / Logo
+                                MenuAnchor(
+                                  menuChildren: [
+                                    MenuItemButton(
+                                      onPressed: _newDocument,
+                                      shortcut: newShortcut,
+                                      child: const Text('New'),
+                                    ),
+                                    MenuItemButton(
+                                      onPressed: _openDocument,
+                                      shortcut: openShortcut,
+                                      child: const Text('Open...'),
+                                    ),
+                                    MenuItemButton(
+                                      onPressed: () => _saveDocument(),
+                                      shortcut: saveShortcut,
+                                      child: const Text('Save'),
+                                    ),
+                                    MenuItemButton(
+                                      onPressed: () =>
+                                          _saveDocument(saveAs: true),
+                                      shortcut: saveAsShortcut,
+                                      child: const Text('Save As...'),
+                                    ),
+                                    SubmenuButton(
+                                      menuChildren:
+                                          _provider.recentDocuments.isEmpty
+                                          ? [
+                                              const MenuItemButton(
+                                                onPressed: null,
+                                                child: Text(
+                                                  'No Recent Projects',
+                                                ),
                                               ),
-                                            )
-                                            .toList(),
-                                  child: const Text('Open Recent'),
-                                ),
-                                const Divider(height: 1),
-                                MenuItemButton(
-                                  onPressed: () =>
-                                      _openProjectSettings(context),
-                                  child: const Text('Info'),
-                                ),
-                              ],
-                              builder: (context, controller, child) => SizedBox(
-                                height: 56,
-                                child: Center(
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(6),
-                                    onTap: () => controller.isOpen
-                                        ? controller.close()
-                                        : controller.open(),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 6,
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(6),
-                                            decoration: BoxDecoration(
-                                              color: AppTheme.goldAccent
-                                                  .withValues(alpha: 0.2),
-                                              borderRadius:
-                                                  BorderRadius.circular(6),
-                                              border: Border.all(
-                                                color: AppTheme.goldAccent,
-                                              ),
-                                            ),
-                                            child: const Icon(
-                                              Icons.movie_outlined,
-                                              size: 18,
-                                              color: AppTheme.goldAccent,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  const Text(
-                                                    'BEATWORK',
-                                                    style: TextStyle(
-                                                      fontSize: 13,
-                                                      fontWeight:
-                                                          FontWeight.w900,
-                                                      letterSpacing: 1.2,
-                                                      color:
-                                                          AppTheme.goldAccent,
-                                                    ),
+                                            ]
+                                          : _provider.recentDocuments
+                                                .map(
+                                                  (document) => MenuItemButton(
+                                                    onPressed: () =>
+                                                        _openRecentDocument(
+                                                          document.path,
+                                                        ),
+                                                    child: Text(document.title),
                                                   ),
-                                                  const SizedBox(width: 34),
-                                                  Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
+                                                )
+                                                .toList(),
+                                      child: const Text('Open Recent'),
+                                    ),
+                                  ],
+                                  builder: (context, controller, child) => SizedBox(
+                                    height: 56,
+                                    child: Center(
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(6),
+                                        onTap: () => controller.isOpen
+                                            ? controller.close()
+                                            : controller.open(),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(
+                                                  6,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.goldAccent
+                                                      .withValues(alpha: 0.2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                  border: Border.all(
+                                                    color: AppTheme.goldAccent,
+                                                  ),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.movie_outlined,
+                                                  size: 18,
+                                                  color: AppTheme.goldAccent,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
                                                     children: [
-                                                      ConstrainedBox(
-                                                        constraints:
-                                                            const BoxConstraints(
-                                                              maxWidth: 160,
-                                                            ),
-                                                        child: Container(
-                                                          padding:
-                                                              const EdgeInsets.symmetric(
-                                                                horizontal: 6,
-                                                                vertical: 1.5,
-                                                              ),
-                                                          decoration: BoxDecoration(
-                                                            color: AppTheme
-                                                                .surfaceElevated,
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  4,
+                                                      const Text(
+                                                        'BEATWORK',
+                                                        style: TextStyle(
+                                                          fontSize: 13,
+                                                          fontWeight:
+                                                              FontWeight.w900,
+                                                          letterSpacing: 1.2,
+                                                          color: AppTheme
+                                                              .goldAccent,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 34),
+                                                      Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          ConstrainedBox(
+                                                            constraints:
+                                                                const BoxConstraints(
+                                                                  maxWidth: 160,
                                                                 ),
+                                                            child: Container(
+                                                              padding:
+                                                                  const EdgeInsets.symmetric(
+                                                                    horizontal:
+                                                                        6,
+                                                                    vertical:
+                                                                        1.5,
+                                                                  ),
+                                                              decoration: BoxDecoration(
+                                                                color: AppTheme
+                                                                    .surfaceElevated,
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      4,
+                                                                    ),
+                                                              ),
+                                                              child: Text(
+                                                                _provider
+                                                                    .project
+                                                                    .title,
+                                                                style: const TextStyle(
+                                                                  fontSize: 11,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                  color: AppTheme
+                                                                      .textPrimary,
+                                                                ),
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
+                                                              ),
+                                                            ),
                                                           ),
-                                                          child: Text(
+                                                          Text(
                                                             _provider
                                                                 .project
-                                                                .title,
+                                                                .genre,
                                                             style: const TextStyle(
-                                                              fontSize: 11,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
+                                                              fontSize: 10,
                                                               color: AppTheme
-                                                                  .textPrimary,
+                                                                  .textSecondary,
                                                             ),
+                                                            maxLines: 1,
                                                             overflow:
                                                                 TextOverflow
                                                                     .ellipsis,
                                                           ),
-                                                        ),
-                                                      ),
-                                                      Text(
-                                                        _provider.project.genre,
-                                                        style: const TextStyle(
-                                                          fontSize: 10,
-                                                          color: AppTheme
-                                                              .textSecondary,
-                                                        ),
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
+                                                        ],
                                                       ),
                                                     ],
                                                   ),
@@ -520,206 +616,241 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                               ),
                                             ],
                                           ),
-                                        ],
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
 
-                            const SizedBox(width: 12),
+                                const SizedBox(width: 12),
 
-                            // View Mode Switcher
-                            Container(
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                color: AppTheme.surface,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: AppTheme.border),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: AppViewMode.values.map((mode) {
-                                  final isSelected = _viewMode == mode;
-                                  return InkWell(
-                                    borderRadius: BorderRadius.circular(6),
-                                    onTap: () =>
-                                        setState(() => _viewMode = mode),
-                                    child: AnimatedContainer(
-                                      duration: const Duration(
-                                        milliseconds: 150,
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isSelected
-                                            ? AppTheme.goldAccent
-                                            : Colors.transparent,
+                                // View Mode Switcher
+                                Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.surface,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: AppTheme.border),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: AppViewMode.values.map((mode) {
+                                      final isSelected = _viewMode == mode;
+                                      return InkWell(
                                         borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            mode.icon,
-                                            size: 15,
-                                            color: isSelected
-                                                ? Colors.black
-                                                : AppTheme.textSecondary,
+                                        onTap: () =>
+                                            setState(() => _viewMode = mode),
+                                        child: AnimatedContainer(
+                                          duration: const Duration(
+                                            milliseconds: 150,
                                           ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            mode.label,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: isSelected
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                              color: isSelected
-                                                  ? Colors.black
-                                                  : AppTheme.textSecondary,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: isSelected
+                                                ? AppTheme.goldAccent
+                                                : Colors.transparent,
+                                            borderRadius: BorderRadius.circular(
+                                              6,
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-
-                            const SizedBox(width: 12),
-
-                            // Quick Actions
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // New Event Button
-                                OutlinedButton.icon(
-                                  icon: const Icon(Icons.add, size: 15),
-                                  label: const Text('New Event'),
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                  ),
-                                  onPressed: () async {
-                                    final newEv = await EventDialog.show(
-                                      context,
-                                    );
-                                    if (newEv != null) {
-                                      _provider.createEvent(
-                                        title: newEv.title,
-                                        description: newEv.description,
-                                        beatId: newEv.beatId,
-                                        characters: newEv.characters,
-                                        location: newEv.location,
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                mode.icon,
+                                                size: 15,
+                                                color: isSelected
+                                                    ? Colors.black
+                                                    : AppTheme.textSecondary,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                mode.label,
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.bold
+                                                      : FontWeight.normal,
+                                                  color: isSelected
+                                                      ? Colors.black
+                                                      : AppTheme.textSecondary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       );
-                                    }
-                                  },
-                                ),
-                                const SizedBox(width: 8),
-
-                                // Toggle Event Pool Sidebar
-                                Tooltip(
-                                  message: 'Toggle Unassigned Event Pool',
-                                  child: OutlinedButton.icon(
-                                    icon: Icon(
-                                      _provider.isEventPoolOpen
-                                          ? Icons.view_sidebar
-                                          : Icons.view_sidebar_outlined,
-                                      size: 16,
-                                      color: _provider.isEventPoolOpen
-                                          ? AppTheme.goldAccent
-                                          : AppTheme.textSecondary,
-                                    ),
-                                    label: Text(
-                                      'Pool ($unassignedCount)',
-                                      style: TextStyle(
-                                        color: _provider.isEventPoolOpen
-                                            ? AppTheme.goldAccent
-                                            : AppTheme.textSecondary,
-                                      ),
-                                    ),
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
-                                      ),
-                                      side: BorderSide(
-                                        color: _provider.isEventPoolOpen
-                                            ? AppTheme.goldAccent
-                                            : AppTheme.border,
-                                      ),
-                                    ),
-                                    onPressed: () =>
-                                        _provider.toggleEventPool(),
+                                    }).toList(),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
 
-                                // Export Button
-                                ElevatedButton.icon(
-                                  icon: const Icon(Icons.download, size: 15),
-                                  label: const Text('Export Script'),
-                                  style: ElevatedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
+                                const SizedBox(width: 12),
+
+                                // Quick Actions
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // New Event Button
+                                    OutlinedButton.icon(
+                                      icon: const Icon(Icons.add, size: 15),
+                                      label: const Text('New Event'),
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                      ),
+                                      onPressed: () async {
+                                        final newEv = await EventDialog.show(
+                                          context,
+                                        );
+                                        if (newEv != null) {
+                                          _provider.createEvent(
+                                            title: newEv.title,
+                                            description: newEv.description,
+                                            beatId: newEv.beatId,
+                                            characters: newEv.characters,
+                                            location: newEv.location,
+                                          );
+                                        }
+                                      },
                                     ),
-                                  ),
-                                  onPressed: () {
-                                    ExportDialog.show(
-                                      context,
-                                      provider: _provider,
-                                    );
-                                  },
+                                    const SizedBox(width: 8),
+
+                                    // Toggle Event Pool Sidebar
+                                    Tooltip(
+                                      message: 'Toggle Unassigned Event Pool',
+                                      child: OutlinedButton.icon(
+                                        icon: Icon(
+                                          _provider.isEventPoolOpen
+                                              ? Icons.view_sidebar
+                                              : Icons.view_sidebar_outlined,
+                                          size: 16,
+                                          color: _provider.isEventPoolOpen
+                                              ? AppTheme.goldAccent
+                                              : AppTheme.textSecondary,
+                                        ),
+                                        label: Text(
+                                          'Pool ($unassignedCount)',
+                                          style: TextStyle(
+                                            color: _provider.isEventPoolOpen
+                                                ? AppTheme.goldAccent
+                                                : AppTheme.textSecondary,
+                                          ),
+                                        ),
+                                        style: OutlinedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
+                                          ),
+                                          side: BorderSide(
+                                            color: _provider.isEventPoolOpen
+                                                ? AppTheme.goldAccent
+                                                : AppTheme.border,
+                                          ),
+                                        ),
+                                        onPressed: () =>
+                                            _provider.toggleEventPool(),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+
+                                    // Export Button
+                                    ElevatedButton.icon(
+                                      icon: const Icon(
+                                        Icons.download,
+                                        size: 15,
+                                      ),
+                                      label: const Text('Export Script'),
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                      ),
+                                      onPressed: () {
+                                        ExportDialog.show(
+                                          context,
+                                          provider: _provider,
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(width: 4),
+                                    PopupMenuButton<String>(
+                                      tooltip: 'Settings',
+                                      icon: const Icon(Icons.settings_outlined),
+                                      onSelected: (item) {
+                                        switch (item) {
+                                          case 'system':
+                                            _openProjectSettings(context);
+                                          case 'author':
+                                            _openAuthorSettings(context);
+                                          case 'about':
+                                            _showAbout(context);
+                                        }
+                                      },
+                                      itemBuilder: (context) => const [
+                                        PopupMenuItem(
+                                          value: 'system',
+                                          child: Text('System'),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'author',
+                                          child: Text('Author'),
+                                        ),
+                                        PopupMenuDivider(),
+                                        PopupMenuItem(
+                                          value: 'about',
+                                          child: Text('About'),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-
-              // Main Workspace Body
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Main View (Beat Sheet Board or Collected Timeline Reader)
-                    Expanded(
-                      child: _viewMode == AppViewMode.beatSheet
-                          ? BeatBoardView(
-                              provider: _provider,
-                              onOpenBeat: (beat) {
-                                BeatDetailDialog.show(
-                                  context,
-                                  beat: beat,
-                                  provider: _provider,
-                                );
-                              },
-                            )
-                          : ScriptReaderView(provider: _provider),
+                          ),
+                        );
+                      },
                     ),
+                  ),
 
-                    // Collapsible Story Event Pool Sidebar (docked on right)
-                    if (_provider.isEventPoolOpen &&
-                        _viewMode == AppViewMode.beatSheet)
-                      EventPoolSidebar(
-                        provider: _provider,
-                        onClose: () => _provider.setEventPoolOpen(false),
-                      ),
-                  ],
-                ),
+                  // Main Workspace Body
+                  Expanded(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Main View (Beat Sheet Board or Collected Timeline Reader)
+                        Expanded(
+                          child: _viewMode == AppViewMode.beatSheet
+                              ? BeatBoardView(
+                                  provider: _provider,
+                                  onOpenBeat: (beat) {
+                                    BeatDetailDialog.show(
+                                      context,
+                                      beat: beat,
+                                      provider: _provider,
+                                    );
+                                  },
+                                )
+                              : ScriptReaderView(provider: _provider),
+                        ),
+
+                        // Collapsible Story Event Pool Sidebar (docked on right)
+                        if (_provider.isEventPoolOpen &&
+                            _viewMode == AppViewMode.beatSheet)
+                          EventPoolSidebar(
+                            provider: _provider,
+                            onClose: () => _provider.setEventPoolOpen(false),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },

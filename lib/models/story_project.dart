@@ -9,6 +9,7 @@ class StoryProject {
   String logline;
   String genre;
   String author;
+  String authorEmail;
   List<StoryEvent> events;
   List<Scene> scenes;
   bool isSample;
@@ -20,6 +21,7 @@ class StoryProject {
     this.logline = '',
     this.genre = 'Feature Film',
     this.author = 'Screenwriter',
+    this.authorEmail = '',
     this.isSample = false,
     List<StoryEvent>? events,
     List<Scene>? scenes,
@@ -84,6 +86,7 @@ class StoryProject {
       'logline': logline,
       'genre': genre,
       'author': author,
+      'authorEmail': authorEmail,
       'isSample': isSample,
       'events': events.map((e) => e.toJson()).toList(),
       'scenes': scenes.map((s) => s.toJson()).toList(),
@@ -98,6 +101,7 @@ class StoryProject {
       logline: json['logline'] as String? ?? '',
       genre: json['genre'] as String? ?? 'Feature Film',
       author: json['author'] as String? ?? 'Screenwriter',
+      authorEmail: json['authorEmail'] as String? ?? '',
       isSample: json['isSample'] as bool? ?? false,
       events:
           (json['events'] as List<dynamic>?)

@@ -48,6 +48,7 @@ const StoryProjectDocument$json = {
       '5': 3,
       '10': 'lastModifiedMicros'
     },
+    {'1': 'author_email', '3': 10, '4': 1, '5': 9, '10': 'authorEmail'},
   ],
 };
 
@@ -58,7 +59,8 @@ final $typed_data.Uint8List storyProjectDocumentDescriptor = $convert.base64Deco
     'BmF1dGhvchgFIAEoCVIGYXV0aG9yEhsKCWlzX3NhbXBsZRgGIAEoCFIIaXNTYW1wbGUSNAoGZX'
     'ZlbnRzGAcgAygLMhwuYmVhdHdvcmsuU3RvcnlFdmVudERvY3VtZW50UgZldmVudHMSLwoGc2Nl'
     'bmVzGAggAygLMhcuYmVhdHdvcmsuU2NlbmVEb2N1bWVudFIGc2NlbmVzEjAKFGxhc3RfbW9kaW'
-    'ZpZWRfbWljcm9zGAkgASgDUhJsYXN0TW9kaWZpZWRNaWNyb3M=');
+    'ZpZWRfbWljcm9zGAkgASgDUhJsYXN0TW9kaWZpZWRNaWNyb3MSIQoMYXV0aG9yX2VtYWlsGAog'
+    'ASgJUgthdXRob3JFbWFpbA==');
 
 @$core.Deprecated('Use storyEventDocumentDescriptor instead')
 const StoryEventDocument$json = {

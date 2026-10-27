@@ -12,6 +12,7 @@ message StoryProjectDocument {
   repeated StoryEventDocument events = 7;
   repeated SceneDocument scenes = 8;
   int64 last_modified_micros = 9;
+  string author_email = 10;
 }
 
 message StoryEventDocument {

@@ -311,11 +311,13 @@ class StoryProvider extends ChangeNotifier {
     String? logline,
     String? genre,
     String? author,
+    String? authorEmail,
   }) {
     if (title != null) _project.title = title;
     if (logline != null) _project.logline = logline;
     if (genre != null) _project.genre = genre;
     if (author != null) _project.author = author;
+    if (authorEmail != null) _project.authorEmail = authorEmail;
     _project.lastModified = DateTime.now();
     _save();
     notifyListeners();

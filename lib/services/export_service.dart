@@ -13,27 +13,59 @@ class ExportService {
   static String generateFinalDraftFdx(StoryProject project) {
     final buffer = StringBuffer();
     buffer.writeln('<?xml version="1.0" encoding="UTF-8" standalone="no" ?>');
-    buffer.writeln('<FinalDraft DocumentType="Script" Template="No" Version="4">');
+    buffer.writeln(
+      '<FinalDraft DocumentType="Script" Template="No" Version="4">',
+    );
     buffer.writeln('  <HeaderAndFooter>');
     buffer.writeln('    <Header>');
-    buffer.writeln('      <Paragraph Alignment="Right" FirstIndent="0.00" Leading="Regular" LeftIndent="1.25" RightIndent="1.25" SpaceBefore="0" Spacing="1" StartsOnPage="1">');
-    buffer.writeln('        <Text>${_escapeXml(project.title)} - Screenplay</Text>');
+    buffer.writeln(
+      '      <Paragraph Alignment="Right" FirstIndent="0.00" Leading="Regular" LeftIndent="1.25" RightIndent="1.25" SpaceBefore="0" Spacing="1" StartsOnPage="1">',
+    );
+    buffer.writeln(
+      '        <Text>${_escapeXml(project.title)} - Screenplay</Text>',
+    );
     buffer.writeln('      </Paragraph>');
     buffer.writeln('    </Header>');
     buffer.writeln('    <Footer>');
-    buffer.writeln('      <Paragraph Alignment="Right" FirstIndent="0.00" Leading="Regular" LeftIndent="1.25" RightIndent="1.25" SpaceBefore="0" Spacing="1" StartsOnPage="1">');
-    buffer.writeln('        <Text AdornmentStyle="0" Background="#FFFFFFFFFFFF" Color="#000000000000" Font="Courier Final Draft" RevisionID="0" Size="12" Style="">Page </Text>');
+    buffer.writeln(
+      '      <Paragraph Alignment="Right" FirstIndent="0.00" Leading="Regular" LeftIndent="1.25" RightIndent="1.25" SpaceBefore="0" Spacing="1" StartsOnPage="1">',
+    );
+    buffer.writeln(
+      '        <Text AdornmentStyle="0" Background="#FFFFFFFFFFFF" Color="#000000000000" Font="Courier Final Draft" RevisionID="0" Size="12" Style="">Page </Text>',
+    );
     buffer.writeln('        <DynamicLabel Type="Page #"/>');
     buffer.writeln('      </Paragraph>');
     buffer.writeln('    </Footer>');
     buffer.writeln('  </HeaderAndFooter>');
+    buffer.writeln('  <TitlePage>');
+    buffer.writeln('    <Content>');
+    buffer.writeln('      <Paragraph Type="Title">');
+    buffer.writeln('        <Text>${_escapeXml(project.title)}</Text>');
+    buffer.writeln('      </Paragraph>');
+    buffer.writeln('      <Paragraph Type="Credit">');
+    buffer.writeln('        <Text>Written by</Text>');
+    buffer.writeln('      </Paragraph>');
+    buffer.writeln('      <Paragraph Type="Author">');
+    buffer.writeln('        <Text>${_escapeXml(project.author)}</Text>');
+    buffer.writeln('      </Paragraph>');
+    if (project.authorEmail.trim().isNotEmpty) {
+      buffer.writeln('      <Paragraph Type="Contact">');
+      buffer.writeln(
+        '        <Text>${_escapeXml(project.authorEmail.trim())}</Text>',
+      );
+      buffer.writeln('      </Paragraph>');
+    }
+    buffer.writeln('    </Content>');
+    buffer.writeln('  </TitlePage>');
     buffer.writeln('  <Content>');
 
     final collectedScenes = project.getCollectedTimeline();
 
     if (collectedScenes.isEmpty) {
       buffer.writeln('    <Paragraph Type="Action">');
-      buffer.writeln('      <Text>(No scenes added yet in beat timeline)</Text>');
+      buffer.writeln(
+        '      <Text>(No scenes added yet in beat timeline)</Text>',
+      );
       buffer.writeln('    </Paragraph>');
     } else {
       String? currentBeatId;
@@ -42,8 +74,12 @@ class ExportService {
         if (currentBeatId != entry.beat.id) {
           currentBeatId = entry.beat.id;
           buffer.writeln('    <Paragraph Type="General">');
-          buffer.writeln('      <Text AdornmentStyle="0" Background="#FFFFFFFFFFFF" Color="#555555555555" Font="Courier Final Draft" RevisionID="0" Size="11" Style="Italic">');
-          buffer.writeln('        === [SAVE THE CAT: ${entry.beat.number}. ${_escapeXml(entry.beat.name).toUpperCase()} (${entry.beat.act.title} - ${entry.beat.targetPage})] ===');
+          buffer.writeln(
+            '      <Text AdornmentStyle="0" Background="#FFFFFFFFFFFF" Color="#555555555555" Font="Courier Final Draft" RevisionID="0" Size="11" Style="Italic">',
+          );
+          buffer.writeln(
+            '        === [SAVE THE CAT: ${entry.beat.number}. ${_escapeXml(entry.beat.name).toUpperCase()} (${entry.beat.act.title} - ${entry.beat.targetPage})] ===',
+          );
           buffer.writeln('      </Text>');
           buffer.writeln('    </Paragraph>');
         }
@@ -55,7 +91,9 @@ class ExportService {
             ? version.slugline.trim().toUpperCase()
             : 'INT. UNTITLED SCENE - DAY';
         buffer.writeln('    <Paragraph Type="Scene Heading">');
-        buffer.writeln('      <Text AdornmentStyle="0" Background="#FFFFFFFFFFFF" Color="#000000000000" Font="Courier Final Draft" RevisionID="0" Size="12" Style="Bold">');
+        buffer.writeln(
+          '      <Text AdornmentStyle="0" Background="#FFFFFFFFFFFF" Color="#000000000000" Font="Courier Final Draft" RevisionID="0" Size="12" Style="Bold">',
+        );
         buffer.writeln('        ${_escapeXml(slugline)}');
         buffer.writeln('      </Text>');
         buffer.writeln('    </Paragraph>');
@@ -64,8 +102,12 @@ class ExportService {
         if (entry.mappedEvents.isNotEmpty) {
           final eventNames = entry.mappedEvents.map((e) => e.title).join(' | ');
           buffer.writeln('    <Paragraph Type="General">');
-          buffer.writeln('      <Text AdornmentStyle="0" Background="#FFFFFFFFFFFF" Color="#777777777777" Font="Courier Final Draft" RevisionID="0" Size="10" Style="Italic">');
-          buffer.writeln('        [[Mapped Beat Events: ${_escapeXml(eventNames)}]]');
+          buffer.writeln(
+            '      <Text AdornmentStyle="0" Background="#FFFFFFFFFFFF" Color="#777777777777" Font="Courier Final Draft" RevisionID="0" Size="10" Style="Italic">',
+          );
+          buffer.writeln(
+            '        [[Mapped Beat Events: ${_escapeXml(eventNames)}]]',
+          );
           buffer.writeln('      </Text>');
           buffer.writeln('    </Paragraph>');
         }
@@ -118,8 +160,15 @@ class ExportService {
     buffer.writeln('Title: ${project.title}');
     buffer.writeln('Credit: written by');
     buffer.writeln('Author: ${project.author}');
-    buffer.writeln('Draft date: ${DateTime.now().toLocal().toString().split(' ')[0]}');
-    buffer.writeln('Notes: Save the Cat Beat Timeline Assembly (${project.genre})');
+    if (project.authorEmail.trim().isNotEmpty) {
+      buffer.writeln('Contact: ${project.authorEmail.trim()}');
+    }
+    buffer.writeln(
+      'Draft date: ${DateTime.now().toLocal().toString().split(' ')[0]}',
+    );
+    buffer.writeln(
+      'Notes: Save the Cat Beat Timeline Assembly (${project.genre})',
+    );
     buffer.writeln();
     buffer.writeln('===');
     buffer.writeln();
@@ -130,7 +179,9 @@ class ExportService {
     for (final entry in collectedScenes) {
       if (currentBeatId != entry.beat.id) {
         currentBeatId = entry.beat.id;
-        buffer.writeln('/* --- SAVE THE CAT: BEAT ${entry.beat.number} - ${entry.beat.name.toUpperCase()} (${entry.beat.act.title} - ${entry.beat.targetPage}) --- */');
+        buffer.writeln(
+          '/* --- SAVE THE CAT: BEAT ${entry.beat.number} - ${entry.beat.name.toUpperCase()} (${entry.beat.act.title} - ${entry.beat.targetPage}) --- */',
+        );
         buffer.writeln();
       }
 
@@ -185,9 +236,19 @@ class ExportService {
                 project.author,
                 style: pw.TextStyle(font: fontCourier, fontSize: 16),
               ),
+              if (project.authorEmail.trim().isNotEmpty) ...[
+                pw.SizedBox(height: 4),
+                pw.Text(
+                  project.authorEmail.trim(),
+                  style: pw.TextStyle(font: fontCourier, fontSize: 11),
+                ),
+              ],
               pw.SizedBox(height: 24),
               pw.Container(
-                padding: const pw.EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
+                ),
                 decoration: pw.BoxDecoration(
                   border: pw.Border.all(color: PdfColors.grey400),
                   borderRadius: pw.BorderRadius.circular(4),
@@ -280,10 +341,11 @@ class ExportService {
               widgets.add(
                 pw.Container(
                   margin: const pw.EdgeInsets.only(top: 24, bottom: 12),
-                  padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                  decoration: const pw.BoxDecoration(
-                    color: PdfColors.grey200,
+                  padding: const pw.EdgeInsets.symmetric(
+                    vertical: 4,
+                    horizontal: 8,
                   ),
+                  decoration: const pw.BoxDecoration(color: PdfColors.grey200),
                   child: pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                     children: [
@@ -381,7 +443,10 @@ class ExportService {
                       padding: const pw.EdgeInsets.symmetric(vertical: 8),
                       child: pw.Text(
                         upper,
-                        style: pw.TextStyle(font: fontCourierBold, fontSize: 12),
+                        style: pw.TextStyle(
+                          font: fontCourierBold,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -430,7 +495,9 @@ class ExportService {
         return outputUri.toFilePath();
       }
     } catch (e) {
-      debugPrint('File picker save error: $e. Falling back to local documents.');
+      debugPrint(
+        'File picker save error: $e. Falling back to local documents.',
+      );
     }
 
     // Fallback: write to documents directory
@@ -444,7 +511,8 @@ class ExportService {
   /// Prompts user to save Screenplay PDF to their desktop
   static Future<String?> savePdfToFile(StoryProject project) async {
     final pdfBytes = await generateScreenplayPdf(project);
-    final defaultFileName = '${_sanitizeFileName(project.title)}_screenplay.pdf';
+    final defaultFileName =
+        '${_sanitizeFileName(project.title)}_screenplay.pdf';
 
     try {
       final outputUri = await FilePicker.saveFile(
@@ -459,7 +527,9 @@ class ExportService {
         return outputUri.toFilePath();
       }
     } catch (e) {
-      debugPrint('File picker save error: $e. Falling back to local documents.');
+      debugPrint(
+        'File picker save error: $e. Falling back to local documents.',
+      );
     }
 
     // Fallback: write to documents directory

@@ -1,10 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:beatwork/main.dart';
 import 'package:beatwork/models/story_project.dart';
 
 void main() {
+  testWidgets('Command-N starts a new project from the app window', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(
+      BeatWorkApp(initialProject: StoryProject.createSampleProject()),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('The Chronos Cipher'), findsOneWidget);
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.keyN);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.keyN);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pumpAndSettle();
+
+    expect(find.text('The Chronos Cipher'), findsNothing);
+  });
+
+  testWidgets('Author gear menu saves title page contact details', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    final project = StoryProject.createSampleProject();
+    await tester.pumpWidget(BeatWorkApp(initialProject: project));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.byTooltip('Settings'));
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+    expect(find.text('System'), findsOneWidget);
+    expect(find.text('Author'), findsOneWidget);
+    expect(find.text('About'), findsOneWidget);
+    await tester.tap(find.text('Author'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const ValueKey('author-name-field')),
+      'Avery Writer',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('author-email-field')),
+      'avery@example.com',
+    );
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(project.author, 'Avery Writer');
+    expect(project.authorEmail, 'avery@example.com');
+  });
+
   testWidgets('saving an unchanged named project reports it is up to date', (
     WidgetTester tester,
   ) async {
@@ -84,10 +142,13 @@ void main() {
     expect(find.text('Open...'), findsOneWidget);
     expect(find.text('Save As...'), findsOneWidget);
     expect(find.text('Open Recent'), findsOneWidget);
-    expect(find.text('Info'), findsOneWidget);
-    await tester.tap(find.text('Info'));
+    expect(find.text('Info'), findsNothing);
+    await tester.ensureVisible(find.byTooltip('Settings'));
+    await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
-    expect(find.text('Screenplay Project Settings'), findsOneWidget);
+    await tester.tap(find.text('System'));
+    await tester.pumpAndSettle();
+    expect(find.text('System'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
 

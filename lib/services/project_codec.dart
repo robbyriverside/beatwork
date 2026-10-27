@@ -19,6 +19,7 @@ class ProjectCodec {
       logline: project.logline,
       genre: project.genre,
       author: project.author,
+      authorEmail: project.authorEmail,
       isSample: project.isSample,
       events: project.events.map(
         (event) => StoryEventDocument(
@@ -65,6 +66,7 @@ class ProjectCodec {
       logline: document.logline,
       genre: document.genre,
       author: document.author,
+      authorEmail: document.authorEmail,
       isSample: document.isSample,
       events: document.events
           .map(
