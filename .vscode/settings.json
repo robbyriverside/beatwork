@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^git tag --list --sort=-version:refname && git status --short && find \\. -maxdepth 2 -type f \\\\\\( -name '\\*\\.sh' -o -name 'Makefile' -o -name '\\*\\.yml' -o -name '\\*\\.yaml' \\\\\\) -not -path '\\./build/\\*' -not -path '\\./\\.dart_tool/\\*' -print$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
