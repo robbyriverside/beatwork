@@ -20,6 +20,7 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
     DocumentOpenBridge.install(messenger: flutterViewController.engine.binaryMessenger)
 
     super.awakeFromNib()
+    self.title = "BeatWork ScreenWriting"
   }
 
   func windowShouldClose(_ sender: NSWindow) -> Bool {

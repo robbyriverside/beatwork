@@ -121,7 +121,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('The Chronos Cipher'));
+    await tester.tap(find.text('BEATWORK'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
@@ -230,13 +230,21 @@ void main() {
     expect(find.text('BEATWORK'), findsOneWidget);
     expect(find.text('The Chronos Cipher'), findsOneWidget);
 
-    await tester.tap(find.text('The Chronos Cipher'));
+    await tester.tap(find.byKey(const ValueKey('project-title-action')));
+    await tester.pumpAndSettle();
+    expect(find.text('Screenplay Title'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('BEATWORK'));
     await tester.pumpAndSettle();
     expect(find.text('New'), findsOneWidget);
     expect(find.text('Open...'), findsOneWidget);
     expect(find.text('Save As...'), findsOneWidget);
     expect(find.text('Open Recent'), findsOneWidget);
     expect(find.text('Info'), findsNothing);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byTooltip('Settings'));
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();

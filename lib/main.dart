@@ -501,132 +501,125 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                       child: const Text('Open Recent'),
                                     ),
                                   ],
-                                  builder: (context, controller, child) => SizedBox(
-                                    height: 56,
-                                    child: Center(
-                                      child: InkWell(
-                                        borderRadius: BorderRadius.circular(6),
-                                        onTap: () => controller.isOpen
-                                            ? controller.close()
-                                            : controller.open(),
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 6,
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.all(
-                                                  6,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: AppTheme.goldAccent
-                                                      .withValues(alpha: 0.2),
-                                                  borderRadius:
-                                                      BorderRadius.circular(6),
-                                                  border: Border.all(
-                                                    color: AppTheme.goldAccent,
+                                  builder: (context, controller, child) =>
+                                      SizedBox(
+                                        height: 56,
+                                        child: Center(
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                            onTap: () => controller.isOpen
+                                                ? controller.close()
+                                                : controller.open(),
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 10,
+                                                    vertical: 6,
                                                   ),
-                                                ),
-                                                child: const Icon(
-                                                  Icons.movie_outlined,
-                                                  size: 18,
-                                                  color: AppTheme.goldAccent,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      const Text(
-                                                        'BEATWORK',
-                                                        style: TextStyle(
-                                                          fontSize: 13,
-                                                          fontWeight:
-                                                              FontWeight.w900,
-                                                          letterSpacing: 1.2,
-                                                          color: AppTheme
-                                                              .goldAccent,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 34),
-                                                      Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          ConstrainedBox(
-                                                            constraints:
-                                                                const BoxConstraints(
-                                                                  maxWidth: 160,
-                                                                ),
-                                                            child: Container(
-                                                              padding:
-                                                                  const EdgeInsets.symmetric(
-                                                                    horizontal:
-                                                                        6,
-                                                                    vertical:
-                                                                        1.5,
-                                                                  ),
-                                                              decoration: BoxDecoration(
-                                                                color: AppTheme
-                                                                    .surfaceElevated,
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                      4,
-                                                                    ),
-                                                              ),
-                                                              child: Text(
-                                                                _provider
-                                                                    .project
-                                                                    .title,
-                                                                style: const TextStyle(
-                                                                  fontSize: 11,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w600,
-                                                                  color: AppTheme
-                                                                      .textPrimary,
-                                                                ),
-                                                                overflow:
-                                                                    TextOverflow
-                                                                        .ellipsis,
-                                                              ),
-                                                            ),
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.all(6),
+                                                    decoration: BoxDecoration(
+                                                      color: AppTheme.goldAccent
+                                                          .withValues(
+                                                            alpha: 0.2,
                                                           ),
-                                                          Text(
-                                                            _provider
-                                                                .project
-                                                                .genre,
-                                                            style: const TextStyle(
-                                                              fontSize: 10,
-                                                              color: AppTheme
-                                                                  .textSecondary,
-                                                            ),
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            6,
                                                           ),
-                                                        ],
+                                                      border: Border.all(
+                                                        color:
+                                                            AppTheme.goldAccent,
                                                       ),
-                                                    ],
+                                                    ),
+                                                    child: const Icon(
+                                                      Icons.movie_outlined,
+                                                      size: 18,
+                                                      color:
+                                                          AppTheme.goldAccent,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  const Text(
+                                                    'BEATWORK',
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w900,
+                                                      letterSpacing: 1.2,
+                                                      color:
+                                                          AppTheme.goldAccent,
+                                                    ),
                                                   ),
                                                 ],
                                               ),
-                                            ],
+                                            ),
                                           ),
                                         ),
                                       ),
+                                ),
+
+                                const SizedBox(width: 16),
+
+                                InkWell(
+                                  key: const ValueKey('project-title-action'),
+                                  borderRadius: BorderRadius.circular(4),
+                                  onTap: () => _openProjectSettings(context),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 4,
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        SizedBox(
+                                          width: 160,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 1.5,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.surfaceElevated,
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              _provider.project.title,
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppTheme.textPrimary,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          width: 160,
+                                          child: Text(
+                                            _provider.project.logline,
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              color: AppTheme.textSecondary,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
