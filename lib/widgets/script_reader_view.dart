@@ -57,7 +57,7 @@ class _ScriptReaderViewState extends State<ScriptReaderView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'COLLECTED STORY TIMELINE: ${provider.project.title.toUpperCase()}',
+                      'SCRIPT TIMELINE: ${provider.project.title.toUpperCase()}',
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,

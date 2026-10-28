@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:beatwork/main.dart';
 import 'package:beatwork/models/story_project.dart';
+import 'package:beatwork/widgets/beat_card.dart';
 
 void main() {
   testWidgets('Command-N starts a new project from the app window', (
@@ -42,7 +43,7 @@ void main() {
     await tester.ensureVisible(find.byTooltip('Settings'));
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
-    expect(find.text('System'), findsOneWidget);
+    expect(find.text('Project'), findsOneWidget);
     expect(find.text('Author'), findsOneWidget);
     expect(find.text('About'), findsOneWidget);
     await tester.tap(find.text('Author'));
@@ -61,6 +62,48 @@ void main() {
 
     expect(project.author, 'Avery Writer');
     expect(project.authorEmail, 'avery@example.com');
+  });
+
+  testWidgets('About dialog displays the macOS marketing version', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    const packageInfoChannel = MethodChannel(
+      'dev.fluttercommunity.plus/package_info',
+    );
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      packageInfoChannel,
+      (call) async => {
+        'appName': 'BeatWork',
+        'packageName': 'com.example.beatwork',
+        'version': '2.4.1',
+        'buildNumber': '37',
+        'buildSignature': '',
+        'installerStore': null,
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        packageInfoChannel,
+        null,
+      ),
+    );
+
+    await tester.pumpWidget(
+      BeatWorkApp(initialProject: StoryProject.createSampleProject()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('About'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2.4.1'), findsOneWidget);
+    expect(find.text('2.4.1+37'), findsNothing);
   });
 
   testWidgets('saving an unchanged named project reports it is up to date', (
@@ -84,6 +127,37 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Project up to date'), findsOneWidget);
+  });
+
+  testWidgets('beat board starts each row after the previous row ends', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1800, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(
+      BeatWorkApp(initialProject: StoryProject.createSampleProject()),
+    );
+    await tester.pumpAndSettle();
+
+    final visibleCards = [1, 2, 3, 4].map((number) {
+      final label = 'BEAT ${number.toString().padLeft(2, '0')}';
+      return tester.getRect(
+        find.ancestor(of: find.text(label), matching: find.byType(BeatCard)),
+      );
+    }).toList();
+    final firstRowTop = visibleCards.first.top;
+    final firstRowCards = visibleCards.where((card) => card.top == firstRowTop);
+    final lastFirstRowBottom = firstRowCards.fold<double>(
+      0,
+      (bottom, card) => card.bottom > bottom ? card.bottom : bottom,
+    );
+    final beatFive = tester.getRect(
+      find.ancestor(of: find.text('BEAT 05'), matching: find.byType(BeatCard)),
+    );
+
+    expect(beatFive.top, greaterThanOrEqualTo(lastFirstRowBottom));
   });
 
   testWidgets('assigned events can be dragged between beat cards', (
@@ -166,9 +240,9 @@ void main() {
     await tester.ensureVisible(find.byTooltip('Settings'));
     await tester.tap(find.byTooltip('Settings'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('System'));
+    await tester.tap(find.text('Project'));
     await tester.pumpAndSettle();
-    expect(find.text('System'), findsOneWidget);
+    expect(find.text('Project'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
 
@@ -182,11 +256,11 @@ void main() {
     // Verify Event Pool sidebar is present
     expect(find.text('Story Event Pool'), findsOneWidget);
 
-    // Switch to Collected Script Timeline
-    await tester.tap(find.text('Collected Script Timeline'));
+    // Switch to Script Timeline
+    await tester.tap(find.text('Script Timeline'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('COLLECTED STORY TIMELINE'), findsOneWidget);
+    expect(find.textContaining('SCRIPT TIMELINE'), findsOneWidget);
 
     final beatHeading = find.textContaining(
       'SAVE THE CAT: BEAT 1 - OPENING IMAGE',
@@ -200,7 +274,7 @@ void main() {
     await tester.tap(find.byTooltip('Close Workspace'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('COLLECTED STORY TIMELINE'), findsOneWidget);
+    expect(find.textContaining('SCRIPT TIMELINE'), findsOneWidget);
     expect(beatHeading, findsOneWidget);
   });
 }

@@ -41,6 +41,7 @@ dependencies:
   image: 4.5.2
   protobuf: ^6.1.0
   fixnum: ^1.1.1
+  package_info_plus: ^10.2.2
 
 dev_dependencies:
   flutter_test:

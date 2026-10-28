@@ -68,6 +68,7 @@ class BeatCard extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(14),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Top: Beat Index & Act Indicator
@@ -165,140 +166,139 @@ class BeatCard extends StatelessWidget {
                     const SizedBox(height: 10),
 
                     // Events preview or Drag Drop Target
-                    Expanded(
-                      child: isHovered
-                          ? Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.file_download_outlined,
-                                    size: 32,
+                    isHovered
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.file_download_outlined,
+                                  size: 32,
+                                  color: beat.act.accentColor,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Drop to assign to ${beat.name}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
                                     color: beat.act.accentColor,
                                   ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    'Drop to assign to ${beat.name}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: beat.act.accentColor,
-                                    ),
-                                    textAlign: TextAlign.center,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          )
+                        : beatEvents.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.add_to_photos_outlined,
+                                  size: 24,
+                                  color: AppTheme.textMuted.withOpacity(0.5),
+                                ),
+                                const SizedBox(height: 6),
+                                const Text(
+                                  'Drag events here\n(or click to open)',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppTheme.textMuted,
                                   ),
-                                ],
-                              ),
-                            )
-                          : beatEvents.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.add_to_photos_outlined,
-                                    size: 24,
-                                    color: AppTheme.textMuted.withOpacity(0.5),
+                                ),
+                              ],
+                            ),
+                          )
+                        : ListView.builder(
+                            physics: const NeverScrollableScrollPhysics(),
+                            shrinkWrap: true,
+                            itemCount: beatEvents.length > 3
+                                ? 3
+                                : beatEvents.length,
+                            itemBuilder: (context, idx) {
+                              final ev = beatEvents[idx];
+                              final preview = Container(
+                                margin: const EdgeInsets.only(bottom: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.surfaceElevated,
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(
+                                    color: AppTheme.border.withOpacity(0.5),
                                   ),
-                                  const SizedBox(height: 6),
-                                  const Text(
-                                    'Drag events here\n(or click to open)',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 11,
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.drag_indicator,
+                                      size: 14,
                                       color: AppTheme.textMuted,
                                     ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : ListView.builder(
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: beatEvents.length > 3
-                                  ? 3
-                                  : beatEvents.length,
-                              itemBuilder: (context, idx) {
-                                final ev = beatEvents[idx];
-                                final preview = Container(
-                                  margin: const EdgeInsets.only(bottom: 4),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.surfaceElevated,
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(
-                                      color: AppTheme.border.withOpacity(0.5),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.drag_indicator,
-                                        size: 14,
-                                        color: AppTheme.textMuted,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Expanded(
-                                        child: Text(
-                                          ev.title,
-                                          style: const TextStyle(
-                                            fontSize: 11,
-                                            color: AppTheme.textPrimary,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                                return Draggable<StoryEvent>(
-                                  data: ev,
-                                  feedback: Material(
-                                    color: Colors.transparent,
-                                    child: Container(
-                                      width: 240,
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.surfaceElevated,
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(
-                                          color: beat.act.accentColor,
-                                          width: 2,
-                                        ),
-                                        boxShadow: const [
-                                          BoxShadow(
-                                            color: Colors.black45,
-                                            blurRadius: 12,
-                                            offset: Offset(0, 6),
-                                          ),
-                                        ],
-                                      ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
                                       child: Text(
                                         ev.title,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 11,
                                           color: AppTheme.textPrimary,
                                         ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              return Draggable<StoryEvent>(
+                                data: ev,
+                                feedback: Material(
+                                  color: Colors.transparent,
+                                  child: Container(
+                                    width: 240,
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.surfaceElevated,
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(
+                                        color: beat.act.accentColor,
+                                        width: 2,
+                                      ),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Colors.black45,
+                                          blurRadius: 12,
+                                          offset: Offset(0, 6),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      ev.title,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppTheme.textPrimary,
                                       ),
                                     ),
                                   ),
-                                  childWhenDragging: Opacity(
-                                    opacity: 0.35,
-                                    child: preview,
-                                  ),
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(4),
-                                    onTap: () => onOpenEvent(ev),
-                                    child: preview,
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
+                                ),
+                                childWhenDragging: Opacity(
+                                  opacity: 0.35,
+                                  child: preview,
+                                ),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(4),
+                                  onTap: () => onOpenEvent(ev),
+                                  child: preview,
+                                ),
+                              );
+                            },
+                          ),
 
                     // Card Footer: Event Count & Scene Count Badges
                     Row(

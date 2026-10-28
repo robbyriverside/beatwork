@@ -44,7 +44,7 @@ class StoryProject {
       ..sort((a, b) => a.timelineOrder.compareTo(b.timelineOrder));
   }
 
-  /// Collects all beat timelines in canonical Save the Cat order (1 to 15),
+  /// Collects all beat timelines in canonical Save the Cat order (1 to 19),
   /// and within each beat by its timeline sequence.
   List<CollectedSceneEntry> getCollectedTimeline() {
     final List<CollectedSceneEntry> collected = [];

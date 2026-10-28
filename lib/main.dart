@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:io';
 import 'models/story_project.dart';
 import 'services/storage_service.dart';
@@ -66,7 +67,7 @@ class BeatWorkApp extends StatelessWidget {
 
 enum AppViewMode {
   beatSheet('Beat Sheet Board', Icons.dashboard_outlined),
-  timelineReader('Collected Script Timeline', Icons.auto_stories_outlined);
+  timelineReader('Script Timeline', Icons.auto_stories_outlined);
 
   final String label;
   final IconData icon;
@@ -256,7 +257,7 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
           children: [
             Icon(Icons.movie_filter_outlined, color: AppTheme.goldAccent),
             SizedBox(width: 8),
-            Text('System'),
+            Text('Project'),
           ],
         ),
         content: ConstrainedBox(
@@ -375,10 +376,19 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
     );
   }
 
-  void _showAbout(BuildContext context) {
+  Future<void> _showAbout(BuildContext context) async {
+    var appVersion = '1.0.0';
+    try {
+      appVersion = (await PackageInfo.fromPlatform()).version;
+    } on MissingPluginException {
+      // The app may be running before native plugin registration is refreshed.
+    }
+    if (!mounted) return;
+
     showAboutDialog(
       context: context,
       applicationName: 'BeatWork',
+      applicationVersion: appVersion,
       applicationLegalese: 'Save the Cat! Screenwriting Workflow',
     );
   }
@@ -744,7 +754,7 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                       itemBuilder: (context) => const [
                                         PopupMenuItem(
                                           value: 'system',
-                                          child: Text('System'),
+                                          child: Text('Project'),
                                         ),
                                         PopupMenuItem(
                                           value: 'author',

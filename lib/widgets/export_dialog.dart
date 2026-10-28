@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../models/beat_model.dart';
 import '../models/story_project.dart';
 import '../services/export_service.dart';
 import '../state/story_provider.dart';
@@ -461,7 +462,10 @@ class _ExportDialogState extends State<ExportDialog>
           _statRow('Author', widget.provider.project.author),
           const Divider(color: AppTheme.border),
           _statRow('Total Scenes on Timeline', '${collected.length} scenes'),
-          _statRow('Beats with Scenes', '$beatsWithScenes of 15 beats active'),
+          _statRow(
+            'Beats with Scenes',
+            '$beatsWithScenes of ${BeatDefinition.saveTheCatBeats.length} beats active',
+          ),
           _statRow('Events Assigned to Beats', '$eventsAssigned events'),
           _statRow('Events in Unassigned Pool', '$eventsInPool events'),
           _statRow(

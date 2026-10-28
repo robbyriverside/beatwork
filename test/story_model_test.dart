@@ -21,11 +21,32 @@ void main() {
   });
 
   group('Save the Cat Beat Model Tests', () {
-    test('Has exactly 15 canonical Save the Cat beats', () {
-      expect(BeatDefinition.saveTheCatBeats.length, 15);
-      expect(BeatDefinition.saveTheCatBeats.first.name, 'Opening Image');
-      expect(BeatDefinition.saveTheCatBeats.last.name, 'Final Image');
-    });
+    test(
+      'Has 19 ordered Save the Cat beats including the five finale stages',
+      () {
+        expect(BeatDefinition.saveTheCatBeats.length, 19);
+        expect(BeatDefinition.saveTheCatBeats.first.name, 'Opening Image');
+        expect(BeatDefinition.saveTheCatBeats.last.name, 'Final Image');
+        expect(BeatDefinition.getById('finale').name, 'Gather the Team');
+        expect(
+          BeatDefinition.saveTheCatBeats.map((beat) => beat.number),
+          List.generate(19, (index) => index + 1),
+        );
+        expect(
+          BeatDefinition.saveTheCatBeats
+              .skip(13)
+              .take(5)
+              .map((beat) => beat.name),
+          [
+            'Gather the Team',
+            'Execute the Plan',
+            'High Tower Surprise',
+            'Dig Down Deep',
+            'Execution of the New Plan',
+          ],
+        );
+      },
+    );
 
     test('Beats are grouped across the 4 acts', () {
       final act1Beats = BeatDefinition.saveTheCatBeats
@@ -41,10 +62,13 @@ void main() {
           .where((b) => b.act == StoryAct.act3)
           .toList();
 
-      expect(act1Beats.length, 5); // 1 to 5
-      expect(act2ABeats.length, 4); // 6 to 9
-      expect(act2BBeats.length, 3); // 10 to 12
-      expect(act3Beats.length, 3); // 13 to 15
+      expect(act1Beats.length, 6); // 1 to 6
+      expect(act2ABeats.length, 3); // 7 to 9
+      expect(act2BBeats.length, 4); // 10 to 13
+      expect(act3Beats.length, 6); // 14 to 19
+      expect(act1Beats.last.id, 'break_into_two');
+      expect(act2ABeats.last.id, 'midpoint');
+      expect(act2BBeats.last.id, 'break_into_three');
     });
   });
 

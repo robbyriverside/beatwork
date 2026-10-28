@@ -2,8 +2,18 @@ import 'package:flutter/material.dart';
 
 enum StoryAct {
   act1('Act 1', 'Exposition & Catalyst', Color(0xFF3B82F6), Color(0xFF1E3A8A)),
-  act2A('Act 2A', 'Promise of the Premise', Color(0xFF10B981), Color(0xFF064E3B)),
-  act2B('Act 2B', 'Bad Guys Close In & Crisis', Color(0xFFF59E0B), Color(0xFF78350F)),
+  act2A(
+    'Act 2A',
+    'Promise of the Premise',
+    Color(0xFF10B981),
+    Color(0xFF064E3B),
+  ),
+  act2B(
+    'Act 2B',
+    'Bad Guys Close In & Crisis',
+    Color(0xFFF59E0B),
+    Color(0xFF78350F),
+  ),
   act3('Act 3', 'Climax & Resolution', Color(0xFF8B5CF6), Color(0xFF4C1D95));
 
   final String title;
@@ -46,8 +56,10 @@ class BeatDefinition {
       act: StoryAct.act1,
       targetPage: 'Page 1',
       percentage: '0% - 1%',
-      shortSummary: 'The visual starting point and snapshot of the protagonist\'s flawed world.',
-      guidance: 'Give us a snapshot of the hero\'s current world, flaw, and status quo before everything changes. Should contrast directly with the Final Image.',
+      shortSummary:
+          'The visual starting point and snapshot of the protagonist\'s flawed world.',
+      guidance:
+          'Give us a snapshot of the hero\'s current world, flaw, and status quo before everything changes. Should contrast directly with the Final Image.',
       icon: Icons.movie_creation_outlined,
     ),
     BeatDefinition(
@@ -57,8 +69,10 @@ class BeatDefinition {
       act: StoryAct.act1,
       targetPage: 'Page 5',
       percentage: '5%',
-      shortSummary: 'The philosophical core or lesson the protagonist must learn.',
-      guidance: 'Usually spoken to or near the hero by a secondary character. The hero does not understand or accept it yet, but it states the true moral/internal journey.',
+      shortSummary:
+          'The philosophical core or lesson the protagonist must learn.',
+      guidance:
+          'Usually spoken to or near the hero by a secondary character. The hero does not understand or accept it yet, but it states the true moral/internal journey.',
       icon: Icons.lightbulb_outline,
     ),
     BeatDefinition(
@@ -68,8 +82,10 @@ class BeatDefinition {
       act: StoryAct.act1,
       targetPage: 'Pages 1 - 10',
       percentage: '1% - 10%',
-      shortSummary: 'Explore the hero\'s life, relationships, and the "stasis = death" dilemma.',
-      guidance: 'Introduce the main characters, the rules of this universe, and show why continuing the current way of living will result in spiritual or physical death.',
+      shortSummary:
+          'Explore the hero\'s life, relationships, and the "stasis = death" dilemma.',
+      guidance:
+          'Introduce the main characters, the rules of this universe, and show why continuing the current way of living will result in spiritual or physical death.',
       icon: Icons.home_work_outlined,
     ),
     BeatDefinition(
@@ -79,8 +95,10 @@ class BeatDefinition {
       act: StoryAct.act1,
       targetPage: 'Page 12',
       percentage: '10% - 12%',
-      shortSummary: 'The inciting incident that disrupts the status quo forever.',
-      guidance: 'An unexpected event, telegram, murder, discovery, or offer that shakes the hero out of equilibrium. There is no going back to the old normal.',
+      shortSummary:
+          'The inciting incident that disrupts the status quo forever.',
+      guidance:
+          'An unexpected event, telegram, murder, discovery, or offer that shakes the hero out of equilibrium. There is no going back to the old normal.',
       icon: Icons.bolt,
     ),
     BeatDefinition(
@@ -90,8 +108,10 @@ class BeatDefinition {
       act: StoryAct.act1,
       targetPage: 'Pages 12 - 25',
       percentage: '12% - 25%',
-      shortSummary: 'Hesitation, doubt, and weighing the risks before taking the leap.',
-      guidance: 'Should I stay or should I go? The hero prepares, hesitates, searches for an easy out, or tests their preparedness before accepting the call.',
+      shortSummary:
+          'Hesitation, doubt, and weighing the risks before taking the leap.',
+      guidance:
+          'Should I stay or should I go? The hero prepares, hesitates, searches for an easy out, or tests their preparedness before accepting the call.',
       icon: Icons.question_mark_rounded,
     ),
 
@@ -100,11 +120,13 @@ class BeatDefinition {
       id: 'break_into_two',
       number: 6,
       name: 'Break into Two',
-      act: StoryAct.act2A,
+      act: StoryAct.act1,
       targetPage: 'Page 25',
       percentage: '25%',
-      shortSummary: 'The active choice to enter the upside-down, unfamiliar world.',
-      guidance: 'The hero makes a deliberate, proactive choice to step across the threshold into Act 2. They enter a new arena with new rules.',
+      shortSummary:
+          'The active choice to enter the upside-down, unfamiliar world.',
+      guidance:
+          'The hero makes a deliberate, proactive choice to step across the threshold into Act 2. They enter a new arena with new rules.',
       icon: Icons.door_front_door_outlined,
     ),
     BeatDefinition(
@@ -114,8 +136,10 @@ class BeatDefinition {
       act: StoryAct.act2A,
       targetPage: 'Page 30',
       percentage: '30%',
-      shortSummary: 'Introduction of the love interest, mentor, or thematic ally.',
-      guidance: 'The secondary relationship that provides breathing room from the main plot and delivers the thematic truth the hero desperately needs to evolve.',
+      shortSummary:
+          'Introduction of the love interest, mentor, or thematic ally.',
+      guidance:
+          'The secondary relationship that provides breathing room from the main plot and delivers the thematic truth the hero desperately needs to evolve.',
       icon: Icons.favorite_border,
     ),
     BeatDefinition(
@@ -126,7 +150,8 @@ class BeatDefinition {
       targetPage: 'Pages 30 - 55',
       percentage: '30% - 50%',
       shortSummary: 'The "Promise of the Premise" – iconic trailer moments.',
-      guidance: 'The audience gets what was promised on the movie poster! Fish out of water adventures, training montages, initial heists, or budding romance.',
+      guidance:
+          'The audience gets what was promised on the movie poster! Fish out of water adventures, training montages, initial heists, or budding romance.',
       icon: Icons.sports_esports_outlined,
     ),
     BeatDefinition(
@@ -136,8 +161,10 @@ class BeatDefinition {
       act: StoryAct.act2A,
       targetPage: 'Page 55',
       percentage: '50%',
-      shortSummary: 'A major inflection point: false victory or false defeat; stakes escalate.',
-      guidance: 'A turning point where the hero gets what they thought they wanted (false victory) or suffers a severe setback (false defeat). A ticking clock starts.',
+      shortSummary:
+          'A major inflection point: false victory or false defeat; stakes escalate.',
+      guidance:
+          'A turning point where the hero gets what they thought they wanted (false victory) or suffers a severe setback (false defeat). A ticking clock starts.',
       icon: Icons.hourglass_top_outlined,
     ),
 
@@ -149,8 +176,10 @@ class BeatDefinition {
       act: StoryAct.act2B,
       targetPage: 'Pages 55 - 75',
       percentage: '50% - 75%',
-      shortSummary: 'External antagonists regroup while internal doubts fracture alliances.',
-      guidance: 'Enemies mount a counterattack, betrayal stirs from within, and the hero\'s unresolved flaws begin to unravel the progress they made.',
+      shortSummary:
+          'External antagonists regroup while internal doubts fracture alliances.',
+      guidance:
+          'Enemies mount a counterattack, betrayal stirs from within, and the hero\'s unresolved flaws begin to unravel the progress they made.',
       icon: Icons.warning_amber_rounded,
     ),
     BeatDefinition(
@@ -160,8 +189,10 @@ class BeatDefinition {
       act: StoryAct.act2B,
       targetPage: 'Page 75',
       percentage: '75%',
-      shortSummary: 'The lowest point and the symbolic or literal "whiff of death".',
-      guidance: 'The darkest nadir. The mentor dies, the plan fails catastrophically, the lovers split. The old way of operating is completely shattered.',
+      shortSummary:
+          'The lowest point and the symbolic or literal "whiff of death".',
+      guidance:
+          'The darkest nadir. The mentor dies, the plan fails catastrophically, the lovers split. The old way of operating is completely shattered.',
       icon: Icons.heart_broken_outlined,
     ),
     BeatDefinition(
@@ -171,8 +202,10 @@ class BeatDefinition {
       act: StoryAct.act2B,
       targetPage: 'Pages 75 - 85',
       percentage: '75% - 85%',
-      shortSummary: 'Mourning the loss, hitting rock bottom, and discovering inner truth.',
-      guidance: 'The hero is isolated and ready to give up. In this silence, they finally internalize the theme and realize how they must change from within.',
+      shortSummary:
+          'Mourning the loss, hitting rock bottom, and discovering inner truth.',
+      guidance:
+          'The hero is isolated and ready to give up. In this silence, they finally internalize the theme and realize how they must change from within.',
       icon: Icons.nights_stay_outlined,
     ),
 
@@ -181,33 +214,90 @@ class BeatDefinition {
       id: 'break_into_three',
       number: 13,
       name: 'Break into Three',
-      act: StoryAct.act3,
+      act: StoryAct.act2B,
       targetPage: 'Page 85',
       percentage: '85%',
       shortSummary: 'The Eureka / Epiphany moment: a new synthesis is born.',
-      guidance: 'Thanks to the B Story\'s wisdom and surviving the rock bottom, the hero devises a bold new solution that combines their outer goal with inner truth.',
+      guidance:
+          'Thanks to the B Story\'s wisdom and surviving the rock bottom, the hero devises a bold new solution that combines their outer goal with inner truth.',
       icon: Icons.wb_incandescent_outlined,
     ),
     BeatDefinition(
       id: 'finale',
       number: 14,
-      name: 'Finale',
+      name: 'Gather the Team',
       act: StoryAct.act3,
-      targetPage: 'Pages 85 - 110',
-      percentage: '85% - 99%',
-      shortSummary: 'The 5-point climax where the hero conquers the primary antagonist.',
-      guidance: 'Gathering the team, executing the new plan, confronting high tower surprises, making the ultimate sacrifice/choice, and establishing the new order.',
+      targetPage: 'Page 85',
+      percentage: '85%',
+      shortSummary:
+          'The hero assembles allies and resources for the final effort.',
+      guidance:
+          'Bring the team together and prepare the people, tools, and plan needed to confront the primary antagonist.',
       icon: Icons.military_tech_outlined,
     ),
     BeatDefinition(
-      id: 'final_image',
+      id: 'execute_the_plan',
       number: 15,
+      name: 'Execute the Plan',
+      act: StoryAct.act3,
+      targetPage: 'Pages 85 - 90',
+      percentage: '85% - 90%',
+      shortSummary:
+          'The team puts its plan into action against the primary antagonist.',
+      guidance:
+          'Show the plan unfolding, the team working together, and the stakes rising as they approach their goal.',
+      icon: Icons.play_arrow_rounded,
+    ),
+    BeatDefinition(
+      id: 'high_tower_surprise',
+      number: 16,
+      name: 'High Tower Surprise',
+      act: StoryAct.act3,
+      targetPage: 'Pages 90 - 95',
+      percentage: '90% - 95%',
+      shortSummary:
+          'A major reversal disrupts the plan at the moment of apparent success.',
+      guidance:
+          'Introduce a high-stakes complication that forces the hero and team to adapt rather than simply follow the plan.',
+      icon: Icons.warning_amber_rounded,
+    ),
+    BeatDefinition(
+      id: 'dig_down_deep',
+      number: 17,
+      name: 'Dig Down Deep',
+      act: StoryAct.act3,
+      targetPage: 'Pages 95 - 98',
+      percentage: '95% - 98%',
+      shortSummary:
+          'The hero finds the resolve to make the final, defining choice.',
+      guidance:
+          'Push the hero to their limit, then let them draw on what they have learned and choose a new way forward.',
+      icon: Icons.bolt,
+    ),
+    BeatDefinition(
+      id: 'execution_of_new_plan',
+      number: 18,
+      name: 'Execution of the New Plan',
+      act: StoryAct.act3,
+      targetPage: 'Pages 98 - 109',
+      percentage: '98% - 99%',
+      shortSummary:
+          'The hero carries out the new approach and resolves the central conflict.',
+      guidance:
+          'Pay off the final plan and the hero’s transformation as they overcome the antagonist and establish a new order.',
+      icon: Icons.task_alt_outlined,
+    ),
+    BeatDefinition(
+      id: 'final_image',
+      number: 19,
       name: 'Final Image',
       act: StoryAct.act3,
       targetPage: 'Page 110',
       percentage: '100%',
-      shortSummary: 'The "after" mirror image demonstrating profound transformation.',
-      guidance: 'The visual opposite of the Opening Image. Proves unequivocally that the hero and their world have evolved through this ordeal.',
+      shortSummary:
+          'The "after" mirror image demonstrating profound transformation.',
+      guidance:
+          'The visual opposite of the Opening Image. Proves unequivocally that the hero and their world have evolved through this ordeal.',
       icon: Icons.verified_outlined,
     ),
   ];

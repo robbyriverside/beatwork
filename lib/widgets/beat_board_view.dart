@@ -62,7 +62,9 @@ class _BeatBoardViewState extends State<BeatBoardView> {
                         children: [
                           ChoiceChip(
                             selected: _selectedActFilter == null,
-                            label: const Text('All 15 Beats'),
+                            label: Text(
+                              'All ${BeatDefinition.saveTheCatBeats.length} Beats',
+                            ),
                             onSelected: (_) =>
                                 setState(() => _selectedActFilter = null),
                             backgroundColor: AppTheme.surfaceElevated,
@@ -131,22 +133,39 @@ class _BeatBoardViewState extends State<BeatBoardView> {
                 crossAxisCount = 4;
               }
 
-              return GridView.builder(
+              final rowCount =
+                  (filteredBeats.length + crossAxisCount - 1) ~/ crossAxisCount;
+
+              return ListView.separated(
                 padding: const EdgeInsets.all(20),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.95,
-                ),
-                itemCount: filteredBeats.length,
+                itemCount: rowCount,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 16),
                 itemBuilder: (context, index) {
-                  final beat = filteredBeats[index];
-                  return BeatCard(
-                    beat: beat,
-                    provider: widget.provider,
-                    onTap: () => widget.onOpenBeat(beat),
-                    onOpenEvent: widget.onOpenEvent,
+                  final rowStart = index * crossAxisCount;
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var column = 0; column < crossAxisCount; column++)
+                        if (rowStart + column < filteredBeats.length)
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                right: column < crossAxisCount - 1 ? 16 : 0,
+                              ),
+                              child: BeatCard(
+                                beat: filteredBeats[rowStart + column],
+                                provider: widget.provider,
+                                onTap: () => widget.onOpenBeat(
+                                  filteredBeats[rowStart + column],
+                                ),
+                                onOpenEvent: widget.onOpenEvent,
+                              ),
+                            ),
+                          )
+                        else
+                          const Expanded(child: SizedBox()),
+                    ],
                   );
                 },
               );
