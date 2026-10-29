@@ -6,7 +6,15 @@ The key value is that the software allows a screenwriter to assemble the beats i
 
 ## macOS Release Build
 
-Create a semantic version tag such as `v1.0.2`, then run:
+Once you checkin your code.
+
+Create a semantic version tag such as `v1.0.2`...
+
+```sh
+sh git tag -a v1.0.2 -m "new version"
+```
+
+...then run:
 
 ```sh
 sh scripts/build_macos_release.sh

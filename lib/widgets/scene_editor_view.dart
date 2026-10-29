@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/beat_model.dart';
 import '../models/scene_model.dart';
 import '../state/story_provider.dart';
@@ -8,12 +9,14 @@ class SceneEditorView extends StatefulWidget {
   final Scene scene;
   final BeatDefinition beat;
   final StoryProvider provider;
+  final FocusNode bodyFocusNode;
 
   const SceneEditorView({
     super.key,
     required this.scene,
     required this.beat,
     required this.provider,
+    required this.bodyFocusNode,
   });
 
   @override
@@ -194,7 +197,7 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                             : AppTheme.textSecondary,
                       ),
                       label: Text(
-                        _isReferenceMode ? 'Hide Reference' : 'Reference Mode',
+                        _isReferenceMode ? 'Hide Versions' : 'Show Versions',
                         style: TextStyle(
                           color: _isReferenceMode
                               ? AppTheme.goldAccent
@@ -507,21 +510,40 @@ class _SceneEditorViewState extends State<SceneEditorView> {
             color: AppTheme.surfaceElevated,
             border: Border(bottom: BorderSide(color: AppTheme.border)),
           ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                const Text(
-                  'Format Snippets:',
-                  style: TextStyle(fontSize: 11, color: AppTheme.textMuted),
+          child: Row(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      const Text(
+                        'Format Snippets:',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.textMuted,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _formatSnippetButton('Action', '\n', '\n'),
+                      _formatSnippetButton('CHARACTER', '\n\n', '\n'),
+                      _formatSnippetButton('(Parenthetical)', '(', ')'),
+                      _formatSnippetButton('TRANSITION:', '\n\n', ' TO:\n\n'),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 8),
-                _formatSnippetButton('Action', '\n', '\n'),
-                _formatSnippetButton('CHARACTER', '\n\n', '\n'),
-                _formatSnippetButton('(Parenthetical)', '(', ')'),
-                _formatSnippetButton('TRANSITION:', '\n\n', ' TO:\n\n'),
-              ],
-            ),
+              ),
+              IconButton(
+                key: const ValueKey('fountain-help-button'),
+                icon: const Icon(Icons.help_outline, size: 18),
+                tooltip: 'Fountain syntax documentation',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => launchUrl(
+                  Uri.parse('https://fountain.io/syntax'),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
+            ],
           ),
         ),
 
@@ -534,13 +556,15 @@ class _SceneEditorViewState extends State<SceneEditorView> {
               children: [
                 Expanded(
                   child: TextField(
+                    key: const ValueKey('scene-script-body'),
                     controller: _scriptController,
+                    focusNode: widget.bodyFocusNode,
                     maxLines: null,
                     expands: true,
                     style: AppTheme.screenplayAction,
                     decoration: const InputDecoration(
                       hintText:
-                          'Write your scene in screenplay format...\n\nKAEL\nI knew you were listening.\n\nHe leans against the console, fingers hovering over the red wire.',
+                          'Write your scene in Fountain screenplay format...\nFountain syntax: https://fountain.io/syntax\n\nKAEL\nI knew you were listening.\n\nHe leans against the console, fingers hovering over the red wire.',
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,

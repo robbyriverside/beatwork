@@ -8,11 +8,13 @@ import 'event_dialog.dart';
 class EventPoolSidebar extends StatelessWidget {
   final StoryProvider provider;
   final VoidCallback onClose;
+  final Future<void> Function() onAddEvent;
 
   const EventPoolSidebar({
     super.key,
     required this.provider,
     required this.onClose,
+    required this.onAddEvent,
   });
 
   @override
@@ -274,9 +276,32 @@ class EventPoolSidebar extends StatelessWidget {
                           final updated = await EventDialog.show(
                             context,
                             initialEvent: ev,
+                            onSaveAndContinue: (event, isEditing) {
+                              if (isEditing) {
+                                provider.updateEvent(event);
+                              } else {
+                                provider.createEvent(
+                                  title: event.title,
+                                  description: event.description,
+                                  beatId: event.beatId,
+                                  characters: event.characters,
+                                  location: event.location,
+                                );
+                              }
+                            },
                           );
                           if (updated != null) {
-                            provider.updateEvent(updated);
+                            if (updated.id.isEmpty) {
+                              provider.createEvent(
+                                title: updated.title,
+                                description: updated.description,
+                                beatId: updated.beatId,
+                                characters: updated.characters,
+                                location: updated.location,
+                              );
+                            } else {
+                              provider.updateEvent(updated);
+                            }
                           }
                         },
                         onDelete: () => provider.deleteEvent(ev.id),
@@ -294,19 +319,8 @@ class EventPoolSidebar extends StatelessWidget {
             ),
             child: ElevatedButton.icon(
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Add Story Event'),
-              onPressed: () async {
-                final newEv = await EventDialog.show(context);
-                if (newEv != null) {
-                  provider.createEvent(
-                    title: newEv.title,
-                    description: newEv.description,
-                    beatId: newEv.beatId,
-                    characters: newEv.characters,
-                    location: newEv.location,
-                  );
-                }
-              },
+              label: const Text('Add Story Event  (%E)'),
+              onPressed: onAddEvent,
             ),
           ),
         ],

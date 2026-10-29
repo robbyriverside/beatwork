@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/beat_model.dart';
 import '../models/scene_model.dart';
 import '../models/story_event.dart';
@@ -38,6 +41,7 @@ class BeatDetailDialog extends StatefulWidget {
 class _BeatDetailDialogState extends State<BeatDetailDialog>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final _sceneBodyFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -48,7 +52,37 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
   @override
   void dispose() {
     _tabController.dispose();
+    _sceneBodyFocusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _addEventToBeat() async {
+    final newEvent = await EventDialog.show(
+      context,
+      initialBeatId: widget.beat.id,
+      onSaveAndContinue: (event, isEditing) {
+        if (isEditing) {
+          widget.provider.updateEvent(event);
+        } else {
+          widget.provider.createEvent(
+            title: event.title,
+            description: event.description,
+            beatId: widget.beat.id,
+            characters: event.characters,
+            location: event.location,
+          );
+        }
+      },
+    );
+    if (newEvent == null) return;
+
+    widget.provider.createEvent(
+      title: newEvent.title,
+      description: newEvent.description,
+      beatId: widget.beat.id,
+      characters: newEvent.characters,
+      location: newEvent.location,
+    );
   }
 
   @override
@@ -64,126 +98,147 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
         );
         final selectedScene = widget.provider.selectedScene;
 
-        return Dialog(
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 24,
-          ),
-          backgroundColor: AppTheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: AppTheme.borderHighlight, width: 1.5),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width * 0.92,
-              height: MediaQuery.of(context).size.height * 0.90,
-              child: Column(
-                children: [
-                  // Header
-                  _buildHeader(beatEvents.length, beatScenes.length),
+        return CallbackShortcuts(
+          bindings: {
+            SingleActivator(
+              LogicalKeyboardKey.keyE,
+              meta: Platform.isMacOS,
+              control: !Platform.isMacOS,
+            ): _addEventToBeat,
+          },
+          child: Focus(
+            autofocus: true,
+            child: Dialog(
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 24,
+              ),
+              backgroundColor: AppTheme.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(
+                  color: AppTheme.borderHighlight,
+                  width: 1.5,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.92,
+                  height: MediaQuery.of(context).size.height * 0.90,
+                  child: Column(
+                    children: [
+                      // Header
+                      _buildHeader(beatEvents.length, beatScenes.length),
 
-                  // Main Content: Split View
-                  Expanded(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Left Panel: Events & Scene Timeline tabs
-                        SizedBox(
-                          width: 380,
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: AppTheme.surfaceElevated,
-                              border: Border(
-                                right: BorderSide(color: AppTheme.border),
+                      // Main Content: Split View
+                      Expanded(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // Left Panel: Events & Scene Timeline tabs
+                            SizedBox(
+                              width: 380,
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  color: AppTheme.surfaceElevated,
+                                  border: Border(
+                                    right: BorderSide(color: AppTheme.border),
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    // Tabs
+                                    Container(
+                                      color: AppTheme.surface,
+                                      child: TabBar(
+                                        controller: _tabController,
+                                        labelColor: AppTheme.goldAccent,
+                                        unselectedLabelColor:
+                                            AppTheme.textSecondary,
+                                        indicatorColor: AppTheme.goldAccent,
+                                        tabs: [
+                                          Tab(
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(
+                                                  Icons.bolt,
+                                                  size: 16,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Flexible(
+                                                  child: Text(
+                                                    'Events (${beatEvents.length})',
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Tab(
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                const Icon(
+                                                  Icons.timeline,
+                                                  size: 16,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Flexible(
+                                                  child: Text(
+                                                    'Timeline (${beatScenes.length})',
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // Tab Views
+                                    Expanded(
+                                      child: TabBarView(
+                                        controller: _tabController,
+                                        children: [
+                                          // 1. Beat Events View
+                                          _buildBeatEventsView(beatEvents),
+
+                                          // 2. Beat Timeline View (Series of scenes)
+                                          _buildBeatTimelineView(beatScenes),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                            child: Column(
-                              children: [
-                                // Tabs
-                                Container(
-                                  color: AppTheme.surface,
-                                  child: TabBar(
-                                    controller: _tabController,
-                                    labelColor: AppTheme.goldAccent,
-                                    unselectedLabelColor:
-                                        AppTheme.textSecondary,
-                                    indicatorColor: AppTheme.goldAccent,
-                                    tabs: [
-                                      Tab(
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            const Icon(Icons.bolt, size: 16),
-                                            const SizedBox(width: 6),
-                                            Flexible(
-                                              child: Text(
-                                                'Events (${beatEvents.length})',
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Tab(
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            const Icon(
-                                              Icons.timeline,
-                                              size: 16,
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Flexible(
-                                              child: Text(
-                                                'Timeline (${beatScenes.length})',
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
 
-                                // Tab Views
-                                Expanded(
-                                  child: TabBarView(
-                                    controller: _tabController,
-                                    children: [
-                                      // 1. Beat Events View
-                                      _buildBeatEventsView(beatEvents),
-
-                                      // 2. Beat Timeline View (Series of scenes)
-                                      _buildBeatTimelineView(beatScenes),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                            // Right Panel: Scene Screenplay Editor & Multi-Version Manager
+                            Expanded(
+                              child: selectedScene != null
+                                  ? SceneEditorView(
+                                      scene: selectedScene,
+                                      beat: widget.beat,
+                                      provider: widget.provider,
+                                      bodyFocusNode: _sceneBodyFocusNode,
+                                    )
+                                  : _buildNoScenePlaceholder(beatScenes),
                             ),
-                          ),
+                          ],
                         ),
-
-                        // Right Panel: Scene Screenplay Editor & Multi-Version Manager
-                        Expanded(
-                          child: selectedScene != null
-                              ? SceneEditorView(
-                                  scene: selectedScene,
-                                  beat: widget.beat,
-                                  provider: widget.provider,
-                                )
-                              : _buildNoScenePlaceholder(beatScenes),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
@@ -366,9 +421,32 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                           final updated = await EventDialog.show(
                             context,
                             initialEvent: ev,
+                            onSaveAndContinue: (event, isEditing) {
+                              if (isEditing) {
+                                widget.provider.updateEvent(event);
+                              } else {
+                                widget.provider.createEvent(
+                                  title: event.title,
+                                  description: event.description,
+                                  beatId: event.beatId,
+                                  characters: event.characters,
+                                  location: event.location,
+                                );
+                              }
+                            },
                           );
                           if (updated != null) {
-                            widget.provider.updateEvent(updated);
+                            if (updated.id.isEmpty) {
+                              widget.provider.createEvent(
+                                title: updated.title,
+                                description: updated.description,
+                                beatId: updated.beatId,
+                                characters: updated.characters,
+                                location: updated.location,
+                              );
+                            } else {
+                              widget.provider.updateEvent(updated);
+                            }
                           }
                         },
                         onDelete: () => widget.provider.deleteEvent(ev.id),
@@ -387,22 +465,8 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
             width: double.infinity,
             child: ElevatedButton.icon(
               icon: const Icon(Icons.add, size: 16),
-              label: const Text('Add Event to this Beat'),
-              onPressed: () async {
-                final newEv = await EventDialog.show(
-                  context,
-                  initialBeatId: widget.beat.id,
-                );
-                if (newEv != null) {
-                  widget.provider.createEvent(
-                    title: newEv.title,
-                    description: newEv.description,
-                    beatId: widget.beat.id,
-                    characters: newEv.characters,
-                    location: newEv.location,
-                  );
-                }
-              },
+              label: const Text('Add Event to this Beat  (%E)'),
+              onPressed: _addEventToBeat,
             ),
           ),
         ),
@@ -671,52 +735,94 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
     );
   }
 
-  void _promptNewScene(BuildContext context) {
-    final titleCtrl = TextEditingController(text: 'New Scene');
-    final sluglineCtrl = TextEditingController(text: 'INT. NEW LOCATION - DAY');
-
-    showDialog(
+  Future<void> _promptNewScene(BuildContext context) async {
+    final previousSceneId = widget.provider.selectedSceneId;
+    await showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Scene to Beat Timeline'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleCtrl,
-              decoration: const InputDecoration(labelText: 'Scene Title'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: sluglineCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Slugline / Scene Heading',
-                hintText: 'e.g. INT. POLICE STATION - NIGHT',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          OutlinedButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+      builder: (context) =>
+          _NewSceneDialog(beat: widget.beat, provider: widget.provider),
+    );
+    if (!mounted || widget.provider.selectedSceneId == previousSceneId) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _sceneBodyFocusNode.requestFocus();
+    });
+  }
+}
+
+class _NewSceneDialog extends StatefulWidget {
+  final BeatDefinition beat;
+  final StoryProvider provider;
+
+  const _NewSceneDialog({required this.beat, required this.provider});
+
+  @override
+  State<_NewSceneDialog> createState() => _NewSceneDialogState();
+}
+
+class _NewSceneDialogState extends State<_NewSceneDialog> {
+  final _titleController = TextEditingController();
+  final _sluglineController = TextEditingController();
+  final _titleFocusNode = FocusNode();
+  final _sluglineFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _sluglineController.dispose();
+    _titleFocusNode.dispose();
+    _sluglineFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _addScene() {
+    final title = _titleController.text.trim();
+    if (title.isNotEmpty) {
+      widget.provider.createScene(
+        beatId: widget.beat.id,
+        title: title,
+        slugline: _sluglineController.text.trim().toUpperCase(),
+      );
+    }
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Add Scene to Beat Timeline'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            key: const ValueKey('new-scene-title-field'),
+            controller: _titleController,
+            focusNode: _titleFocusNode,
+            autofocus: true,
+            textInputAction: TextInputAction.next,
+            onSubmitted: (_) => _sluglineFocusNode.requestFocus(),
+            decoration: const InputDecoration(labelText: 'Scene Title'),
           ),
-          ElevatedButton(
-            onPressed: () {
-              final title = titleCtrl.text.trim();
-              if (title.isNotEmpty) {
-                widget.provider.createScene(
-                  beatId: widget.beat.id,
-                  title: title,
-                  slugline: sluglineCtrl.text.trim().toUpperCase(),
-                );
-              }
-              Navigator.of(ctx).pop();
-            },
-            child: const Text('Add Scene'),
+          const SizedBox(height: 12),
+          TextField(
+            key: const ValueKey('new-scene-slugline-field'),
+            controller: _sluglineController,
+            focusNode: _sluglineFocusNode,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _addScene(),
+            decoration: const InputDecoration(
+              labelText: 'Slugline / Scene Heading',
+              hintText: 'e.g. INT. POLICE STATION - NIGHT',
+            ),
           ),
         ],
       ),
+      actions: [
+        OutlinedButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(onPressed: _addScene, child: const Text('Add Scene')),
+      ],
     );
   }
 }

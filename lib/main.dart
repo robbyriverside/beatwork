@@ -393,12 +393,39 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
     );
   }
 
+  Future<void> _createStoryEvent() async {
+    final newEvent = await EventDialog.show(
+      context,
+      onSaveAndContinue: (event, isEditing) {
+        if (isEditing) {
+          _provider.updateEvent(event);
+        } else {
+          _provider.createEvent(
+            title: event.title,
+            description: event.description,
+            beatId: event.beatId,
+            characters: event.characters,
+            location: event.location,
+          );
+        }
+      },
+    );
+    if (newEvent == null) return;
+
+    _provider.createEvent(
+      title: newEvent.title,
+      description: newEvent.description,
+      beatId: newEvent.beatId,
+      characters: newEvent.characters,
+      location: newEvent.location,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: _provider,
       builder: (context, _) {
-        final unassignedCount = _provider.project.getUnassignedEvents().length;
         final usesMetaModifier = Platform.isMacOS;
         SingleActivator menuShortcut(
           LogicalKeyboardKey key, {
@@ -417,6 +444,7 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
           shift: true,
         );
         final infoShortcut = menuShortcut(LogicalKeyboardKey.keyI);
+        final addEventShortcut = menuShortcut(LogicalKeyboardKey.keyE);
 
         return CallbackShortcuts(
           bindings: {
@@ -425,6 +453,7 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
             saveShortcut: () => _saveDocument(),
             saveAsShortcut: () => _saveDocument(saveAs: true),
             infoShortcut: () => _openProjectSettings(context),
+            addEventShortcut: _createStoryEvent,
           },
           child: Focus(
             autofocus: true,
@@ -694,43 +723,6 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    // Toggle Event Pool Sidebar
-                                    Tooltip(
-                                      message: 'Toggle Unassigned Event Pool',
-                                      child: OutlinedButton.icon(
-                                        icon: Icon(
-                                          _provider.isEventPoolOpen
-                                              ? Icons.view_sidebar
-                                              : Icons.view_sidebar_outlined,
-                                          size: 16,
-                                          color: _provider.isEventPoolOpen
-                                              ? AppTheme.goldAccent
-                                              : AppTheme.textSecondary,
-                                        ),
-                                        label: Text(
-                                          'Pool ($unassignedCount)',
-                                          style: TextStyle(
-                                            color: _provider.isEventPoolOpen
-                                                ? AppTheme.goldAccent
-                                                : AppTheme.textSecondary,
-                                          ),
-                                        ),
-                                        style: OutlinedButton.styleFrom(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 8,
-                                          ),
-                                          side: BorderSide(
-                                            color: _provider.isEventPoolOpen
-                                                ? AppTheme.goldAccent
-                                                : AppTheme.border,
-                                          ),
-                                        ),
-                                        onPressed: () =>
-                                            _provider.toggleEventPool(),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
                                     PopupMenuButton<String>(
                                       tooltip: 'Settings',
                                       icon: const Icon(Icons.settings_outlined),
@@ -791,9 +783,32 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                     final updated = await EventDialog.show(
                                       context,
                                       initialEvent: event,
+                                      onSaveAndContinue: (next, isEditing) {
+                                        if (isEditing) {
+                                          _provider.updateEvent(next);
+                                        } else {
+                                          _provider.createEvent(
+                                            title: next.title,
+                                            description: next.description,
+                                            beatId: next.beatId,
+                                            characters: next.characters,
+                                            location: next.location,
+                                          );
+                                        }
+                                      },
                                     );
                                     if (updated != null) {
-                                      _provider.updateEvent(updated);
+                                      if (updated.id.isEmpty) {
+                                        _provider.createEvent(
+                                          title: updated.title,
+                                          description: updated.description,
+                                          beatId: updated.beatId,
+                                          characters: updated.characters,
+                                          location: updated.location,
+                                        );
+                                      } else {
+                                        _provider.updateEvent(updated);
+                                      }
                                     }
                                   },
                                 )
@@ -806,6 +821,7 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                           EventPoolSidebar(
                             provider: _provider,
                             onClose: () => _provider.setEventPoolOpen(false),
+                            onAddEvent: _createStoryEvent,
                           ),
                       ],
                     ),

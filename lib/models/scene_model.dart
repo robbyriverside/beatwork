@@ -89,8 +89,8 @@ class Scene {
     List<String>? mappedEventIds,
     List<SceneVersion>? versions,
     this.activeVersionId,
-  })  : mappedEventIds = mappedEventIds ?? [],
-        versions = versions ?? [] {
+  }) : mappedEventIds = mappedEventIds ?? [],
+       versions = versions ?? [] {
     if (this.versions.isEmpty) {
       final initialVersion = SceneVersion(
         id: const Uuid().v4(),
@@ -98,7 +98,7 @@ class Scene {
         label: 'Version 1 (Initial Draft)',
         slugline: 'INT. UNTITLED SCENE - DAY',
         summary: title,
-        scriptContent: 'Action description begins here...',
+        scriptContent: '',
       );
       this.versions.add(initialVersion);
       activeVersionId = initialVersion.id;
@@ -139,10 +139,8 @@ class Scene {
   }) {
     final nextNum = versions.isEmpty
         ? 1
-        : versions
-                .map((v) => v.versionNumber)
-                .reduce((a, b) => a > b ? a : b) +
-            1;
+        : versions.map((v) => v.versionNumber).reduce((a, b) => a > b ? a : b) +
+              1;
 
     final current = activeVersion;
     final newVersion = SceneVersion(
@@ -152,7 +150,8 @@ class Scene {
       slugline: slugline ?? current.slugline,
       summary: summary ?? current.summary,
       scriptContent: scriptContent ?? current.scriptContent,
-      notes: notes ?? 'Revision created based on Version ${current.versionNumber}',
+      notes:
+          notes ?? 'Revision created based on Version ${current.versionNumber}',
     );
 
     versions.add(newVersion);
@@ -193,7 +192,8 @@ class Scene {
   }
 
   factory Scene.fromJson(Map<String, dynamic> json) {
-    final vList = (json['versions'] as List<dynamic>?)
+    final vList =
+        (json['versions'] as List<dynamic>?)
             ?.map((e) => SceneVersion.fromJson(e as Map<String, dynamic>))
             .toList() ??
         [];
@@ -203,7 +203,8 @@ class Scene {
       beatId: json['beatId'] as String,
       title: json['title'] as String,
       timelineOrder: json['timelineOrder'] as int? ?? 0,
-      mappedEventIds: (json['mappedEventIds'] as List<dynamic>?)
+      mappedEventIds:
+          (json['mappedEventIds'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],

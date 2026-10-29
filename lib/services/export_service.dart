@@ -9,6 +9,236 @@ import 'package:pdf/widgets.dart' as pw;
 import '../models/story_project.dart';
 
 class ExportService {
+  static Future<Uint8List> generateBeatWorkTimelinePdf(
+    StoryProject project,
+  ) async {
+    final pdf = pw.Document();
+    final courier = pw.Font.courier();
+    final courierBold = pw.Font.courierBold();
+    final courierOblique = pw.Font.courierOblique();
+    final collected = project.getCollectedTimeline();
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.letter,
+        margin: const pw.EdgeInsets.fromLTRB(72, 64, 72, 64),
+        header: (context) => context.pageNumber == 1
+            ? pw.SizedBox()
+            : pw.Container(
+                alignment: pw.Alignment.topRight,
+                margin: const pw.EdgeInsets.only(bottom: 20),
+                child: pw.Text(
+                  '${context.pageNumber}.',
+                  style: pw.TextStyle(font: courier, fontSize: 10),
+                ),
+              ),
+        build: (_) {
+          final widgets = <pw.Widget>[
+            pw.SizedBox(height: 32),
+            pw.Center(
+              child: pw.Text(
+                project.title.toUpperCase(),
+                textAlign: pw.TextAlign.center,
+                style: pw.TextStyle(font: courierBold, fontSize: 20),
+              ),
+            ),
+            pw.SizedBox(height: 6),
+            pw.Center(
+              child: pw.Text(
+                'written by ${project.author}',
+                style: pw.TextStyle(font: courier, fontSize: 12),
+              ),
+            ),
+            if (project.logline.trim().isNotEmpty) ...[
+              pw.SizedBox(height: 14),
+              pw.Center(
+                child: pw.Text(
+                  '"${project.logline.trim()}"',
+                  textAlign: pw.TextAlign.center,
+                  style: pw.TextStyle(font: courierOblique, fontSize: 11),
+                ),
+              ),
+            ],
+            pw.SizedBox(height: 28),
+            pw.Divider(thickness: 1.5),
+            pw.SizedBox(height: 10),
+            pw.Center(
+              child: pw.Text(
+                'Copyright © ${DateTime.now().year} BeatWork ScriptWriter',
+                style: pw.TextStyle(font: courier, fontSize: 9),
+              ),
+            ),
+            pw.SizedBox(height: 26),
+          ];
+
+          String? currentBeatId;
+          for (final entry in collected) {
+            final version = entry.scene.activeVersion;
+            if (entry.beat.id != currentBeatId) {
+              currentBeatId = entry.beat.id;
+              widgets.add(
+                pw.Container(
+                  margin: const pw.EdgeInsets.only(top: 18, bottom: 10),
+                  padding: const pw.EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
+                  color: PdfColors.grey200,
+                  child: pw.Text(
+                    'BEAT ${entry.beat.number}: ${entry.beat.name.toUpperCase()}  |  ${entry.beat.act.title} - ${entry.beat.targetPage}',
+                    style: pw.TextStyle(font: courierBold, fontSize: 9),
+                  ),
+                ),
+              );
+            }
+
+            widgets.add(
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(top: 10, bottom: 5),
+                child: pw.Text(
+                  version.slugline.toUpperCase(),
+                  style: pw.TextStyle(font: courierBold, fontSize: 12),
+                ),
+              ),
+            );
+            widgets.add(
+              pw.Text(
+                'Scene #${entry.overallIndex}  |  Version ${version.versionNumber}',
+                style: pw.TextStyle(font: courierOblique, fontSize: 8),
+              ),
+            );
+            if (version.summary.trim().isNotEmpty) {
+              widgets.add(
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(top: 5),
+                  child: pw.Text(
+                    'Summary: ${version.summary.trim()}',
+                    style: pw.TextStyle(font: courier, fontSize: 9),
+                  ),
+                ),
+              );
+            }
+            if (version.notes.trim().isNotEmpty) {
+              widgets.add(
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(top: 3),
+                  child: pw.Text(
+                    'Writer Notes: ${version.notes.trim()}',
+                    style: pw.TextStyle(font: courierOblique, fontSize: 9),
+                  ),
+                ),
+              );
+            }
+            if (entry.mappedEvents.isNotEmpty) {
+              widgets.add(
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(top: 3, bottom: 5),
+                  child: pw.Text(
+                    'Events: ${entry.mappedEvents.map((event) => event.title).join('; ')}',
+                    style: pw.TextStyle(font: courierOblique, fontSize: 9),
+                  ),
+                ),
+              );
+            } else {
+              widgets.add(pw.SizedBox(height: 5));
+            }
+
+            for (final rawLine in _scriptBodyLines(
+              version.scriptContent,
+              version.slugline,
+            )) {
+              final line = rawLine.trim();
+              if (line.isEmpty) {
+                widgets.add(pw.SizedBox(height: 7));
+              } else if (_isCharacterCue(line)) {
+                widgets.add(
+                  pw.Container(
+                    margin: const pw.EdgeInsets.only(top: 8, left: 140),
+                    child: pw.Text(
+                      line.toUpperCase(),
+                      style: pw.TextStyle(font: courierBold, fontSize: 11),
+                    ),
+                  ),
+                );
+              } else if (line.startsWith('(') && line.endsWith(')')) {
+                widgets.add(
+                  pw.Container(
+                    margin: const pw.EdgeInsets.only(left: 110),
+                    child: pw.Text(
+                      line,
+                      style: pw.TextStyle(font: courier, fontSize: 11),
+                    ),
+                  ),
+                );
+              } else if (line.toUpperCase().endsWith('TO:') ||
+                  line.toUpperCase().startsWith('FADE ')) {
+                widgets.add(
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Text(
+                      line.toUpperCase(),
+                      style: pw.TextStyle(font: courierBold, fontSize: 11),
+                    ),
+                  ),
+                );
+              } else {
+                widgets.add(
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(bottom: 4),
+                    child: pw.Text(
+                      line,
+                      style: pw.TextStyle(font: courier, fontSize: 11),
+                    ),
+                  ),
+                );
+              }
+            }
+            widgets.add(pw.SizedBox(height: 14));
+          }
+
+          widgets.add(
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 30),
+              child: pw.Center(
+                child: pw.Text(
+                  'THE END',
+                  style: pw.TextStyle(font: courierBold, fontSize: 14),
+                ),
+              ),
+            ),
+          );
+          return widgets;
+        },
+      ),
+    );
+
+    return pdf.save();
+  }
+
+  static Future<String?> saveBeatWorkTimelinePdf(StoryProject project) async {
+    final bytes = await generateBeatWorkTimelinePdf(project);
+    final fileName =
+        '${_sanitizeFileName(project.title)}_beatwork_timeline.pdf';
+
+    try {
+      final outputUri = await FilePicker.saveFile(
+        dialogTitle: 'Export BeatWork Script Timeline PDF',
+        fileName: fileName,
+        bytes: bytes,
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+      if (outputUri != null) return outputUri.toFilePath();
+    } catch (error) {
+      debugPrint('Timeline PDF save error: $error. Falling back to documents.');
+    }
+
+    final directory = await getApplicationDocumentsDirectory();
+    final file = File('${directory.path}/$fileName');
+    await file.writeAsBytes(bytes);
+    return file.path;
+  }
+
   /// Generates industry standard Final Draft (.fdx) XML
   static String generateFinalDraftFdx(StoryProject project) {
     final buffer = StringBuffer();
@@ -61,90 +291,55 @@ class ExportService {
 
     final collectedScenes = project.getCollectedTimeline();
 
-    if (collectedScenes.isEmpty) {
-      buffer.writeln('    <Paragraph Type="Action">');
+    for (final entry in collectedScenes) {
+      final version = entry.scene.activeVersion;
+
+      // Scene Heading
+      final slugline = version.slugline.trim().isNotEmpty
+          ? version.slugline.trim().toUpperCase()
+          : 'INT. UNTITLED SCENE - DAY';
+      buffer.writeln('    <Paragraph Type="Scene Heading">');
       buffer.writeln(
-        '      <Text>(No scenes added yet in beat timeline)</Text>',
+        '      <Text AdornmentStyle="0" Background="#FFFFFFFFFFFF" Color="#000000000000" Font="Courier Final Draft" RevisionID="0" Size="12" Style="Bold">',
       );
+      buffer.writeln('        ${_escapeXml(slugline)}');
+      buffer.writeln('      </Text>');
       buffer.writeln('    </Paragraph>');
-    } else {
-      String? currentBeatId;
 
-      for (final entry in collectedScenes) {
-        if (currentBeatId != entry.beat.id) {
-          currentBeatId = entry.beat.id;
-          buffer.writeln('    <Paragraph Type="General">');
-          buffer.writeln(
-            '      <Text AdornmentStyle="0" Background="#FFFFFFFFFFFF" Color="#555555555555" Font="Courier Final Draft" RevisionID="0" Size="11" Style="Italic">',
-          );
-          buffer.writeln(
-            '        === [SAVE THE CAT: ${entry.beat.number}. ${_escapeXml(entry.beat.name).toUpperCase()} (${entry.beat.act.title} - ${entry.beat.targetPage})] ===',
-          );
-          buffer.writeln('      </Text>');
+      // Script content parsed into Final Draft paragraph types
+      for (final rawLine in _scriptBodyLines(
+        version.scriptContent,
+        version.slugline,
+      )) {
+        final line = rawLine.trim();
+        if (line.isEmpty) continue;
+
+        // Detect type
+        final upper = line.toUpperCase();
+        if (upper.startsWith('INT.') ||
+            upper.startsWith('EXT.') ||
+            upper.startsWith('INT/EXT') ||
+            upper.startsWith('I/E')) {
+          // Already handled or interior slug
+          buffer.writeln('    <Paragraph Type="Scene Heading">');
+          buffer.writeln('      <Text>${_escapeXml(upper)}</Text>');
           buffer.writeln('    </Paragraph>');
-        }
-
-        final version = entry.scene.activeVersion;
-
-        // Scene Heading
-        final slugline = version.slugline.trim().isNotEmpty
-            ? version.slugline.trim().toUpperCase()
-            : 'INT. UNTITLED SCENE - DAY';
-        buffer.writeln('    <Paragraph Type="Scene Heading">');
-        buffer.writeln(
-          '      <Text AdornmentStyle="0" Background="#FFFFFFFFFFFF" Color="#000000000000" Font="Courier Final Draft" RevisionID="0" Size="12" Style="Bold">',
-        );
-        buffer.writeln('        ${_escapeXml(slugline)}');
-        buffer.writeln('      </Text>');
-        buffer.writeln('    </Paragraph>');
-
-        // Optional Beat Event reference note
-        if (entry.mappedEvents.isNotEmpty) {
-          final eventNames = entry.mappedEvents.map((e) => e.title).join(' | ');
-          buffer.writeln('    <Paragraph Type="General">');
-          buffer.writeln(
-            '      <Text AdornmentStyle="0" Background="#FFFFFFFFFFFF" Color="#777777777777" Font="Courier Final Draft" RevisionID="0" Size="10" Style="Italic">',
-          );
-          buffer.writeln(
-            '        [[Mapped Beat Events: ${_escapeXml(eventNames)}]]',
-          );
-          buffer.writeln('      </Text>');
+        } else if (line.startsWith('(') && line.endsWith(')')) {
+          buffer.writeln('    <Paragraph Type="Parenthetical">');
+          buffer.writeln('      <Text>${_escapeXml(line)}</Text>');
           buffer.writeln('    </Paragraph>');
-        }
-
-        // Script content parsed into Final Draft paragraph types
-        final lines = version.scriptContent.split('\n');
-        for (final rawLine in lines) {
-          final line = rawLine.trim();
-          if (line.isEmpty) continue;
-
-          // Detect type
-          final upper = line.toUpperCase();
-          if (upper.startsWith('INT.') ||
-              upper.startsWith('EXT.') ||
-              upper.startsWith('INT/EXT') ||
-              upper.startsWith('I/E')) {
-            // Already handled or interior slug
-            buffer.writeln('    <Paragraph Type="Scene Heading">');
-            buffer.writeln('      <Text>${_escapeXml(upper)}</Text>');
-            buffer.writeln('    </Paragraph>');
-          } else if (line.startsWith('(') && line.endsWith(')')) {
-            buffer.writeln('    <Paragraph Type="Parenthetical">');
-            buffer.writeln('      <Text>${_escapeXml(line)}</Text>');
-            buffer.writeln('    </Paragraph>');
-          } else if (_isCharacterCue(line)) {
-            buffer.writeln('    <Paragraph Type="Character">');
-            buffer.writeln('      <Text>${_escapeXml(line)}</Text>');
-            buffer.writeln('    </Paragraph>');
-          } else if (upper.endsWith('TO:') || upper.startsWith('FADE ')) {
-            buffer.writeln('    <Paragraph Type="Transition">');
-            buffer.writeln('      <Text>${_escapeXml(upper)}</Text>');
-            buffer.writeln('    </Paragraph>');
-          } else {
-            buffer.writeln('    <Paragraph Type="Action">');
-            buffer.writeln('      <Text>${_escapeXml(line)}</Text>');
-            buffer.writeln('    </Paragraph>');
-          }
+        } else if (_isCharacterCue(line)) {
+          buffer.writeln('    <Paragraph Type="Character">');
+          buffer.writeln('      <Text>${_escapeXml(line)}</Text>');
+          buffer.writeln('    </Paragraph>');
+        } else if (upper.endsWith('TO:') || upper.startsWith('FADE ')) {
+          buffer.writeln('    <Paragraph Type="Transition">');
+          buffer.writeln('      <Text>${_escapeXml(upper)}</Text>');
+          buffer.writeln('    </Paragraph>');
+        } else {
+          buffer.writeln('    <Paragraph Type="Action">');
+          buffer.writeln('      <Text>${_escapeXml(line)}</Text>');
+          buffer.writeln('    </Paragraph>');
         }
       }
     }
@@ -166,32 +361,18 @@ class ExportService {
     buffer.writeln(
       'Draft date: ${DateTime.now().toLocal().toString().split(' ')[0]}',
     );
-    buffer.writeln(
-      'Notes: Save the Cat Beat Timeline Assembly (${project.genre})',
-    );
     buffer.writeln();
     buffer.writeln('===');
     buffer.writeln();
 
     final collectedScenes = project.getCollectedTimeline();
-    String? currentBeatId;
 
     for (final entry in collectedScenes) {
-      if (currentBeatId != entry.beat.id) {
-        currentBeatId = entry.beat.id;
-        buffer.writeln(
-          '/* --- SAVE THE CAT: BEAT ${entry.beat.number} - ${entry.beat.name.toUpperCase()} (${entry.beat.act.title} - ${entry.beat.targetPage}) --- */',
-        );
-        buffer.writeln();
-      }
-
       final version = entry.scene.activeVersion;
       buffer.writeln(version.slugline.toUpperCase());
       buffer.writeln();
       if (version.scriptContent.trim().isNotEmpty) {
         buffer.writeln(version.scriptContent.trim());
-      } else {
-        buffer.writeln(version.summary);
       }
       buffer.writeln();
     }
@@ -277,17 +458,6 @@ class ExportService {
                   ),
                 ),
               pw.Spacer(flex: 3),
-              pw.Align(
-                alignment: pw.Alignment.bottomLeft,
-                child: pw.Text(
-                  'Created with BeatWork\nSave the Cat! Screenwriting Workflow\n${DateTime.now().toLocal().toString().split(' ')[0]}',
-                  style: pw.TextStyle(
-                    font: fontCourier,
-                    fontSize: 10,
-                    color: PdfColors.grey600,
-                  ),
-                ),
-              ),
             ],
           );
         },
@@ -320,57 +490,7 @@ class ExportService {
         build: (pw.Context context) {
           final List<pw.Widget> widgets = [];
 
-          if (collectedScenes.isEmpty) {
-            widgets.add(
-              pw.Center(
-                child: pw.Text(
-                  '(No scenes have been scheduled in the beat timelines yet.)',
-                  style: pw.TextStyle(font: fontCourierOblique, fontSize: 12),
-                ),
-              ),
-            );
-            return widgets;
-          }
-
-          String? currentBeatId;
-
           for (final entry in collectedScenes) {
-            // Beat separator banner
-            if (currentBeatId != entry.beat.id) {
-              currentBeatId = entry.beat.id;
-              widgets.add(
-                pw.Container(
-                  margin: const pw.EdgeInsets.only(top: 24, bottom: 12),
-                  padding: const pw.EdgeInsets.symmetric(
-                    vertical: 4,
-                    horizontal: 8,
-                  ),
-                  decoration: const pw.BoxDecoration(color: PdfColors.grey200),
-                  child: pw.Row(
-                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                    children: [
-                      pw.Text(
-                        'BEAT ${entry.beat.number}: ${entry.beat.name.toUpperCase()}',
-                        style: pw.TextStyle(
-                          font: fontCourierBold,
-                          fontSize: 10,
-                          color: PdfColors.black,
-                        ),
-                      ),
-                      pw.Text(
-                        '${entry.beat.act.title} - ${entry.beat.targetPage}',
-                        style: pw.TextStyle(
-                          font: fontCourier,
-                          fontSize: 9,
-                          color: PdfColors.grey700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }
-
             final version = entry.scene.activeVersion;
 
             // Slugline
@@ -384,27 +504,11 @@ class ExportService {
               ),
             );
 
-            // Mapped events annotation
-            if (entry.mappedEvents.isNotEmpty) {
-              final evList = entry.mappedEvents.map((e) => e.title).join('; ');
-              widgets.add(
-                pw.Padding(
-                  padding: const pw.EdgeInsets.only(bottom: 6),
-                  child: pw.Text(
-                    '/* Events: $evList */',
-                    style: pw.TextStyle(
-                      font: fontCourierOblique,
-                      fontSize: 9,
-                      color: PdfColors.blueGrey800,
-                    ),
-                  ),
-                ),
-              );
-            }
-
             // Screenplay content lines
-            final lines = version.scriptContent.split('\n');
-            for (final rawLine in lines) {
+            for (final rawLine in _scriptBodyLines(
+              version.scriptContent,
+              version.slugline,
+            )) {
               final line = rawLine.trim();
               if (line.isEmpty) {
                 widgets.add(pw.SizedBox(height: 8));
@@ -582,6 +686,26 @@ class ExportService {
     }
     // Must contain letters
     return RegExp(r'^[A-Z0-9\s\.\(\)\-_]+$').hasMatch(line);
+  }
+
+  static Iterable<String> _scriptBodyLines(
+    String scriptContent,
+    String slugline,
+  ) sync* {
+    final lines = scriptContent.split('\n');
+    final sluglineText = slugline.trim();
+    var checkedFirstContentLine = false;
+
+    for (final line in lines) {
+      if (!checkedFirstContentLine && line.trim().isNotEmpty) {
+        checkedFirstContentLine = true;
+        if (sluglineText.isNotEmpty &&
+            line.trim().toUpperCase() == sluglineText.toUpperCase()) {
+          continue;
+        }
+      }
+      yield line;
+    }
   }
 
   static String _escapeXml(String input) {

@@ -87,28 +87,64 @@ class _BeatBoardViewState extends State<BeatBoardView> {
                               padding: const EdgeInsets.only(right: 6),
                               child: ChoiceChip(
                                 selected: _selectedActFilter == act,
-                                label: Text('${act.title}: ${act.subtitle}'),
+                                label: Text(act.title),
                                 onSelected: (sel) => setState(
                                   () => _selectedActFilter = sel ? act : null,
                                 ),
-                                backgroundColor: AppTheme.surfaceElevated,
+                                backgroundColor: act.accentColor.withValues(
+                                  alpha: 0.1,
+                                ),
                                 selectedColor: act.accentColor.withValues(
-                                  alpha: 0.2,
+                                  alpha: 0.22,
                                 ),
                                 labelStyle: TextStyle(
                                   fontSize: 11.5,
-                                  fontWeight: _selectedActFilter == act
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                  color: _selectedActFilter == act
-                                      ? act.accentColor
-                                      : AppTheme.textSecondary,
+                                  fontWeight: FontWeight.bold,
+                                  color: act.accentColor,
                                 ),
                               ),
                             ),
                           ),
                         ],
                       ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Tooltip(
+                    message: widget.provider.isEventPoolOpen
+                        ? 'Hide Event Pool'
+                        : 'Show Event Pool',
+                    child: OutlinedButton.icon(
+                      key: const ValueKey('toggle-event-pool-button'),
+                      icon: Icon(
+                        widget.provider.isEventPoolOpen
+                            ? Icons.view_sidebar
+                            : Icons.view_sidebar_outlined,
+                        size: 16,
+                        color: widget.provider.isEventPoolOpen
+                            ? AppTheme.goldAccent
+                            : AppTheme.textSecondary,
+                      ),
+                      label: Text(
+                        'Pool (${widget.provider.project.getUnassignedEvents().length})',
+                        style: TextStyle(
+                          color: widget.provider.isEventPoolOpen
+                              ? AppTheme.goldAccent
+                              : AppTheme.textSecondary,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        side: BorderSide(
+                          color: widget.provider.isEventPoolOpen
+                              ? AppTheme.goldAccent
+                              : AppTheme.border,
+                        ),
+                      ),
+                      onPressed: widget.provider.toggleEventPool,
                     ),
                   ),
                 ],

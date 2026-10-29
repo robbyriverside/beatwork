@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/story_project.dart';
+import '../services/export_service.dart';
 import '../state/story_provider.dart';
 import '../theme/app_theme.dart';
 import 'beat_detail_dialog.dart';
@@ -15,6 +16,25 @@ class ScriptReaderView extends StatefulWidget {
 }
 
 class _ScriptReaderViewState extends State<ScriptReaderView> {
+  Future<void> _exportTimelinePdf() async {
+    try {
+      final savedPath = await ExportService.saveBeatWorkTimelinePdf(
+        widget.provider.project,
+      );
+      if (mounted && savedPath != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('BeatWork Timeline PDF saved: $savedPath')),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not export Timeline PDF: $error')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = widget.provider;
@@ -211,6 +231,28 @@ class _ScriptReaderViewState extends State<ScriptReaderView> {
                               color: AppTheme.border,
                               thickness: 1.5,
                             ),
+                            const SizedBox(height: 12),
+                            Center(
+                              child: Text(
+                                'Copyright © ${DateTime.now().year} BeatWork ScriptWriter',
+                                style: TextStyle(
+                                  fontFamily: 'Courier',
+                                  fontSize: 10,
+                                  color: AppTheme.textMuted,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Center(
+                              child: ElevatedButton.icon(
+                                key: const ValueKey(
+                                  'export-beatwork-timeline-button',
+                                ),
+                                icon: const Icon(Icons.picture_as_pdf),
+                                label: const Text('Export BeatWork'),
+                                onPressed: _exportTimelinePdf,
+                              ),
+                            ),
                             const SizedBox(height: 24),
 
                             // Script content broken down by beat timeline
@@ -357,13 +399,46 @@ class _ScriptReaderViewState extends State<ScriptReaderView> {
         ),
       );
 
+      if (version.summary.trim().isNotEmpty) {
+        list.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(
+              'Summary: ${version.summary.trim()}',
+              style: const TextStyle(
+                fontFamily: 'Courier',
+                fontSize: 11,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+          ),
+        );
+      }
+
+      if (version.notes.trim().isNotEmpty) {
+        list.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text(
+              'Writer Notes: ${version.notes.trim()}',
+              style: const TextStyle(
+                fontFamily: 'Courier',
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+                color: AppTheme.textMuted,
+              ),
+            ),
+          ),
+        );
+      }
+
       // Mapped events annotation
       if (entry.mappedEvents.isNotEmpty) {
         list.add(
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: Text(
-              '/* Mapped Beat Events: ${entry.mappedEvents.map((e) => e.title).join('; ')} */',
+              'Events: ${entry.mappedEvents.map((e) => e.title).join('; ')}',
               style: const TextStyle(
                 fontFamily: 'Courier',
                 fontSize: 11,

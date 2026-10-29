@@ -168,6 +168,11 @@ void main() {
     test('Generates valid Final Draft (.fdx) XML content', () {
       final project = StoryProject.createSampleProject();
       project.authorEmail = 'writer@example.com';
+      final firstEntry = project.getCollectedTimeline().first;
+      firstEntry.scene.activeVersion.summary = 'Internal scene summary';
+      firstEntry.scene.activeVersion.notes = 'Internal writer note';
+      final mappedEvent = project.events.first;
+      firstEntry.scene.mappedEventIds.add(mappedEvent.id);
       final fdx = ExportService.generateFinalDraftFdx(project);
 
       expect(fdx.contains('<?xml version="1.0"'), true);
@@ -180,18 +185,37 @@ void main() {
       expect(fdx.contains('<Paragraph Type="Scene Heading">'), true);
       expect(fdx.contains('</FinalDraft>'), true);
       expect(fdx.contains('The Chronos Cipher'), true);
+      expect('EXT. SPIDERTOWER ANTENNA - NIGHT'.allMatches(fdx).length, 1);
+      expect(fdx.contains('SAVE THE CAT:'), false);
+      expect(fdx.contains('BEAT 1:'), false);
+      expect(fdx.contains('Mapped Beat Events'), false);
+      expect(fdx.contains(mappedEvent.title), false);
+      expect(fdx.contains('Internal scene summary'), false);
+      expect(fdx.contains('Internal writer note'), false);
     });
 
     test('Generates valid Fountain plain text content', () {
       final project = StoryProject.createSampleProject();
       project.authorEmail = 'writer@example.com';
+      final firstScene = project.getCollectedTimeline().first.scene;
+      final firstEntry = project.getCollectedTimeline().first;
+      firstScene.activeVersion.summary = 'Internal scene summary';
+      firstScene.activeVersion.notes = 'Internal writer note';
+      final mappedEvent = project.events.first;
+      firstScene.mappedEventIds.add(mappedEvent.id);
       final fountain = ExportService.generateFountain(project);
 
       expect(fountain.contains('Title: The Chronos Cipher'), true);
       expect(fountain.contains('Author: Antigravity Screenwriter'), true);
       expect(fountain.contains('Contact: writer@example.com'), true);
-      expect(fountain.contains('SAVE THE CAT:'), true);
+      expect(fountain.contains('SAVE THE CAT:'), false);
+      expect(fountain.contains('BEAT ${firstEntry.beat.number}'), false);
       expect(fountain.contains('EXT. SPIDERTOWER ANTENNA - NIGHT'), true);
+      expect(fountain.contains('Events:'), false);
+      expect(fountain.contains(mappedEvent.title), false);
+      expect(fountain.contains('Internal scene summary'), false);
+      expect(fountain.contains('Internal writer note'), false);
+      expect(fountain.contains('[['), false);
     });
 
     test('Generates Screenplay PDF bytes', () async {
@@ -205,5 +229,18 @@ void main() {
       expect(pdfBytes[2], 0x44); // D
       expect(pdfBytes[3], 0x46); // F
     });
+
+    test(
+      'Generates BeatWork Timeline PDF directly from project data',
+      () async {
+        final project = StoryProject.createSampleProject();
+        final pdfBytes = await ExportService.generateBeatWorkTimelinePdf(
+          project,
+        );
+
+        expect(pdfBytes.take(4).toList(), [0x25, 0x50, 0x44, 0x46]);
+        expect(pdfBytes.length, greaterThan(1000));
+      },
+    );
   });
 }
