@@ -442,11 +442,19 @@ class _ScriptReaderViewState extends State<ScriptReaderView> {
 
       // Script Content
       final lines = version.scriptContent.split('\n');
+      var checkedFirstContentLine = false;
       for (final rawLine in lines) {
         final line = rawLine.trim();
         if (line.isEmpty) {
           list.add(const SizedBox(height: 10));
           continue;
+        }
+        if (!checkedFirstContentLine) {
+          checkedFirstContentLine = true;
+          if (version.slugline.trim().isNotEmpty &&
+              line.toUpperCase() == version.slugline.trim().toUpperCase()) {
+            continue;
+          }
         }
 
         final upper = line.toUpperCase();

@@ -686,6 +686,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('SCRIPT TIMELINE'), findsOneWidget);
+    expect(find.text('EXT. SPIDERTOWER ANTENNA - NIGHT'), findsOneWidget);
     expect(
       find.text('Copyright © ${DateTime.now().year} BeatWork ScriptWriter'),
       findsOneWidget,
