@@ -399,51 +399,41 @@ class _ScriptReaderViewState extends State<ScriptReaderView> {
         ),
       );
 
+      final metadataLines = <String>[];
       if (version.summary.trim().isNotEmpty) {
-        list.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Text(
-              'Summary: ${version.summary.trim()}',
-              style: const TextStyle(
-                fontFamily: 'Courier',
-                fontSize: 11,
-                color: AppTheme.textSecondary,
-              ),
-            ),
-          ),
-        );
+        metadataLines.add('Summary: ${version.summary.trim()}');
       }
-
       if (version.notes.trim().isNotEmpty) {
-        list.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Text(
-              'Writer Notes: ${version.notes.trim()}',
-              style: const TextStyle(
-                fontFamily: 'Courier',
-                fontSize: 11,
-                fontStyle: FontStyle.italic,
-                color: AppTheme.textMuted,
-              ),
-            ),
-          ),
+        metadataLines.add('Writer Notes: ${version.notes.trim()}');
+      }
+      if (entry.mappedEvents.isNotEmpty) {
+        metadataLines.add(
+          'Events: ${entry.mappedEvents.map((event) => event.title).join('; ')}',
         );
       }
 
-      // Mapped events annotation
-      if (entry.mappedEvents.isNotEmpty) {
+      if (metadataLines.isNotEmpty) {
         list.add(
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: Text(
-              'Events: ${entry.mappedEvents.map((e) => e.title).join('; ')}',
-              style: const TextStyle(
-                fontFamily: 'Courier',
-                fontSize: 11,
-                fontStyle: FontStyle.italic,
-                color: AppTheme.cyanAccent,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: ['/*', ...metadataLines, '*/']
+                    .map(
+                      (line) => Text(
+                        line,
+                        style: TextStyle(
+                          fontFamily: 'Courier',
+                          fontSize: 11,
+                          fontStyle: FontStyle.italic,
+                          color: entry.beat.act.accentColor,
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
             ),
           ),

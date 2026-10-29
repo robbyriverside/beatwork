@@ -234,6 +234,10 @@ void main() {
       'Generates BeatWork Timeline PDF directly from project data',
       () async {
         final project = StoryProject.createSampleProject();
+        final scene = project.getCollectedTimeline().first.scene;
+        scene.activeVersion.summary = 'Summary for the PDF';
+        scene.activeVersion.notes = 'Writer note for the PDF';
+        scene.mappedEventIds.add(project.events.first.id);
         final pdfBytes = await ExportService.generateBeatWorkTimelinePdf(
           project,
         );

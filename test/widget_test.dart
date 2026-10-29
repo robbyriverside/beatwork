@@ -697,6 +697,14 @@ void main() {
       ),
       findsOneWidget,
     );
+    expect(find.text('/*'), findsWidgets);
+    expect(find.text('*/'), findsWidgets);
+    final timelineSummary = tester.widget<Text>(
+      find.textContaining(
+        'Summary: Tightened pacing, introduced the ticking rain',
+      ),
+    );
+    expect(timelineSummary.style?.color, StoryAct.act1.accentColor);
     expect(
       find.textContaining('Writer Notes: Latest polished version.'),
       findsOneWidget,

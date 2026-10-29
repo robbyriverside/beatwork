@@ -74,6 +74,16 @@ class ExportService {
           String? currentBeatId;
           for (final entry in collected) {
             final version = entry.scene.activeVersion;
+            final beatColor = PdfColor(
+              entry.beat.act.accentColor.r,
+              entry.beat.act.accentColor.g,
+              entry.beat.act.accentColor.b,
+            );
+            final beatTint = PdfColor(
+              0.88 + entry.beat.act.accentColor.r * 0.12,
+              0.88 + entry.beat.act.accentColor.g * 0.12,
+              0.88 + entry.beat.act.accentColor.b * 0.12,
+            );
             if (entry.beat.id != currentBeatId) {
               currentBeatId = entry.beat.id;
               widgets.add(
@@ -83,10 +93,14 @@ class ExportService {
                     horizontal: 8,
                     vertical: 5,
                   ),
-                  color: PdfColors.grey200,
+                  color: beatTint,
                   child: pw.Text(
                     'BEAT ${entry.beat.number}: ${entry.beat.name.toUpperCase()}  |  ${entry.beat.act.title} - ${entry.beat.targetPage}',
-                    style: pw.TextStyle(font: courierBold, fontSize: 9),
+                    style: pw.TextStyle(
+                      font: courierBold,
+                      fontSize: 9,
+                      color: beatColor,
+                    ),
                   ),
                 ),
               );
@@ -107,41 +121,45 @@ class ExportService {
                 style: pw.TextStyle(font: courierOblique, fontSize: 8),
               ),
             );
+
+            final metadataLines = <String>['/*'];
             if (version.summary.trim().isNotEmpty) {
-              widgets.add(
-                pw.Padding(
-                  padding: const pw.EdgeInsets.only(top: 5),
-                  child: pw.Text(
-                    'Summary: ${version.summary.trim()}',
-                    style: pw.TextStyle(font: courier, fontSize: 9),
-                  ),
-                ),
-              );
+              metadataLines.add('Summary: ${version.summary.trim()}');
             }
             if (version.notes.trim().isNotEmpty) {
-              widgets.add(
-                pw.Padding(
-                  padding: const pw.EdgeInsets.only(top: 3),
-                  child: pw.Text(
-                    'Writer Notes: ${version.notes.trim()}',
-                    style: pw.TextStyle(font: courierOblique, fontSize: 9),
-                  ),
-                ),
-              );
+              metadataLines.add('Writer Notes: ${version.notes.trim()}');
             }
             if (entry.mappedEvents.isNotEmpty) {
-              widgets.add(
-                pw.Padding(
-                  padding: const pw.EdgeInsets.only(top: 3, bottom: 5),
-                  child: pw.Text(
-                    'Events: ${entry.mappedEvents.map((event) => event.title).join('; ')}',
-                    style: pw.TextStyle(font: courierOblique, fontSize: 9),
-                  ),
-                ),
+              metadataLines.add(
+                'Events: ${entry.mappedEvents.map((event) => event.title).join('; ')}',
               );
-            } else {
-              widgets.add(pw.SizedBox(height: 5));
             }
+            metadataLines.add('*/');
+            widgets.add(
+              pw.Container(
+                width: double.infinity,
+                margin: const pw.EdgeInsets.only(top: 5, bottom: 5),
+                padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 6,
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: metadataLines
+                      .map(
+                        (line) => pw.Text(
+                          line,
+                          style: pw.TextStyle(
+                            font: courierOblique,
+                            fontSize: 9,
+                            color: beatColor,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            );
 
             for (final rawLine in _scriptBodyLines(
               version.scriptContent,
