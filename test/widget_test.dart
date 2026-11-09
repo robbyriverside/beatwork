@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -559,6 +560,108 @@ void main() {
     );
 
     expect(beatFive.top, greaterThanOrEqualTo(lastFirstRowBottom));
+  });
+
+  testWidgets('each beat scrolls its own events without moving the board', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    final project = StoryProject.createEmptyProject();
+    for (final beatId in ['opening_image', 'theme_stated', 'b_story']) {
+      for (var index = 0; index < 10; index++) {
+        project.events.add(
+          StoryEvent(
+            id: '$beatId-$index',
+            title: '$beatId event $index',
+            beatId: beatId,
+            orderIndex: index,
+          ),
+        );
+      }
+    }
+
+    await tester.pumpWidget(BeatWorkApp(initialProject: project));
+    await tester.pumpAndSettle();
+
+    Finder beatCard(String label) =>
+        find.ancestor(of: find.text(label), matching: find.byType(BeatCard));
+    Finder eventList(Finder card) =>
+        find.descendant(of: card, matching: find.byType(ListView));
+
+    final firstCard = beatCard('BEAT 01');
+    final secondCard = beatCard('BEAT 02');
+    final firstList = eventList(firstCard);
+    final secondList = eventList(secondCard);
+    final firstController = tester.widget<ListView>(firstList).controller!;
+    final secondController = tester.widget<ListView>(secondList).controller!;
+    final board = find.ancestor(of: firstCard, matching: find.byType(ListView));
+    final boardPosition = tester
+        .state<ScrollableState>(
+          find.descendant(of: board, matching: find.byType(Scrollable)).first,
+        )
+        .position;
+    final boardOffset = boardPosition.pixels;
+
+    expect(firstController.position.maxScrollExtent, greaterThan(0));
+    expect(find.text('opening_image event 9').hitTestable(), findsNothing);
+
+    await tester.sendEventToBinding(
+      PointerScrollEvent(
+        position: tester.getCenter(firstList),
+        scrollDelta: const Offset(0, 1000),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(firstController.offset, firstController.position.maxScrollExtent);
+    expect(secondController.offset, 0);
+    expect(boardPosition.pixels, boardOffset);
+    expect(find.text('opening_image event 9').hitTestable(), findsOneWidget);
+    expect(find.text('10 Events'), findsWidgets);
+
+    final listRect = tester.getRect(firstList);
+    await tester.dragFrom(
+      Offset(listRect.right - 4, listRect.bottom - 10),
+      const Offset(0, -80),
+    );
+    await tester.pumpAndSettle();
+    expect(firstController.offset, 0);
+    expect(secondController.offset, 0);
+    expect(boardPosition.pixels, boardOffset);
+
+    await tester.sendEventToBinding(
+      PointerScrollEvent(
+        position: tester.getCenter(firstList),
+        scrollDelta: const Offset(0, 1000),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('opening_image event 9'));
+    await tester.pumpAndSettle();
+    expect(find.text('Edit Story Event'), findsOneWidget);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    final lastEvent = find.text('opening_image event 9');
+    final dragOffset =
+        tester.getCenter(secondCard) - tester.getCenter(lastEvent);
+    await tester.drag(lastEvent, dragOffset);
+    await tester.pumpAndSettle();
+    expect(
+      project.events
+          .firstWhere((event) => event.id == 'opening_image-9')
+          .beatId,
+      'theme_stated',
+    );
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Act 2A'));
+    await tester.pumpAndSettle();
+    final filteredList = eventList(beatCard('BEAT 07'));
+    expect(tester.widget<ListView>(filteredList).controller!.offset, 0);
+    expect(find.text('b_story event 0').hitTestable(), findsOneWidget);
   });
 
   testWidgets('assigned events can be dragged between beat cards', (

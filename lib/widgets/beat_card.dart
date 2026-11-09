@@ -4,7 +4,7 @@ import '../models/story_event.dart';
 import '../state/story_provider.dart';
 import '../theme/app_theme.dart';
 
-class BeatCard extends StatelessWidget {
+class BeatCard extends StatefulWidget {
   final BeatDefinition beat;
   final StoryProvider provider;
   final VoidCallback onTap;
@@ -19,7 +19,22 @@ class BeatCard extends StatelessWidget {
   });
 
   @override
+  State<BeatCard> createState() => _BeatCardState();
+}
+
+class _BeatCardState extends State<BeatCard> {
+  final _eventsScrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _eventsScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final beat = widget.beat;
+    final provider = widget.provider;
     final beatEvents = provider.project.getEventsForBeat(beat.id);
     final beatScenes = provider.project.getScenesForBeat(beat.id);
     final isSelected = provider.selectedBeatId == beat.id;
@@ -64,7 +79,7 @@ class BeatCard extends StatelessWidget {
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
-              onTap: onTap,
+              onTap: widget.onTap,
               child: Padding(
                 padding: const EdgeInsets.all(14),
                 child: Column(
@@ -211,93 +226,105 @@ class BeatCard extends StatelessWidget {
                               ],
                             ),
                           )
-                        : ListView.builder(
-                            physics: const NeverScrollableScrollPhysics(),
-                            shrinkWrap: true,
-                            itemCount: beatEvents.length > 3
-                                ? 3
-                                : beatEvents.length,
-                            itemBuilder: (context, idx) {
-                              final ev = beatEvents[idx];
-                              final preview = Container(
-                                margin: const EdgeInsets.only(bottom: 4),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.surfaceElevated,
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(
-                                    color: AppTheme.border.withOpacity(0.5),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.drag_indicator,
-                                      size: 14,
-                                      color: AppTheme.textMuted,
+                        : SizedBox(
+                            height: 90,
+                            child: Scrollbar(
+                              controller: _eventsScrollController,
+                              thumbVisibility: true,
+                              interactive: true,
+                              child: ScrollConfiguration(
+                                behavior: ScrollConfiguration.of(
+                                  context,
+                                ).copyWith(scrollbars: false),
+                                child: ListView.builder(
+                                  controller: _eventsScrollController,
+                                  itemCount: beatEvents.length,
+                                  itemBuilder: (context, idx) {
+                                  final ev = beatEvents[idx];
+                                  final preview = Container(
+                                    margin: const EdgeInsets.only(bottom: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
                                     ),
-                                    const SizedBox(width: 4),
-                                    Expanded(
-                                      child: Text(
-                                        ev.title,
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          color: AppTheme.textPrimary,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              return Draggable<StoryEvent>(
-                                data: ev,
-                                feedback: Material(
-                                  color: Colors.transparent,
-                                  child: Container(
-                                    width: 240,
-                                    padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
                                       color: AppTheme.surfaceElevated,
-                                      borderRadius: BorderRadius.circular(6),
+                                      borderRadius: BorderRadius.circular(4),
                                       border: Border.all(
-                                        color: beat.act.accentColor,
-                                        width: 2,
+                                        color: AppTheme.border.withOpacity(0.5),
                                       ),
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          color: Colors.black45,
-                                          blurRadius: 12,
-                                          offset: Offset(0, 6),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.drag_indicator,
+                                          size: 14,
+                                          color: AppTheme.textMuted,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            ev.title,
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              color: AppTheme.textPrimary,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
                                       ],
                                     ),
-                                    child: Text(
-                                      ev.title,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppTheme.textPrimary,
+                                  );
+                                  return Draggable<StoryEvent>(
+                                    data: ev,
+                                    feedback: Material(
+                                      color: Colors.transparent,
+                                      child: Container(
+                                        width: 240,
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.surfaceElevated,
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                          border: Border.all(
+                                            color: beat.act.accentColor,
+                                            width: 2,
+                                          ),
+                                          boxShadow: const [
+                                            BoxShadow(
+                                              color: Colors.black45,
+                                              blurRadius: 12,
+                                              offset: Offset(0, 6),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Text(
+                                          ev.title,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppTheme.textPrimary,
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
+                                    childWhenDragging: Opacity(
+                                      opacity: 0.35,
+                                      child: preview,
+                                    ),
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(4),
+                                      onTap: () => widget.onOpenEvent(ev),
+                                      child: preview,
+                                    ),
+                                  );
+                                  },
                                 ),
-                                childWhenDragging: Opacity(
-                                  opacity: 0.35,
-                                  child: preview,
-                                ),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(4),
-                                  onTap: () => onOpenEvent(ev),
-                                  child: preview,
-                                ),
-                              );
-                            },
+                              ),
+                            ),
                           ),
 
                     // Card Footer: Event Count & Scene Count Badges

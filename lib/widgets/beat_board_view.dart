@@ -190,6 +190,9 @@ class _BeatBoardViewState extends State<BeatBoardView> {
                                 right: column < crossAxisCount - 1 ? 16 : 0,
                               ),
                               child: BeatCard(
+                                key: ValueKey(
+                                  filteredBeats[rowStart + column].id,
+                                ),
                                 beat: filteredBeats[rowStart + column],
                                 provider: widget.provider,
                                 onTap: () => widget.onOpenBeat(
