@@ -396,7 +396,7 @@ class StorageService {
               title: data['title'] as String,
               logline: data['logline'] as String? ?? '',
               genre: data['genre'] as String? ?? 'Feature Film',
-              author: data['author'] as String? ?? 'Screenwriter',
+              author: data['author'] as String? ?? StoryProject.defaultAuthor,
               eventCount: (data['events'] as List<dynamic>?)?.length ?? 0,
               sceneCount: (data['scenes'] as List<dynamic>?)?.length ?? 0,
               isSample: data['isSample'] as bool? ?? false,

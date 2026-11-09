@@ -182,7 +182,7 @@ class StoryProvider extends ChangeNotifier {
     String title = 'Untitled Screenplay',
     String logline = '',
     String genre = 'Feature Film',
-    String author = 'Screenwriter',
+    String author = StoryProject.defaultAuthor,
   }) async {
     _isLoading = true;
     notifyListeners();

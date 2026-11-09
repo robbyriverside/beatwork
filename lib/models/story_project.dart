@@ -4,6 +4,8 @@ import 'story_event.dart';
 import 'scene_model.dart';
 
 class StoryProject {
+  static const defaultAuthor = 'Anonymous';
+
   final String id;
   String title;
   String logline;
@@ -20,7 +22,7 @@ class StoryProject {
     required this.title,
     this.logline = '',
     this.genre = 'Feature Film',
-    this.author = 'Screenwriter',
+    this.author = defaultAuthor,
     this.authorEmail = '',
     this.isSample = false,
     List<StoryEvent>? events,
@@ -100,7 +102,7 @@ class StoryProject {
       title: json['title'] as String,
       logline: json['logline'] as String? ?? '',
       genre: json['genre'] as String? ?? 'Feature Film',
-      author: json['author'] as String? ?? 'Screenwriter',
+      author: json['author'] as String? ?? defaultAuthor,
       authorEmail: json['authorEmail'] as String? ?? '',
       isSample: json['isSample'] as bool? ?? false,
       events:
@@ -123,7 +125,7 @@ class StoryProject {
     String title = 'Untitled Screenplay',
     String logline = '',
     String genre = 'Feature Film',
-    String author = 'Screenwriter',
+    String author = defaultAuthor,
   }) {
     return StoryProject(
       id: const Uuid().v4(),
@@ -468,7 +470,7 @@ Jax's ocular implants go dark. His hand falls limp in the gutter.''',
       logline:
           'When an outlaw cyberpunk data-thief intercepts an impossible quantum drive containing the uploaded consciousness of his comatose sister, he must join forces with a rogue corporate architect to pull off the ultimate digital heist before an all-seeing Syndicate wipes her existence.',
       genre: 'Sci-Fi / Heist Thriller',
-      author: 'Antigravity Screenwriter',
+      author: defaultAuthor,
       isSample: true,
       events: [
         e1,
@@ -521,7 +523,7 @@ class ProjectMetadata {
     required this.title,
     this.logline = '',
     this.genre = 'Feature Film',
-    this.author = 'Screenwriter',
+    this.author = StoryProject.defaultAuthor,
     required this.eventCount,
     required this.sceneCount,
     this.isSample = false,
@@ -560,7 +562,7 @@ class ProjectMetadata {
         title: json['title'] as String,
         logline: json['logline'] as String? ?? '',
         genre: json['genre'] as String? ?? 'Feature Film',
-        author: json['author'] as String? ?? 'Screenwriter',
+        author: json['author'] as String? ?? StoryProject.defaultAuthor,
         eventCount: json['eventCount'] as int? ?? 0,
         sceneCount: json['sceneCount'] as int? ?? 0,
         isSample: json['isSample'] as bool? ?? false,

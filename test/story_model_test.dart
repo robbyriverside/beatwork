@@ -73,6 +73,32 @@ void main() {
   });
 
   group('Story Project & Scene Versioning Tests', () {
+    test('Default author is Anonymous and saved authors are preserved', () {
+      expect(StoryProject(id: 'project', title: 'Title').author, 'Anonymous');
+      expect(StoryProject.createEmptyProject().author, 'Anonymous');
+      expect(StoryProject.createSampleProject().author, 'Anonymous');
+      expect(
+        StoryProject.fromJson({'id': 'project', 'title': 'Title'}).author,
+        'Anonymous',
+      );
+      expect(
+        StoryProject.fromJson({
+          'id': 'project',
+          'title': 'Title',
+          'author': 'An Existing Author',
+        }).author,
+        'An Existing Author',
+      );
+      expect(
+        StoryProject.createEmptyProject(author: 'A New Author').author,
+        'A New Author',
+      );
+      expect(
+        ProjectMetadata.fromJson({'id': 'project', 'title': 'Title'}).author,
+        'Anonymous',
+      );
+    });
+
     test('Project Protobuf round-trip preserves nested project content', () {
       final project = StoryProject.createSampleProject();
       project.authorEmail = 'writer@example.com';
@@ -180,7 +206,7 @@ void main() {
       expect(fdx.contains('<TitlePage>'), true);
       expect(fdx.contains('<Paragraph Type="Author">'), true);
       expect(fdx.contains('<Paragraph Type="Contact">'), true);
-      expect(fdx.contains('Antigravity Screenwriter'), true);
+      expect(fdx.contains('Anonymous'), true);
       expect(fdx.contains('writer@example.com'), true);
       expect(fdx.contains('<Paragraph Type="Scene Heading">'), true);
       expect(fdx.contains('</FinalDraft>'), true);
@@ -206,7 +232,7 @@ void main() {
       final fountain = ExportService.generateFountain(project);
 
       expect(fountain.contains('Title: The Chronos Cipher'), true);
-      expect(fountain.contains('Author: Antigravity Screenwriter'), true);
+      expect(fountain.contains('Author: Anonymous'), true);
       expect(fountain.contains('Contact: writer@example.com'), true);
       expect(fountain.contains('SAVE THE CAT:'), false);
       expect(fountain.contains('BEAT ${firstEntry.beat.number}'), false);
