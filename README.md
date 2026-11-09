@@ -6,6 +6,8 @@ The key value is that the software allows a screenwriter to assemble the beats i
 
 Scenes can be marked unused in the beat timeline. They remain saved and editable, appear at the end of the list, and can be hidden or marked used again. Unused scenes are excluded from the Script Timeline and screenplay exports. To permanently delete a scene, first mark it unused and then confirm deletion. To delete an event, first move it to the event pool.
 
+When adding or editing a scene, choose a slugline prefix and time and enter a location. The location menu includes locations from events and all scene versions in the current project; you can also type a new one. New scenes default to `INT.` and `DAY`. Press Return in the scene title to move to the location field. Existing nonstandard headings are preserved until their slugline fields are edited.
+
 ## macOS Release Build
 
 Once you checkin your code.
@@ -22,4 +24,4 @@ sh git tag -a v1.0.2 -m "new version"
 sh scripts/build_macos_release.sh
 ```
 
-The build uses the highest semantic version tag as Flutter's build name. macOS records that version in the app bundle, where it appears in the native About panel. Additional Flutter build options can be passed to the script.
+The build uses the highest semantic version tag as Flutter's build name. macOS records that version in the app bundle, where it appears in the native About panel. After the build, the script packages `beatwork.app` in a ZIP archive under `build/macos/Build/Products/Release/beatwork_<version>/`, with the leading `v` removed and periods replaced by underscores. For example, tag `v1.0.2` produces `beatwork_1_0_2/beatwork_1_0_2.zip`. Additional Flutter build options can be passed to the script.

@@ -4,6 +4,7 @@ import '../models/beat_model.dart';
 import '../models/scene_model.dart';
 import '../state/story_provider.dart';
 import '../theme/app_theme.dart';
+import 'slugline_fields.dart';
 
 class SceneEditorView extends StatefulWidget {
   final Scene scene;
@@ -25,7 +26,7 @@ class SceneEditorView extends StatefulWidget {
 
 class _SceneEditorViewState extends State<SceneEditorView> {
   late TextEditingController _titleController;
-  late TextEditingController _sluglineController;
+  final _locationFocusNode = FocusNode();
   late TextEditingController _scriptController;
   late TextEditingController _summaryController;
   late TextEditingController _notesController;
@@ -46,7 +47,6 @@ class _SceneEditorViewState extends State<SceneEditorView> {
     _editingSceneId = widget.scene.id;
     _editingVersionId = widget.scene.activeVersionId;
     _titleController = TextEditingController(text: widget.scene.title);
-    _sluglineController = TextEditingController(text: active.slugline);
     _scriptController = TextEditingController(text: active.scriptContent);
     _summaryController = TextEditingController(text: active.summary);
     _notesController = TextEditingController(text: active.notes);
@@ -66,7 +66,6 @@ class _SceneEditorViewState extends State<SceneEditorView> {
       _editingSceneId = widget.scene.id;
       _editingVersionId = widget.scene.activeVersionId;
       _titleController.text = widget.scene.title;
-      _sluglineController.text = active.slugline;
       _scriptController.text = active.scriptContent;
       _summaryController.text = active.summary;
       _notesController.text = active.notes;
@@ -76,7 +75,7 @@ class _SceneEditorViewState extends State<SceneEditorView> {
   @override
   void dispose() {
     _titleController.dispose();
-    _sluglineController.dispose();
+    _locationFocusNode.dispose();
     _scriptController.dispose();
     _summaryController.dispose();
     _notesController.dispose();
@@ -86,7 +85,6 @@ class _SceneEditorViewState extends State<SceneEditorView> {
   void _saveCurrentVersion() {
     widget.provider.updateActiveVersionContent(
       widget.scene.id,
-      slugline: _sluglineController.text.trim(),
       summary: _summaryController.text.trim(),
       scriptContent: _scriptController.text,
       notes: _notesController.text.trim(),
@@ -114,7 +112,10 @@ class _SceneEditorViewState extends State<SceneEditorView> {
             minLines: 8,
             maxLines: 12,
             keyboardType: TextInputType.multiline,
-            decoration: InputDecoration(labelText: label, alignLabelWithHint: true),
+            decoration: InputDecoration(
+              labelText: label,
+              alignLabelWithHint: true,
+            ),
             onChanged: (value) => draft = value,
           ),
         ),
@@ -135,7 +136,9 @@ class _SceneEditorViewState extends State<SceneEditorView> {
         widget.scene.activeVersionId != versionId) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('The active scene or version changed; edits were not saved.'),
+          content: Text(
+            'The active scene or version changed; edits were not saved.',
+          ),
         ),
       );
       return;
@@ -240,7 +243,10 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                     Expanded(
                       flex: 2,
                       child: TextField(
+                        key: const ValueKey('scene-title-field'),
                         controller: _titleController,
+                        textInputAction: TextInputAction.next,
+                        onSubmitted: (_) => _locationFocusNode.requestFocus(),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -258,24 +264,6 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                           widget.scene.title = val;
                           widget.provider.updateScene(widget.scene);
                         },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 3,
-                      child: TextField(
-                        controller: _sluglineController,
-                        style: AppTheme.screenplaySlugline,
-                        decoration: const InputDecoration(
-                          labelText: 'Scene Heading / Slugline',
-                          hintText: 'e.g. INT. COFFEE SHOP - DAY',
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                        ),
-                        onChanged: (_) => _saveCurrentVersion(),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -301,6 +289,18 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                       },
                     ),
                   ],
+                ),
+                const SizedBox(height: 10),
+                SluglineFields(
+                  key: ValueKey('${widget.scene.id}:${activeVersion.id}'),
+                  project: widget.provider.project,
+                  slugline: activeVersion.slugline,
+                  locationFocusNode: _locationFocusNode,
+                  onChanged: (slugline) =>
+                      widget.provider.updateActiveVersionContent(
+                        widget.scene.id,
+                        slugline: slugline,
+                      ),
                 ),
                 const SizedBox(height: 10),
 

@@ -10,6 +10,7 @@ import '../theme/app_theme.dart';
 import 'event_card.dart';
 import 'event_dialog.dart';
 import 'scene_editor_view.dart';
+import 'slugline_fields.dart';
 
 class BeatDetailDialog extends StatefulWidget {
   final BeatDefinition beat;
@@ -865,16 +866,15 @@ class _NewSceneDialog extends StatefulWidget {
 
 class _NewSceneDialogState extends State<_NewSceneDialog> {
   final _titleController = TextEditingController();
-  final _sluglineController = TextEditingController();
   final _titleFocusNode = FocusNode();
-  final _sluglineFocusNode = FocusNode();
+  final _locationFocusNode = FocusNode();
+  String _slugline = 'INT. - DAY';
 
   @override
   void dispose() {
     _titleController.dispose();
-    _sluglineController.dispose();
     _titleFocusNode.dispose();
-    _sluglineFocusNode.dispose();
+    _locationFocusNode.dispose();
     super.dispose();
   }
 
@@ -884,7 +884,7 @@ class _NewSceneDialogState extends State<_NewSceneDialog> {
       widget.provider.createScene(
         beatId: widget.beat.id,
         title: title,
-        slugline: _sluglineController.text.trim().toUpperCase(),
+        slugline: _slugline,
       );
     }
     Navigator.of(context).pop();
@@ -894,31 +894,30 @@ class _NewSceneDialogState extends State<_NewSceneDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Add Scene to Beat Timeline'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            key: const ValueKey('new-scene-title-field'),
-            controller: _titleController,
-            focusNode: _titleFocusNode,
-            autofocus: true,
-            textInputAction: TextInputAction.next,
-            onSubmitted: (_) => _sluglineFocusNode.requestFocus(),
-            decoration: const InputDecoration(labelText: 'Scene Title'),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            key: const ValueKey('new-scene-slugline-field'),
-            controller: _sluglineController,
-            focusNode: _sluglineFocusNode,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _addScene(),
-            decoration: const InputDecoration(
-              labelText: 'Slugline / Scene Heading',
-              hintText: 'e.g. INT. POLICE STATION - NIGHT',
+      content: SizedBox(
+        width: 560,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              key: const ValueKey('new-scene-title-field'),
+              controller: _titleController,
+              focusNode: _titleFocusNode,
+              autofocus: true,
+              textInputAction: TextInputAction.next,
+              onSubmitted: (_) => _locationFocusNode.requestFocus(),
+              decoration: const InputDecoration(labelText: 'Scene Title'),
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            SluglineFields(
+              project: widget.provider.project,
+              slugline: _slugline,
+              locationFocusNode: _locationFocusNode,
+              onChanged: (value) => _slugline = value,
+              onLocationSubmitted: _addScene,
+            ),
+          ],
+        ),
       ),
       actions: [
         OutlinedButton(

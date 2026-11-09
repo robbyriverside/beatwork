@@ -830,7 +830,7 @@ void main() {
     expect(project.getUnassignedEvents(), contains(event));
   });
 
-  testWidgets('Add Scene dialog supports title and slugline Enter navigation', (
+  testWidgets('Add Scene dialog supports title and location Enter navigation', (
     WidgetTester tester,
   ) async {
     tester.view.physicalSize = const Size(1400, 900);
@@ -862,8 +862,9 @@ void main() {
     await tester.pumpAndSettle();
 
     final titleField = find.byKey(const ValueKey('new-scene-title-field'));
-    final sluglineField = find.byKey(
-      const ValueKey('new-scene-slugline-field'),
+    final locationField = find.descendant(
+      of: find.byType(AlertDialog).last,
+      matching: find.byKey(const ValueKey('slugline-location')),
     );
     expect(
       tester
@@ -885,7 +886,7 @@ void main() {
       tester
           .widget<EditableText>(
             find.descendant(
-              of: sluglineField,
+              of: locationField,
               matching: find.byType(EditableText),
             ),
           )
@@ -894,7 +895,7 @@ void main() {
       isTrue,
     );
 
-    await tester.enterText(sluglineField, 'int. archive - night');
+    await tester.enterText(locationField, 'archive');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
 
@@ -902,7 +903,7 @@ void main() {
       (scene) => scene.title == 'A scene by keyboard',
     );
     expect(scene.beatId, 'opening_image');
-    expect(scene.activeVersion.slugline, 'INT. ARCHIVE - NIGHT');
+    expect(scene.activeVersion.slugline, 'INT. ARCHIVE - DAY');
     expect(
       tester
           .widget<EditableText>(
