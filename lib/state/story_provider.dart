@@ -360,6 +360,10 @@ class StoryProvider extends ChangeNotifier {
   }
 
   void deleteEvent(String eventId) {
+    final event = _project.events.firstWhere((e) => e.id == eventId);
+    if (event.beatId != null && event.beatId!.isNotEmpty) {
+      throw StateError('Move the event to the pool before deleting it.');
+    }
     _project.events.removeWhere((e) => e.id == eventId);
     for (final s in _project.scenes) {
       s.mappedEventIds.remove(eventId);
@@ -453,6 +457,10 @@ class StoryProvider extends ChangeNotifier {
   }
 
   void deleteScene(String sceneId) {
+    final scene = _project.scenes.firstWhere((s) => s.id == sceneId);
+    if (!scene.isUnused) {
+      throw StateError('Mark the scene unused before deleting it.');
+    }
     _project.scenes.removeWhere((s) => s.id == sceneId);
     if (_selectedSceneId == sceneId) {
       final beatScenes = _selectedBeatId != null
@@ -465,11 +473,26 @@ class StoryProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSceneUnused(String sceneId, bool isUnused) {
+    final scene = _project.scenes.firstWhere((s) => s.id == sceneId);
+    if (scene.isUnused == isUnused) return;
+    scene.isUnused = isUnused;
+    _project.lastModified = DateTime.now();
+    _save();
+    notifyListeners();
+  }
+
   void reorderScenesInBeat(String beatId, int oldIndex, int newIndex) {
     final beatScenes = _project.getScenesForBeat(beatId);
     if (oldIndex < 0 || oldIndex >= beatScenes.length) return;
     if (newIndex < 0 || newIndex > beatScenes.length) return;
 
+    final activeCount = beatScenes.where((scene) => !scene.isUnused).length;
+    if (beatScenes[oldIndex].isUnused) {
+      if (newIndex < activeCount) newIndex = activeCount;
+    } else {
+      if (newIndex > activeCount) newIndex = activeCount;
+    }
     if (oldIndex < newIndex) {
       newIndex -= 1;
     }

@@ -318,6 +318,7 @@ class SceneDocument extends $pb.GeneratedMessage {
     $core.Iterable<$core.String>? mappedEventIds,
     $core.Iterable<SceneVersionDocument>? versions,
     $core.String? activeVersionId,
+    $core.bool? isUnused,
   }) {
     final result = SceneDocument._();
     if (id != null) result.id = id;
@@ -327,6 +328,7 @@ class SceneDocument extends $pb.GeneratedMessage {
     if (mappedEventIds != null) result.mappedEventIds.addAll(mappedEventIds);
     if (versions != null) result.versions.addAll(versions);
     if (activeVersionId != null) result.activeVersionId = activeVersionId;
+    if (isUnused != null) result.isUnused = isUnused;
     return result;
   }
 
@@ -351,6 +353,7 @@ class SceneDocument extends $pb.GeneratedMessage {
     ..pPM<SceneVersionDocument>(6, _omitFieldNames ? '' : 'versions',
         subBuilder: SceneVersionDocument.$_createMessage)
     ..aOS(7, _omitFieldNames ? '' : 'activeVersionId')
+    ..aOB(8, _omitFieldNames ? '' : 'isUnused')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -425,6 +428,15 @@ class SceneDocument extends $pb.GeneratedMessage {
   $core.bool hasActiveVersionId() => $_has(6);
   @$pb.TagNumber(7)
   void clearActiveVersionId() => $_clearField(7);
+
+  @$pb.TagNumber(8)
+  $core.bool get isUnused => $_getBF(7);
+  @$pb.TagNumber(8)
+  set isUnused($core.bool value) => $_setBool(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasIsUnused() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearIsUnused() => $_clearField(8);
 }
 
 class SceneVersionDocument extends $pb.GeneratedMessage {

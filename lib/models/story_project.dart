@@ -43,7 +43,10 @@ class StoryProject {
 
   List<Scene> getScenesForBeat(String beatId) {
     return scenes.where((s) => s.beatId == beatId).toList()
-      ..sort((a, b) => a.timelineOrder.compareTo(b.timelineOrder));
+      ..sort((a, b) {
+        if (a.isUnused != b.isUnused) return a.isUnused ? 1 : -1;
+        return a.timelineOrder.compareTo(b.timelineOrder);
+      });
   }
 
   /// Collects all beat timelines in canonical Save the Cat order (1 to 19),
@@ -53,7 +56,7 @@ class StoryProject {
     int overallIndex = 1;
 
     for (final beatDef in BeatDefinition.saveTheCatBeats) {
-      final beatScenes = getScenesForBeat(beatDef.id);
+      final beatScenes = getScenesForBeat(beatDef.id).where((scene) => !scene.isUnused);
       for (final scene in beatScenes) {
         final mappedEvents = events
             .where((e) => scene.mappedEventIds.contains(e.id))

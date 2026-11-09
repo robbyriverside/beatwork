@@ -42,6 +42,7 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _sceneBodyFocusNode = FocusNode();
+  bool _showUnusedScenes = true;
 
   @override
   void initState() {
@@ -85,6 +86,36 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
     );
   }
 
+  Future<void> _confirmDeleteScene(Scene scene) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Scene?'),
+        content: Text(
+          'Permanently delete "${scene.title}" and all its versions? This cannot be undone.',
+        ),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Delete Scene'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+    if (!scene.isUnused) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Only unused scenes can be deleted.')),
+      );
+      return;
+    }
+    widget.provider.deleteScene(scene.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -96,6 +127,9 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
         final beatScenes = widget.provider.project.getScenesForBeat(
           widget.beat.id,
         );
+        final activeSceneCount = beatScenes
+            .where((scene) => !scene.isUnused)
+            .length;
         final selectedScene = widget.provider.selectedScene;
 
         return CallbackShortcuts(
@@ -129,7 +163,7 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                   child: Column(
                     children: [
                       // Header
-                      _buildHeader(beatEvents.length, beatScenes.length),
+                      _buildHeader(beatEvents.length, activeSceneCount),
 
                       // Main Content: Split View
                       Expanded(
@@ -191,7 +225,7 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                                                 const SizedBox(width: 6),
                                                 Flexible(
                                                   child: Text(
-                                                    'Timeline (${beatScenes.length})',
+                                                    'Timeline ($activeSceneCount)',
                                                     maxLines: 1,
                                                     overflow:
                                                         TextOverflow.ellipsis,
@@ -210,7 +244,10 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                                         controller: _tabController,
                                         children: [
                                           // 1. Beat Events View
-                                          _buildBeatEventsView(beatEvents),
+                                          _buildBeatEventsView(
+                                            beatEvents,
+                                            activeSceneCount,
+                                          ),
 
                                           // 2. Beat Timeline View (Series of scenes)
                                           _buildBeatTimelineView(beatScenes),
@@ -329,39 +366,53 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
     );
   }
 
-  Widget _buildBeatEventsView(List<StoryEvent> beatEvents) {
+  Widget _buildEstimateHint({
+    required int count,
+    required String singular,
+    required IconData icon,
+    required Color color,
+    required bool belowMinimum,
+  }) {
+    return Container(
+      margin: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Estimated minimum: $count $singular${count == 1 ? '' : 's'}.',
+              style: TextStyle(
+                fontSize: 11.5,
+                color: belowMinimum
+                    ? AppTheme.crimsonAccent
+                    : AppTheme.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBeatEventsView(List<StoryEvent> beatEvents, int sceneCount) {
+    final minimum = widget.beat.estimatedSceneCount;
+    final eventEstimate = sceneCount > minimum ? sceneCount : minimum;
     return Column(
       children: [
-        // Guidance banner: "Initially a list of events in no particular order. Usually 3 to 5 events."
-        Container(
-          margin: const EdgeInsets.all(10),
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: AppTheme.border),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.info_outline,
-                size: 16,
-                color: AppTheme.goldAccent,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  '${beatEvents.length} events assigned. Usually 3 to 5 events belong in this beat.',
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        _buildEstimateHint(
+          count: eventEstimate,
+          singular: 'event',
+          icon: Icons.bolt,
+          color: AppTheme.goldAccent,
+          belowMinimum: beatEvents.length < eventEstimate,
         ),
-
         // Events List (Reorderable / in no particular order)
         Expanded(
           child: beatEvents.isEmpty
@@ -449,7 +500,6 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                             }
                           }
                         },
-                        onDelete: () => widget.provider.deleteEvent(ev.id),
                         onUnassign: () => widget.provider.unassignEvent(ev.id),
                         enableDrag: false,
                       ),
@@ -475,37 +525,34 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
   }
 
   Widget _buildBeatTimelineView(List<Scene> beatScenes) {
+    final sceneEstimate = widget.beat.estimatedSceneCount;
+    final activeScenes = beatScenes.where((scene) => !scene.isUnused).toList();
+    final unusedScenes = beatScenes.where((scene) => scene.isUnused).toList();
+    final activeSceneCount = activeScenes.length;
     return Column(
       children: [
-        // Timeline Header Explanation
-        Container(
-          margin: const EdgeInsets.all(10),
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: AppTheme.border),
-          ),
-          child: const Row(
-            children: [
-              Icon(Icons.route, size: 16, color: AppTheme.cyanAccent),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'The beat timeline is the sequence of scenes executing this beat.',
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-              ),
-            ],
+        _buildEstimateHint(
+          count: sceneEstimate,
+          singular: 'scene',
+          icon: Icons.route,
+          color: AppTheme.cyanAccent,
+          belowMinimum: activeSceneCount < sceneEstimate,
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () =>
+                setState(() => _showUnusedScenes = !_showUnusedScenes),
+            child: Text(
+              _showUnusedScenes ? 'Hide unused scenes' : 'Show unused scenes',
+            ),
           ),
         ),
 
         // Timeline Scene List
         Expanded(
-          child: beatScenes.isEmpty
+          child:
+              beatScenes.isEmpty || (activeScenes.isEmpty && !_showUnusedScenes)
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
@@ -518,9 +565,11 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                           color: AppTheme.textMuted,
                         ),
                         const SizedBox(height: 12),
-                        const Text(
-                          'No Scenes in Beat Timeline',
-                          style: TextStyle(
+                        Text(
+                          beatScenes.isNotEmpty
+                              ? 'No visible scenes'
+                              : 'No Scenes in Beat Timeline',
+                          style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: AppTheme.textPrimary,
@@ -539,144 +588,25 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                     ),
                   ),
                 )
-              : ReorderableListView.builder(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  itemCount: beatScenes.length,
-                  onReorder: (oldIndex, newIndex) {
-                    widget.provider.reorderScenesInBeat(
-                      widget.beat.id,
-                      oldIndex,
-                      newIndex,
-                    );
-                  },
-                  itemBuilder: (context, index) {
-                    final sc = beatScenes[index];
-                    final isSelected = widget.provider.selectedSceneId == sc.id;
-                    final activeVer = sc.activeVersion;
-
-                    return KeyedSubtree(
-                      key: ValueKey(sc.id),
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 6),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppTheme.goldAccent.withOpacity(0.12)
-                              : AppTheme.surface,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isSelected
-                                ? AppTheme.goldAccent
-                                : AppTheme.border,
-                            width: isSelected ? 1.5 : 1,
-                          ),
-                        ),
-                        child: ListTile(
-                          dense: true,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 2,
-                          ),
-                          leading: CircleAvatar(
-                            radius: 12,
-                            backgroundColor: isSelected
-                                ? AppTheme.goldAccent
-                                : AppTheme.surfaceElevated,
-                            child: Text(
-                              '${index + 1}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: isSelected
-                                    ? Colors.black
-                                    : AppTheme.textSecondary,
-                              ),
-                            ),
-                          ),
-                          title: Text(
-                            sc.title,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.w600,
-                              color: isSelected
-                                  ? AppTheme.goldAccent
-                                  : AppTheme.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                activeVer.slugline,
-                                style: const TextStyle(
-                                  fontFamily: 'Courier',
-                                  fontSize: 11,
-                                  color: AppTheme.textSecondary,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 2),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      '${sc.mappedEventIds.length} Events Mapped',
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        color: AppTheme.cyanAccent,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'v${activeVer.versionNumber} (${sc.versions.length} drafts)',
-                                    style: const TextStyle(
-                                      fontSize: 10,
-                                      color: AppTheme.textMuted,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          trailing: PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_vert, size: 16),
-                            padding: EdgeInsets.zero,
-                            itemBuilder: (ctx) => [
-                              const PopupMenuItem(
-                                value: 'delete',
-                                child: Text(
-                                  'Delete Scene',
-                                  style: TextStyle(
-                                    color: AppTheme.crimsonAccent,
-                                  ),
-                                ),
-                              ),
-                            ],
-                            onSelected: (val) {
-                              if (val == 'delete') {
-                                widget.provider.deleteScene(sc.id);
-                              }
-                            },
-                          ),
-                          onTap: () {
-                            widget.provider.selectScene(sc.id);
-                          },
+              : Column(
+                  children: [
+                    if (activeScenes.isNotEmpty)
+                      Expanded(
+                        child: _buildSceneList(
+                          activeScenes,
+                          0,
+                          isUnused: false,
                         ),
                       ),
-                    );
-                  },
+                    if (_showUnusedScenes && unusedScenes.isNotEmpty)
+                      Expanded(
+                        child: _buildSceneList(
+                          unusedScenes,
+                          activeSceneCount,
+                          isUnused: true,
+                        ),
+                      ),
+                  ],
                 ),
         ),
 
@@ -697,6 +627,180 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSceneList(
+    List<Scene> scenes,
+    int indexOffset, {
+    required bool isUnused,
+  }) {
+    return ReorderableListView.builder(
+      key: ValueKey(isUnused ? 'unused-scenes-list' : 'active-scenes-list'),
+      primary: false,
+      reverse: isUnused,
+      buildDefaultDragHandles: false,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      itemCount: scenes.length,
+      onReorder: (oldIndex, newIndex) {
+        widget.provider.reorderScenesInBeat(
+          widget.beat.id,
+          (isUnused ? scenes.length - 1 - oldIndex : oldIndex) + indexOffset,
+          (isUnused ? scenes.length - newIndex : newIndex) + indexOffset,
+        );
+      },
+      itemBuilder: (context, index) {
+        final sceneIndex = isUnused ? scenes.length - 1 - index : index;
+        final sc = scenes[sceneIndex];
+        final isSelected = widget.provider.selectedSceneId == sc.id;
+        final activeVer = sc.activeVersion;
+
+        return KeyedSubtree(
+          key: ValueKey(sc.id),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 6),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppTheme.goldAccent.withOpacity(0.12)
+                  : AppTheme.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isSelected ? AppTheme.goldAccent : AppTheme.border,
+                width: isSelected ? 1.5 : 1,
+              ),
+            ),
+            child: ListTile(
+              dense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 2,
+              ),
+              leading: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ReorderableDragStartListener(
+                    index: index,
+                    child: const Tooltip(
+                      message: 'Reorder scene',
+                      child: Icon(Icons.drag_handle, size: 20),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  CircleAvatar(
+                    radius: 12,
+                    backgroundColor: isSelected
+                        ? AppTheme.goldAccent
+                        : AppTheme.surfaceElevated,
+                    child: Text(
+                      '${sceneIndex + indexOffset + 1}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected
+                            ? Colors.black
+                            : AppTheme.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              title: Text(
+                sc.title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                  color: isSelected
+                      ? AppTheme.goldAccent
+                      : AppTheme.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (sc.isUnused)
+                    const Text(
+                      'UNUSED',
+                      style: TextStyle(
+                        color: AppTheme.crimsonAccent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  Text(
+                    activeVer.slugline,
+                    style: const TextStyle(
+                      fontFamily: 'Courier',
+                      fontSize: 11,
+                      color: AppTheme.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${sc.mappedEventIds.length} Events Mapped',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppTheme.cyanAccent,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'v${activeVer.versionNumber} (${sc.versions.length} drafts)',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: AppTheme.textMuted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              trailing: PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, size: 16),
+                padding: EdgeInsets.zero,
+                itemBuilder: (ctx) => [
+                  PopupMenuItem(
+                    value: 'unused',
+                    child: Text(
+                      sc.isUnused ? 'Mark as Used' : 'Mark as Unused',
+                    ),
+                  ),
+                  if (sc.isUnused)
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Text(
+                        'Delete Scene',
+                        style: TextStyle(color: AppTheme.crimsonAccent),
+                      ),
+                    ),
+                ],
+                onSelected: (val) {
+                  if (val == 'unused') {
+                    widget.provider.setSceneUnused(sc.id, !sc.isUnused);
+                  }
+                  if (val == 'delete') {
+                    _confirmDeleteScene(sc);
+                  }
+                },
+              ),
+              onTap: () {
+                widget.provider.selectScene(sc.id);
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 

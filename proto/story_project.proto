@@ -34,6 +34,7 @@ message SceneDocument {
   repeated string mapped_event_ids = 5;
   repeated SceneVersionDocument versions = 6;
   optional string active_version_id = 7;
+  bool is_unused = 8;
 }
 
 message SceneVersionDocument {

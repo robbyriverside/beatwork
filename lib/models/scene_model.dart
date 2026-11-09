@@ -80,6 +80,7 @@ class Scene {
   List<String> mappedEventIds;
   List<SceneVersion> versions;
   String? activeVersionId;
+  bool isUnused;
 
   Scene({
     required this.id,
@@ -89,6 +90,7 @@ class Scene {
     List<String>? mappedEventIds,
     List<SceneVersion>? versions,
     this.activeVersionId,
+    this.isUnused = false,
   }) : mappedEventIds = mappedEventIds ?? [],
        versions = versions ?? [] {
     if (this.versions.isEmpty) {
@@ -167,6 +169,7 @@ class Scene {
     List<String>? mappedEventIds,
     List<SceneVersion>? versions,
     String? activeVersionId,
+    bool? isUnused,
   }) {
     return Scene(
       id: id ?? this.id,
@@ -176,6 +179,7 @@ class Scene {
       mappedEventIds: mappedEventIds ?? List.from(this.mappedEventIds),
       versions: versions ?? List.from(this.versions),
       activeVersionId: activeVersionId ?? this.activeVersionId,
+      isUnused: isUnused ?? this.isUnused,
     );
   }
 
@@ -188,6 +192,7 @@ class Scene {
       'mappedEventIds': mappedEventIds,
       'versions': versions.map((v) => v.toJson()).toList(),
       'activeVersionId': activeVersionId,
+      'isUnused': isUnused,
     };
   }
 
@@ -210,6 +215,7 @@ class Scene {
           [],
       versions: vList,
       activeVersionId: json['activeVersionId'] as String?,
+      isUnused: json['isUnused'] as bool? ?? false,
     );
   }
 }

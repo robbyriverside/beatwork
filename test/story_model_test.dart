@@ -21,6 +21,23 @@ void main() {
   });
 
   group('Save the Cat Beat Model Tests', () {
+    test('scene estimates use one scene per five pages, rounded up', () {
+      final estimates = {
+        'opening_image': 1,
+        'execute_the_plan': 1,
+        'set_up': 2,
+        'debate': 3,
+        'bad_guys_close_in': 4,
+        'fun_and_games': 5,
+      };
+      for (final entry in estimates.entries) {
+        expect(BeatDefinition.getById(entry.key).estimatedSceneCount, entry.value);
+      }
+      for (final beat in BeatDefinition.saveTheCatBeats) {
+        expect(beat.estimatedSceneCount, greaterThanOrEqualTo(1));
+      }
+    });
+
     test(
       'Has 19 ordered Save the Cat beats including the five finale stages',
       () {
@@ -73,6 +90,23 @@ void main() {
   });
 
   group('Story Project & Scene Versioning Tests', () {
+    test('unused scenes survive serialization and are excluded from exports', () {
+      final project = StoryProject.createSampleProject();
+      final scene = project.getScenesForBeat('opening_image').first;
+      final text = scene.activeVersion.scriptContent;
+      scene.isUnused = true;
+
+      final decoded = ProjectCodec.decode(ProjectCodec.encode(project));
+      final loaded = decoded.scenes.singleWhere((item) => item.id == scene.id);
+      expect(loaded.isUnused, isTrue);
+      expect(Scene.fromJson(scene.toJson()).isUnused, isTrue);
+      expect(scene.copyWith().isUnused, isTrue);
+      expect(decoded.getCollectedTimeline().any((entry) => entry.scene.id == scene.id), isFalse);
+      expect(ExportService.generateFountain(decoded).contains(text), isFalse);
+      loaded.isUnused = false;
+      expect(decoded.getCollectedTimeline().any((entry) => entry.scene.id == scene.id), isTrue);
+    });
+
     test('Default author is Anonymous and saved authors are preserved', () {
       expect(StoryProject(id: 'project', title: 'Title').author, 'Anonymous');
       expect(StoryProject.createEmptyProject().author, 'Anonymous');

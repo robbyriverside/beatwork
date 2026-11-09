@@ -52,6 +52,38 @@ void main() {
     );
   });
 
+  test('events must be in the pool and scenes unused before deletion', () {
+    final project = StoryProject.createEmptyProject();
+    final provider = StoryProvider(initialProject: project);
+    addTearDown(provider.dispose);
+    final event = provider.createEvent(title: 'Event', beatId: 'opening_image');
+    final scene = provider.createScene(beatId: 'opening_image', title: 'Scene');
+    expect(() => provider.deleteEvent(event.id), throwsStateError);
+    expect(() => provider.deleteScene(scene.id), throwsStateError);
+    expect(project.events, contains(event));
+    expect(project.scenes, contains(scene));
+
+    provider.unassignEvent(event.id);
+    provider.deleteEvent(event.id);
+    provider.setSceneUnused(scene.id, true);
+    provider.deleteScene(scene.id);
+    expect(project.events, isEmpty);
+    expect(project.scenes, isEmpty);
+  });
+
+  test('unused scenes keep their state after saving and reopening', () async {
+    final project = StoryProject.createEmptyProject();
+    final provider = StoryProvider(initialProject: project);
+    addTearDown(provider.dispose);
+    final scene = provider.createScene(beatId: 'opening_image', title: 'Scene');
+    provider.setSceneUnused(scene.id, true);
+    final path = '${temporaryDirectory.path}/unused.beats';
+    await StorageService.saveDocumentToPath(project, path);
+    final loaded = await StorageService.openDocument(path);
+    expect(loaded.scenes.single.isUnused, isTrue);
+    expect(loaded.getCollectedTimeline(), isEmpty);
+  });
+
   test(
     'untitled edits remain in memory instead of using legacy JSON storage',
     () async {

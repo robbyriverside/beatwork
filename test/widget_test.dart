@@ -8,8 +8,10 @@ import 'package:beatwork/models/beat_model.dart';
 import 'package:beatwork/models/story_project.dart';
 import 'package:beatwork/models/story_event.dart';
 import 'package:beatwork/state/story_provider.dart';
+import 'package:beatwork/theme/app_theme.dart';
 import 'package:beatwork/widgets/beat_card.dart';
 import 'package:beatwork/widgets/beat_detail_dialog.dart';
+import 'package:beatwork/widgets/event_card.dart';
 import 'package:beatwork/widgets/event_dialog.dart';
 
 void main() {
@@ -288,6 +290,442 @@ void main() {
     },
   );
 
+  testWidgets('beat dialog shows the page-based scene estimate', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1800, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    final provider = StoryProvider(
+      initialProject: StoryProject.createEmptyProject(),
+    );
+    addTearDown(provider.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Column(
+              children: [
+                for (final id in [
+                  'opening_image',
+                  'bad_guys_close_in',
+                  'dark_night_of_the_soul',
+                ])
+                  TextButton(
+                    onPressed: () => BeatDetailDialog.show(
+                      context,
+                      beat: BeatDefinition.getById(id),
+                      provider: provider,
+                    ),
+                    child: Text(id),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('opening_image'));
+    await tester.pumpAndSettle();
+    expect(find.text('Estimated minimum: 1 scene.'), findsOneWidget);
+    expect(
+      find.textContaining('The beat timeline is the sequence'),
+      findsNothing,
+    );
+    await tester.tap(find.text('Events (0)'));
+    await tester.pumpAndSettle();
+    expect(find.text('Estimated minimum: 1 event.'), findsOneWidget);
+    expect(find.textContaining('Usually 3 to 5 events'), findsNothing);
+    expect(find.text('No Events In This Beat Yet'), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('bad_guys_close_in'));
+    await tester.pumpAndSettle();
+    expect(find.text('Estimated minimum: 4 scenes.'), findsOneWidget);
+    expect(find.text('No Scenes in Beat Timeline'), findsOneWidget);
+    await tester.tap(find.text('Events (0)'));
+    await tester.pumpAndSettle();
+    expect(find.text('Estimated minimum: 4 events.'), findsOneWidget);
+
+    final scenes = <String>[];
+    for (var index = 0; index < 5; index++) {
+      scenes.add(
+        provider
+            .createScene(beatId: 'bad_guys_close_in', title: 'Scene $index')
+            .id,
+      );
+      await tester.pump();
+      expect(
+        find.text('Estimated minimum: ${index < 4 ? 4 : 5} events.'),
+        findsOneWidget,
+      );
+    }
+
+    provider.createScene(beatId: 'opening_image', title: 'Different beat');
+    await tester.pump();
+    expect(find.text('Estimated minimum: 5 events.'), findsOneWidget);
+
+    provider.setSceneUnused(scenes.last, true);
+    provider.deleteScene(scenes.last);
+    await tester.pump();
+    expect(find.text('Estimated minimum: 4 events.'), findsOneWidget);
+    await tester.tap(find.text('Timeline (4)'));
+    await tester.pumpAndSettle();
+    expect(find.text('Estimated minimum: 4 scenes.'), findsOneWidget);
+
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('dark_night_of_the_soul'));
+    await tester.pumpAndSettle();
+    expect(find.text('Estimated minimum: 2 scenes.'), findsOneWidget);
+    await tester.tap(find.text('Events (0)'));
+    await tester.pumpAndSettle();
+    expect(find.text('Estimated minimum: 2 events.'), findsOneWidget);
+    for (var index = 0; index < 3; index++) {
+      provider.createScene(
+        beatId: 'dark_night_of_the_soul',
+        title: 'Ten-page beat scene $index',
+      );
+      await tester.pump();
+      expect(
+        find.text('Estimated minimum: ${index < 2 ? 2 : 3} events.'),
+        findsOneWidget,
+      );
+    }
+    await tester.tap(find.text('Timeline (3)'));
+    await tester.pumpAndSettle();
+    expect(find.text('Estimated minimum: 2 scenes.'), findsOneWidget);
+  });
+
+  testWidgets('estimate hints turn red below their current minimums', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1800, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    final provider = StoryProvider(
+      initialProject: StoryProject.createEmptyProject(),
+    );
+    addTearDown(provider.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => BeatDetailDialog.show(
+                context,
+                beat: BeatDefinition.getById('dark_night_of_the_soul'),
+                provider: provider,
+              ),
+              child: const Text('Open Beat'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open Beat'));
+    await tester.pumpAndSettle();
+
+    Color? hintColor(String text) =>
+        tester.widget<Text>(find.text(text)).style?.color;
+    const sceneHint = 'Estimated minimum: 2 scenes.';
+    expect(hintColor(sceneHint), AppTheme.crimsonAccent);
+    final scenes = <String>[];
+    for (var index = 0; index < 3; index++) {
+      scenes.add(
+        provider
+            .createScene(
+              beatId: 'dark_night_of_the_soul',
+              title: 'Scene $index',
+            )
+            .id,
+      );
+      await tester.pump();
+      expect(
+        hintColor(sceneHint),
+        index == 0 ? AppTheme.crimsonAccent : AppTheme.textSecondary,
+      );
+    }
+
+    await tester.tap(find.text('Events (0)'));
+    await tester.pumpAndSettle();
+    const eventHint = 'Estimated minimum: 3 events.';
+    expect(hintColor(eventHint), AppTheme.crimsonAccent);
+    final events = <String>[];
+    for (var index = 0; index < 4; index++) {
+      events.add(
+        provider
+            .createEvent(
+              beatId: 'dark_night_of_the_soul',
+              title: 'Event $index',
+            )
+            .id,
+      );
+      await tester.pump();
+      expect(
+        hintColor(eventHint),
+        index < 2 ? AppTheme.crimsonAccent : AppTheme.textSecondary,
+      );
+    }
+    provider.unassignEvent(events.last);
+    provider.deleteEvent(events.last);
+    provider.unassignEvent(events[2]);
+    provider.deleteEvent(events[2]);
+    await tester.pump();
+    expect(hintColor(eventHint), AppTheme.crimsonAccent);
+    provider.setSceneUnused(scenes.last, true);
+    provider.deleteScene(scenes.last);
+    await tester.pump();
+    expect(hintColor('Estimated minimum: 2 events.'), AppTheme.textSecondary);
+
+    await tester.tap(find.text('Timeline (2)'));
+    await tester.pumpAndSettle();
+    expect(hintColor(sceneHint), AppTheme.textSecondary);
+    provider.setSceneUnused(scenes.first, true);
+    provider.deleteScene(scenes.first);
+    await tester.pump();
+    expect(hintColor(sceneHint), AppTheme.crimsonAccent);
+  });
+
+  testWidgets(
+    'unused scenes can be hidden, restored, and deleted with confirmation',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1800, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+      final project = StoryProject.createEmptyProject();
+      final provider = StoryProvider(initialProject: project);
+      addTearDown(provider.dispose);
+      final first = provider.createScene(
+        beatId: 'opening_image',
+        title: 'First scene',
+      );
+      final second = provider.createScene(
+        beatId: 'opening_image',
+        title: 'Second scene',
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () => BeatDetailDialog.show(
+                  context,
+                  beat: BeatDefinition.getById('opening_image'),
+                  provider: provider,
+                ),
+                child: const Text('Open Beat'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open Beat'));
+      await tester.pumpAndSettle();
+      Finder sceneMenu(String id) => find.descendant(
+        of: find.byKey(ValueKey(id)),
+        matching: find.byType(PopupMenuButton<String>),
+      );
+      await tester.tap(sceneMenu(first.id));
+      await tester.pumpAndSettle();
+      expect(find.text('Delete Scene'), findsNothing);
+      await tester.tap(find.text('Mark as Unused'));
+      await tester.pumpAndSettle();
+      expect(first.isUnused, isTrue);
+      expect(find.text('UNUSED'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.byKey(ValueKey(second.id))).dy,
+        lessThan(tester.getTopLeft(find.byKey(ValueKey(first.id))).dy),
+      );
+      expect(project.getCollectedTimeline().map((entry) => entry.scene.id), [
+        second.id,
+      ]);
+
+      await tester.tap(find.text('Hide unused scenes'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(ValueKey(first.id)), findsNothing);
+      await tester.tap(find.text('Show unused scenes'));
+      await tester.pumpAndSettle();
+      await tester.tap(sceneMenu(first.id));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mark as Used'));
+      await tester.pumpAndSettle();
+      expect(first.isUnused, isFalse);
+      expect(project.getCollectedTimeline().length, 2);
+
+      await tester.tap(sceneMenu(first.id));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mark as Unused'));
+      await tester.pumpAndSettle();
+      await tester.tap(sceneMenu(first.id));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete Scene'));
+      await tester.pumpAndSettle();
+      expect(find.text('Delete Scene?'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(project.scenes, contains(first));
+      await tester.tap(sceneMenu(first.id));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete Scene'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Delete Scene'));
+      await tester.pumpAndSettle();
+      expect(project.scenes, isNot(contains(first)));
+    },
+  );
+
+  testWidgets('scene handles reorder within top and bottom sections', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1800, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+    final provider = StoryProvider(
+      initialProject: StoryProject.createEmptyProject(),
+    );
+    addTearDown(provider.dispose);
+    final scenes = List.generate(
+      4,
+      (index) =>
+          provider.createScene(beatId: 'opening_image', title: 'Scene $index'),
+    );
+    provider.setSceneUnused(scenes[2].id, true);
+    provider.setSceneUnused(scenes[3].id, true);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => BeatDetailDialog.show(
+                context,
+                beat: BeatDefinition.getById('opening_image'),
+                provider: provider,
+              ),
+              child: const Text('Open Beat'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open Beat'));
+    await tester.pumpAndSettle();
+
+    Finder item(int index) => find.byKey(ValueKey(scenes[index].id));
+    Finder handle(int index) => find.descendant(
+      of: item(index),
+      matching: find.byType(ReorderableDragStartListener),
+    );
+    Finder menu(int index) => find.descendant(
+      of: item(index),
+      matching: find.byType(PopupMenuButton<String>),
+    );
+    final topList = find.byKey(const ValueKey('active-scenes-list'));
+    final bottomList = find.byKey(const ValueKey('unused-scenes-list'));
+    expect(tester.widget<ReorderableListView>(topList).shrinkWrap, isFalse);
+    expect(tester.widget<ReorderableListView>(bottomList).shrinkWrap, isFalse);
+    expect(
+      tester.getTopLeft(handle(0)).dx,
+      lessThan(tester.getTopLeft(menu(0)).dx),
+    );
+    expect(
+      tester.getTopLeft(item(0)).dy - tester.getTopLeft(topList).dy,
+      lessThan(10),
+    );
+    expect(
+      tester.getBottomLeft(bottomList).dy - tester.getBottomLeft(item(3)).dy,
+      lessThan(15),
+    );
+    expect(
+      tester.getTopLeft(item(2)).dy - tester.getBottomLeft(item(1)).dy,
+      greaterThan(20),
+    );
+
+    final activeDrag = await tester.startGesture(tester.getCenter(handle(0)));
+    await tester.pump();
+    await activeDrag.moveBy(const Offset(0, 20));
+    await tester.pump();
+    await activeDrag.moveBy(const Offset(0, 180));
+    await tester.pump(const Duration(milliseconds: 400));
+    await activeDrag.up();
+    await tester.pumpAndSettle();
+    expect(
+      provider.project
+          .getScenesForBeat('opening_image')
+          .map((scene) => scene.id),
+      [scenes[1].id, scenes[0].id, scenes[2].id, scenes[3].id],
+    );
+
+    final unusedDrag = await tester.startGesture(tester.getCenter(handle(2)));
+    await tester.pump();
+    await unusedDrag.moveBy(const Offset(0, 20));
+    await tester.pump();
+    await unusedDrag.moveBy(const Offset(0, 180));
+    await tester.pump(const Duration(milliseconds: 400));
+    await unusedDrag.up();
+    await tester.pumpAndSettle();
+    expect(
+      provider.project
+          .getScenesForBeat('opening_image')
+          .map((scene) => scene.id),
+      [scenes[1].id, scenes[0].id, scenes[3].id, scenes[2].id],
+    );
+
+    for (var index = 0; index < 8; index++) {
+      final scene = provider.createScene(
+        beatId: 'opening_image',
+        title: 'Extra unused $index',
+      );
+      provider.setSceneUnused(scene.id, true);
+    }
+    await tester.pumpAndSettle();
+    final bottomPosition = tester
+        .state<ScrollableState>(
+          find
+              .descendant(of: bottomList, matching: find.byType(Scrollable))
+              .first,
+        )
+        .position;
+    expect(bottomPosition.maxScrollExtent, greaterThan(0));
+    await tester.sendEventToBinding(
+      PointerScrollEvent(
+        position: tester.getCenter(bottomList),
+        scrollDelta: const Offset(0, 2000),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find
+          .descendant(of: bottomList, matching: find.text('Extra unused 7'))
+          .hitTestable(),
+      findsOneWidget,
+    );
+    expect(find.byKey(ValueKey(scenes[1].id)).hitTestable(), findsOneWidget);
+
+    final reorderWithUnused = await tester.startGesture(
+      tester.getCenter(handle(1)),
+    );
+    await tester.pump();
+    await reorderWithUnused.moveBy(const Offset(0, 20));
+    await tester.pump();
+    await reorderWithUnused.moveBy(const Offset(0, 180));
+    await tester.pump(const Duration(milliseconds: 400));
+    await reorderWithUnused.up();
+    await tester.pumpAndSettle();
+    expect(
+      provider.project
+          .getScenesForBeat('opening_image')
+          .take(2)
+          .map((scene) => scene.id),
+      [scenes[0].id, scenes[1].id],
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Command-E in Beat Edit adds the event to that beat', (
     WidgetTester tester,
   ) async {
@@ -342,6 +780,54 @@ void main() {
           .beatId,
       'opening_image',
     );
+  });
+
+  testWidgets('an assigned event must be moved to the pool before deletion', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1800, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+    final project = StoryProject.createSampleProject();
+    final event = project.getEventsForBeat('opening_image').first;
+    final provider = StoryProvider(initialProject: project);
+    addTearDown(provider.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => BeatDetailDialog.show(
+                context,
+                beat: BeatDefinition.getById('opening_image'),
+                provider: provider,
+              ),
+              child: const Text('Open Beat'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open Beat'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Events (2)'));
+    await tester.pumpAndSettle();
+    final eventCard = find.ancestor(
+      of: find.text(event.title),
+      matching: find.byType(EventCard),
+    );
+    await tester.tap(
+      find.descendant(
+        of: eventCard,
+        matching: find.byType(PopupMenuButton<String>),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Delete'), findsNothing);
+    await tester.tap(find.text('Move to Pool'));
+    await tester.pumpAndSettle();
+    expect(event.beatId, isNull);
+    expect(project.getUnassignedEvents(), contains(event));
   });
 
   testWidgets('Add Scene dialog supports title and slugline Enter navigation', (
@@ -429,6 +915,137 @@ void main() {
           .hasFocus,
       isTrue,
     );
+  });
+
+  testWidgets('scene summary and notes open multiline editors', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    final project = StoryProject.createSampleProject();
+    final scene = project.getScenesForBeat('opening_image').first;
+    final version = scene.activeVersion;
+    final originalNotes = version.notes;
+    final provider = StoryProvider(initialProject: project);
+    addTearDown(provider.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => BeatDetailDialog.show(
+                context,
+                beat: BeatDefinition.saveTheCatBeats.first,
+                provider: provider,
+              ),
+              child: const Text('Open Beat'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open Beat'));
+    await tester.pumpAndSettle();
+
+    final summaryPreview = find.byKey(const ValueKey('scene-summary-preview'));
+    final notesPreview = find.byKey(const ValueKey('scene-notes-preview'));
+    final summaryEditor = find.byKey(const ValueKey('scene-summary-editor'));
+    final notesEditor = find.byKey(const ValueKey('scene-notes-editor'));
+    const summary = 'A much longer summary.\nA second line of detail.';
+    const notes = 'First revision thought.\nSecond revision thought.';
+
+    await tester.tap(summaryPreview);
+    await tester.pumpAndSettle();
+    expect(
+      (tester.widget<AlertDialog>(find.byType(AlertDialog)).title as Text).data,
+      scene.title,
+    );
+    expect(
+      tester
+          .widget<TextField>(
+            find.descendant(
+              of: summaryEditor,
+              matching: find.byType(TextField),
+            ),
+          )
+          .maxLines,
+      greaterThan(1),
+    );
+    await tester.enterText(summaryEditor, summary);
+    expect(version.summary, isNot(summary));
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(version.summary, summary);
+    expect(version.notes, originalNotes);
+    final summaryText = tester.widget<Text>(
+      find.descendant(
+        of: summaryPreview,
+        matching: find.text('A much longer summary. A second line of detail.'),
+      ),
+    );
+    expect(summaryText.maxLines, 1);
+    expect(summaryText.overflow, TextOverflow.ellipsis);
+
+    await tester.tap(notesPreview);
+    await tester.pumpAndSettle();
+    expect(
+      (tester.widget<AlertDialog>(find.byType(AlertDialog)).title as Text).data,
+      scene.title,
+    );
+    expect(
+      tester
+          .widget<TextField>(
+            find.descendant(of: notesEditor, matching: find.byType(TextField)),
+          )
+          .maxLines,
+      greaterThan(1),
+    );
+    await tester.enterText(notesEditor, notes);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(version.notes, originalNotes);
+
+    await tester.tap(notesPreview);
+    await tester.pumpAndSettle();
+    await tester.enterText(notesEditor, notes);
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(version.notes, notes);
+    expect(version.summary, summary);
+    final notesText = tester.widget<Text>(
+      find.descendant(
+        of: notesPreview,
+        matching: find.text('First revision thought. Second revision thought.'),
+      ),
+    );
+    expect(notesText.maxLines, 1);
+
+    await tester.tap(summaryPreview);
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextFormField>(summaryEditor).initialValue, summary);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(version.summary, summary);
+
+    await tester.tap(find.text('v1: Draft 1 (Raw Action)'));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: summaryPreview,
+        matching: find.text(scene.versions.first.summary),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(summaryPreview);
+    await tester.pumpAndSettle();
+    await tester.enterText(summaryEditor, 'Summary for the first version');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(scene.versions.first.summary, 'Summary for the first version');
+    expect(version.summary, summary);
+    expect(version.notes, notes);
   });
 
   testWidgets('Author gear menu saves title page contact details', (

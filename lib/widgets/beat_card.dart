@@ -36,7 +36,7 @@ class _BeatCardState extends State<BeatCard> {
     final beat = widget.beat;
     final provider = widget.provider;
     final beatEvents = provider.project.getEventsForBeat(beat.id);
-    final beatScenes = provider.project.getScenesForBeat(beat.id);
+    final beatScenes = provider.project.getScenesForBeat(beat.id).where((scene) => !scene.isUnused).toList();
     final isSelected = provider.selectedBeatId == beat.id;
 
     return DragTarget<StoryEvent>(

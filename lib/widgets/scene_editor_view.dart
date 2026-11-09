@@ -29,6 +29,8 @@ class _SceneEditorViewState extends State<SceneEditorView> {
   late TextEditingController _scriptController;
   late TextEditingController _summaryController;
   late TextEditingController _notesController;
+  late String _editingSceneId;
+  String? _editingVersionId;
 
   bool _isReferenceMode = false;
   String? _referenceVersionId;
@@ -41,6 +43,8 @@ class _SceneEditorViewState extends State<SceneEditorView> {
 
   void _initControllers() {
     final active = widget.scene.activeVersion;
+    _editingSceneId = widget.scene.id;
+    _editingVersionId = widget.scene.activeVersionId;
     _titleController = TextEditingController(text: widget.scene.title);
     _sluglineController = TextEditingController(text: active.slugline);
     _scriptController = TextEditingController(text: active.scriptContent);
@@ -56,9 +60,11 @@ class _SceneEditorViewState extends State<SceneEditorView> {
   @override
   void didUpdateWidget(covariant SceneEditorView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.scene.id != widget.scene.id ||
-        oldWidget.scene.activeVersionId != widget.scene.activeVersionId) {
+    if (_editingSceneId != widget.scene.id ||
+        _editingVersionId != widget.scene.activeVersionId) {
       final active = widget.scene.activeVersion;
+      _editingSceneId = widget.scene.id;
+      _editingVersionId = widget.scene.activeVersionId;
       _titleController.text = widget.scene.title;
       _sluglineController.text = active.slugline;
       _scriptController.text = active.scriptContent;
@@ -84,6 +90,92 @@ class _SceneEditorViewState extends State<SceneEditorView> {
       summary: _summaryController.text.trim(),
       scriptContent: _scriptController.text,
       notes: _notesController.text.trim(),
+    );
+  }
+
+  Future<void> _editSceneText({
+    required String label,
+    required String fieldKey,
+    required TextEditingController controller,
+  }) async {
+    final sceneId = widget.scene.id;
+    final versionId = widget.scene.activeVersionId;
+    var draft = controller.text;
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(widget.scene.title),
+        content: SizedBox(
+          width: 600,
+          child: TextFormField(
+            key: ValueKey(fieldKey),
+            initialValue: draft,
+            autofocus: true,
+            minLines: 8,
+            maxLines: 12,
+            keyboardType: TextInputType.multiline,
+            decoration: InputDecoration(labelText: label, alignLabelWithHint: true),
+            onChanged: (value) => draft = value,
+          ),
+        ),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(dialogContext).pop(draft),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || result == null) return;
+    if (widget.scene.id != sceneId ||
+        widget.scene.activeVersionId != versionId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('The active scene or version changed; edits were not saved.'),
+        ),
+      );
+      return;
+    }
+    setState(() => controller.text = result.trim());
+    _saveCurrentVersion();
+  }
+
+  Widget _buildTextPreview({
+    required String label,
+    required String previewKey,
+    required String fieldKey,
+    required TextEditingController controller,
+  }) {
+    final preview = controller.text.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return InkWell(
+      key: ValueKey(previewKey),
+      onTap: () => _editSceneText(
+        label: label,
+        fieldKey: fieldKey,
+        controller: controller,
+      ),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 10,
+            vertical: 8,
+          ),
+        ),
+        child: Text(
+          preview.isEmpty ? 'Click to edit' : preview,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: preview.isEmpty
+              ? const TextStyle(color: AppTheme.textMuted)
+              : null,
+        ),
+      ),
     );
   }
 
@@ -578,36 +670,23 @@ class _SceneEditorViewState extends State<SceneEditorView> {
                 const Divider(color: AppTheme.border, height: 1),
                 const SizedBox(height: 8),
 
-                // Scene Notes & Summary expandable bottom
                 Row(
                   children: [
                     Expanded(
-                      child: TextField(
+                      child: _buildTextPreview(
+                        label: 'Scene Objective / Summary',
+                        previewKey: 'scene-summary-preview',
+                        fieldKey: 'scene-summary-editor',
                         controller: _summaryController,
-                        decoration: const InputDecoration(
-                          labelText: 'Scene Objective / Summary',
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 8,
-                          ),
-                        ),
-                        onChanged: (_) => _saveCurrentVersion(),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: TextField(
+                      child: _buildTextPreview(
+                        label: 'Writer Notes & Revision Thoughts',
+                        previewKey: 'scene-notes-preview',
+                        fieldKey: 'scene-notes-editor',
                         controller: _notesController,
-                        decoration: const InputDecoration(
-                          labelText: 'Writer Notes & Revision Thoughts',
-                          isDense: true,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 8,
-                          ),
-                        ),
-                        onChanged: (_) => _saveCurrentVersion(),
                       ),
                     ),
                   ],

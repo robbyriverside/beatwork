@@ -53,6 +53,7 @@ class ProjectCodec {
             ),
           ),
           activeVersionId: scene.activeVersionId,
+          isUnused: scene.isUnused,
         ),
       ),
       lastModifiedMicros: Int64(project.lastModified.microsecondsSinceEpoch),
@@ -107,6 +108,7 @@ class ProjectCodec {
               activeVersionId: scene.hasActiveVersionId()
                   ? scene.activeVersionId
                   : null,
+              isUnused: scene.isUnused,
             ),
           )
           .toList(),

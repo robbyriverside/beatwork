@@ -47,6 +47,20 @@ class BeatDefinition {
     required this.icon,
   });
 
+  int get estimatedSceneCount {
+    final match = RegExp(r'^Pages? (\d+)(?: - (\d+))?$').firstMatch(targetPage);
+    if (match == null) {
+      throw FormatException('Invalid beat page range: $targetPage');
+    }
+    final start = int.parse(match.group(1)!);
+    final end = int.parse(match.group(2) ?? match.group(1)!);
+    if (start < 1 || end < start) {
+      throw FormatException('Invalid beat page range: $targetPage');
+    }
+    final pageSpan = end == start ? 1 : end - start;
+    return (pageSpan + 4) ~/ 5;
+  }
+
   static const List<BeatDefinition> saveTheCatBeats = [
     // Act 1
     BeatDefinition(

@@ -122,6 +122,7 @@ const SceneDocument$json = {
       '10': 'activeVersionId',
       '17': true
     },
+    {'1': 'is_unused', '3': 8, '4': 1, '5': 8, '10': 'isUnused'},
   ],
   '8': [
     {'1': '_active_version_id'},
@@ -134,8 +135,8 @@ final $typed_data.Uint8List sceneDocumentDescriptor = $convert.base64Decode(
     'QSFAoFdGl0bGUYAyABKAlSBXRpdGxlEiUKDnRpbWVsaW5lX29yZGVyGAQgASgFUg10aW1lbGlu'
     'ZU9yZGVyEigKEG1hcHBlZF9ldmVudF9pZHMYBSADKAlSDm1hcHBlZEV2ZW50SWRzEjoKCHZlcn'
     'Npb25zGAYgAygLMh4uYmVhdHdvcmsuU2NlbmVWZXJzaW9uRG9jdW1lbnRSCHZlcnNpb25zEi8K'
-    'EWFjdGl2ZV92ZXJzaW9uX2lkGAcgASgJSABSD2FjdGl2ZVZlcnNpb25JZIgBAUIUChJfYWN0aX'
-    'ZlX3ZlcnNpb25faWQ=');
+    'EWFjdGl2ZV92ZXJzaW9uX2lkGAcgASgJSABSD2FjdGl2ZVZlcnNpb25JZIgBARIbCglpc191bn'
+    'VzZWQYCCABKAhSCGlzVW51c2VkQhQKEl9hY3RpdmVfdmVyc2lvbl9pZA==');
 
 @$core.Deprecated('Use sceneVersionDocumentDescriptor instead')
 const SceneVersionDocument$json = {
