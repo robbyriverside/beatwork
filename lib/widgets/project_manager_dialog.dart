@@ -439,7 +439,7 @@ class _ProjectManagerDialogState extends State<ProjectManagerDialog> {
 
                                     // Genre & Author
                                     Text(
-                                      '${meta.genre}  •  Written by ${meta.author}',
+                                      meta.genre,
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: AppTheme.textSecondary,

@@ -1,30 +1,32 @@
 import 'package:uuid/uuid.dart';
 import 'beat_model.dart';
+import 'beat_sheet.dart';
 import 'story_event.dart';
 import 'scene_model.dart';
 
 class StoryProject {
-  static const defaultAuthor = 'Anonymous';
-
   final String id;
   String title;
   String logline;
   String genre;
-  String author;
-  String authorEmail;
   List<StoryEvent> events;
   List<Scene> scenes;
   bool isSample;
   DateTime lastModified;
+  final String beatSheetYaml;
+  final int targetPageCount;
+  late final BeatSheet beatSheet = beatSheetYaml.isEmpty
+      ? BeatSheet.legacy
+      : BeatSheet.fromYaml(beatSheetYaml, targetPageCount);
 
   StoryProject({
     required this.id,
     required this.title,
     this.logline = '',
     this.genre = 'Feature Film',
-    this.author = defaultAuthor,
-    this.authorEmail = '',
     this.isSample = false,
+    this.beatSheetYaml = '',
+    this.targetPageCount = 110,
     List<StoryEvent>? events,
     List<Scene>? scenes,
     DateTime? lastModified,
@@ -42,21 +44,21 @@ class StoryProject {
   }
 
   List<Scene> getScenesForBeat(String beatId) {
-    return scenes.where((s) => s.beatId == beatId).toList()
-      ..sort((a, b) {
-        if (a.isUnused != b.isUnused) return a.isUnused ? 1 : -1;
-        return a.timelineOrder.compareTo(b.timelineOrder);
-      });
+    return scenes.where((s) => s.beatId == beatId).toList()..sort((a, b) {
+      if (a.isUnused != b.isUnused) return a.isUnused ? 1 : -1;
+      return a.timelineOrder.compareTo(b.timelineOrder);
+    });
   }
 
-  /// Collects all beat timelines in canonical Save the Cat order (1 to 19),
-  /// and within each beat by its timeline sequence.
+  /// Collects scenes in the project's beat and timeline order.
   List<CollectedSceneEntry> getCollectedTimeline() {
     final List<CollectedSceneEntry> collected = [];
     int overallIndex = 1;
 
-    for (final beatDef in BeatDefinition.saveTheCatBeats) {
-      final beatScenes = getScenesForBeat(beatDef.id).where((scene) => !scene.isUnused);
+    for (final beatDef in beatSheet.beats) {
+      final beatScenes = getScenesForBeat(
+        beatDef.id,
+      ).where((scene) => !scene.isUnused);
       for (final scene in beatScenes) {
         final mappedEvents = events
             .where((e) => scene.mappedEventIds.contains(e.id))
@@ -90,9 +92,9 @@ class StoryProject {
       'title': title,
       'logline': logline,
       'genre': genre,
-      'author': author,
-      'authorEmail': authorEmail,
       'isSample': isSample,
+      'beatSheetYaml': beatSheetYaml,
+      'targetPageCount': targetPageCount,
       'events': events.map((e) => e.toJson()).toList(),
       'scenes': scenes.map((s) => s.toJson()).toList(),
       'lastModified': lastModified.toIso8601String(),
@@ -105,9 +107,9 @@ class StoryProject {
       title: json['title'] as String,
       logline: json['logline'] as String? ?? '',
       genre: json['genre'] as String? ?? 'Feature Film',
-      author: json['author'] as String? ?? defaultAuthor,
-      authorEmail: json['authorEmail'] as String? ?? '',
       isSample: json['isSample'] as bool? ?? false,
+      beatSheetYaml: json['beatSheetYaml'] as String? ?? '',
+      targetPageCount: json['targetPageCount'] as int? ?? 110,
       events:
           (json['events'] as List<dynamic>?)
               ?.map((e) => StoryEvent.fromJson(e as Map<String, dynamic>))
@@ -128,14 +130,18 @@ class StoryProject {
     String title = 'Untitled Screenplay',
     String logline = '',
     String genre = 'Feature Film',
-    String author = defaultAuthor,
+    String beatSheetYaml = '',
+    int targetPageCount = 110,
   }) {
     return StoryProject(
       id: const Uuid().v4(),
       title: title,
       logline: logline,
       genre: genre,
-      author: author,
+      beatSheetYaml: beatSheetYaml.isEmpty
+          ? ''
+          : BeatSheet.fromYaml(beatSheetYaml, targetPageCount).toFixedYaml(),
+      targetPageCount: targetPageCount,
       isSample: false,
     );
   }
@@ -473,7 +479,6 @@ Jax's ocular implants go dark. His hand falls limp in the gutter.''',
       logline:
           'When an outlaw cyberpunk data-thief intercepts an impossible quantum drive containing the uploaded consciousness of his comatose sister, he must join forces with a rogue corporate architect to pull off the ultimate digital heist before an all-seeing Syndicate wipes her existence.',
       genre: 'Sci-Fi / Heist Thriller',
-      author: defaultAuthor,
       isSample: true,
       events: [
         e1,
@@ -515,7 +520,6 @@ class ProjectMetadata {
   final String title;
   final String logline;
   final String genre;
-  final String author;
   final int eventCount;
   final int sceneCount;
   final bool isSample;
@@ -526,7 +530,6 @@ class ProjectMetadata {
     required this.title,
     this.logline = '',
     this.genre = 'Feature Film',
-    this.author = StoryProject.defaultAuthor,
     required this.eventCount,
     required this.sceneCount,
     this.isSample = false,
@@ -539,7 +542,6 @@ class ProjectMetadata {
       title: project.title,
       logline: project.logline,
       genre: project.genre,
-      author: project.author,
       eventCount: project.events.length,
       sceneCount: project.scenes.length,
       isSample: project.isSample,
@@ -552,7 +554,6 @@ class ProjectMetadata {
     'title': title,
     'logline': logline,
     'genre': genre,
-    'author': author,
     'eventCount': eventCount,
     'sceneCount': sceneCount,
     'isSample': isSample,
@@ -565,7 +566,6 @@ class ProjectMetadata {
         title: json['title'] as String,
         logline: json['logline'] as String? ?? '',
         genre: json['genre'] as String? ?? 'Feature Film',
-        author: json['author'] as String? ?? StoryProject.defaultAuthor,
         eventCount: json['eventCount'] as int? ?? 0,
         sceneCount: json['sceneCount'] as int? ?? 0,
         isSample: json['isSample'] as bool? ?? false,

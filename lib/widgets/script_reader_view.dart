@@ -20,6 +20,7 @@ class _ScriptReaderViewState extends State<ScriptReaderView> {
     try {
       final savedPath = await ExportService.saveBeatWorkTimelinePdf(
         widget.provider.project,
+        author: widget.provider.author,
       );
       if (mounted && savedPath != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -203,7 +204,7 @@ class _ScriptReaderViewState extends State<ScriptReaderView> {
                             const SizedBox(height: 6),
                             Center(
                               child: Text(
-                                'written by ${provider.project.author}',
+                                'written by ${provider.author.name}',
                                 style: const TextStyle(
                                   fontFamily: 'Courier',
                                   fontSize: 13,
@@ -342,7 +343,7 @@ class _ScriptReaderViewState extends State<ScriptReaderView> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'SAVE THE CAT: BEAT ${entry.beat.number} - ${entry.beat.name.toUpperCase()}',
+                    '${widget.provider.project.beatSheet.timelineLabel}: BEAT ${entry.beat.number} - ${entry.beat.name.toUpperCase()}',
                     style: TextStyle(
                       fontFamily: 'Courier',
                       fontSize: 12,

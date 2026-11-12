@@ -26,11 +26,10 @@ class _BeatBoardViewState extends State<BeatBoardView> {
 
   @override
   Widget build(BuildContext context) {
+    final sheet = widget.provider.project.beatSheet;
     final filteredBeats = _selectedActFilter == null
-        ? BeatDefinition.saveTheCatBeats
-        : BeatDefinition.saveTheCatBeats
-              .where((b) => b.act == _selectedActFilter)
-              .toList();
+        ? sheet.beats
+        : sheet.beats.where((b) => b.act == _selectedActFilter).toList();
 
     return Column(
       children: [
@@ -45,9 +44,9 @@ class _BeatBoardViewState extends State<BeatBoardView> {
             builder: (context, constraints) {
               return Row(
                 children: [
-                  const Text(
-                    'SAVE THE CAT!',
-                    style: TextStyle(
+                  Text(
+                    sheet.name.toUpperCase(),
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.0,
@@ -62,9 +61,7 @@ class _BeatBoardViewState extends State<BeatBoardView> {
                         children: [
                           ChoiceChip(
                             selected: _selectedActFilter == null,
-                            label: Text(
-                              'All ${BeatDefinition.saveTheCatBeats.length} Beats',
-                            ),
+                            label: Text('All ${sheet.beats.length} Beats'),
                             onSelected: (_) =>
                                 setState(() => _selectedActFilter = null),
                             backgroundColor: AppTheme.surfaceElevated,
@@ -82,7 +79,7 @@ class _BeatBoardViewState extends State<BeatBoardView> {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          ...StoryAct.values.map(
+                          ...sheet.acts.map(
                             (act) => Padding(
                               padding: const EdgeInsets.only(right: 6),
                               child: ChoiceChip(

@@ -61,6 +61,7 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
   Future<void> _addEventToBeat() async {
     final newEvent = await EventDialog.show(
       context,
+      beats: widget.provider.project.beatSheet.beats,
       initialBeatId: widget.beat.id,
       onSaveAndContinue: (event, isEditing) {
         if (isEditing) {
@@ -372,7 +373,6 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
     required String singular,
     required IconData icon,
     required Color color,
-    required bool belowMinimum,
   }) {
     return Container(
       margin: const EdgeInsets.all(10),
@@ -388,12 +388,10 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Estimated minimum: $count $singular${count == 1 ? '' : 's'}.',
-              style: TextStyle(
+              'Estimate: $count $singular${count == 1 ? '' : 's'}.',
+              style: const TextStyle(
                 fontSize: 11.5,
-                color: belowMinimum
-                    ? AppTheme.crimsonAccent
-                    : AppTheme.textSecondary,
+                color: AppTheme.textSecondary,
               ),
             ),
           ),
@@ -403,8 +401,8 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
   }
 
   Widget _buildBeatEventsView(List<StoryEvent> beatEvents, int sceneCount) {
-    final minimum = widget.beat.estimatedSceneCount;
-    final eventEstimate = sceneCount > minimum ? sceneCount : minimum;
+    final estimate = widget.beat.estimatedSceneCount;
+    final eventEstimate = sceneCount > estimate ? sceneCount : estimate;
     return Column(
       children: [
         _buildEstimateHint(
@@ -412,7 +410,6 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
           singular: 'event',
           icon: Icons.bolt,
           color: AppTheme.goldAccent,
-          belowMinimum: beatEvents.length < eventEstimate,
         ),
         // Events List (Reorderable / in no particular order)
         Expanded(
@@ -472,6 +469,7 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
                         onEdit: () async {
                           final updated = await EventDialog.show(
                             context,
+                            beats: widget.provider.project.beatSheet.beats,
                             initialEvent: ev,
                             onSaveAndContinue: (event, isEditing) {
                               if (isEditing) {
@@ -537,7 +535,6 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
           singular: 'scene',
           icon: Icons.route,
           color: AppTheme.cyanAccent,
-          belowMinimum: activeSceneCount < sceneEstimate,
         ),
         Align(
           alignment: Alignment.centerRight,

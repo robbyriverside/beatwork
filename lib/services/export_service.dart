@@ -7,11 +7,13 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../models/story_project.dart';
+import '../models/author_profile.dart';
 
 class ExportService {
   static Future<Uint8List> generateBeatWorkTimelinePdf(
-    StoryProject project,
-  ) async {
+    StoryProject project, {
+    required AuthorProfile author,
+  }) async {
     final pdf = pw.Document();
     final courier = pw.Font.courier();
     final courierBold = pw.Font.courierBold();
@@ -45,7 +47,7 @@ class ExportService {
             pw.SizedBox(height: 6),
             pw.Center(
               child: pw.Text(
-                'written by ${project.author}',
+                'written by ${author.name}',
                 style: pw.TextStyle(font: courier, fontSize: 12),
               ),
             ),
@@ -233,8 +235,11 @@ class ExportService {
     return pdf.save();
   }
 
-  static Future<String?> saveBeatWorkTimelinePdf(StoryProject project) async {
-    final bytes = await generateBeatWorkTimelinePdf(project);
+  static Future<String?> saveBeatWorkTimelinePdf(
+    StoryProject project, {
+    required AuthorProfile author,
+  }) async {
+    final bytes = await generateBeatWorkTimelinePdf(project, author: author);
     final fileName =
         '${_sanitizeFileName(project.title)}_beatwork_timeline.pdf';
 
@@ -258,7 +263,10 @@ class ExportService {
   }
 
   /// Generates industry standard Final Draft (.fdx) XML
-  static String generateFinalDraftFdx(StoryProject project) {
+  static String generateFinalDraftFdx(
+    StoryProject project, {
+    required AuthorProfile author,
+  }) {
     final buffer = StringBuffer();
     buffer.writeln('<?xml version="1.0" encoding="UTF-8" standalone="no" ?>');
     buffer.writeln(
@@ -294,13 +302,11 @@ class ExportService {
     buffer.writeln('        <Text>Written by</Text>');
     buffer.writeln('      </Paragraph>');
     buffer.writeln('      <Paragraph Type="Author">');
-    buffer.writeln('        <Text>${_escapeXml(project.author)}</Text>');
+    buffer.writeln('        <Text>${_escapeXml(author.name)}</Text>');
     buffer.writeln('      </Paragraph>');
-    if (project.authorEmail.trim().isNotEmpty) {
+    if (author.email.trim().isNotEmpty) {
       buffer.writeln('      <Paragraph Type="Contact">');
-      buffer.writeln(
-        '        <Text>${_escapeXml(project.authorEmail.trim())}</Text>',
-      );
+      buffer.writeln('        <Text>${_escapeXml(author.email.trim())}</Text>');
       buffer.writeln('      </Paragraph>');
     }
     buffer.writeln('    </Content>');
@@ -368,13 +374,16 @@ class ExportService {
   }
 
   /// Generates a Fountain screenplay script
-  static String generateFountain(StoryProject project) {
+  static String generateFountain(
+    StoryProject project, {
+    required AuthorProfile author,
+  }) {
     final buffer = StringBuffer();
     buffer.writeln('Title: ${project.title}');
     buffer.writeln('Credit: written by');
-    buffer.writeln('Author: ${project.author}');
-    if (project.authorEmail.trim().isNotEmpty) {
-      buffer.writeln('Contact: ${project.authorEmail.trim()}');
+    buffer.writeln('Author: ${author.name}');
+    if (author.email.trim().isNotEmpty) {
+      buffer.writeln('Contact: ${author.email.trim()}');
     }
     buffer.writeln(
       'Draft date: ${DateTime.now().toLocal().toString().split(' ')[0]}',
@@ -399,7 +408,10 @@ class ExportService {
   }
 
   /// Generates a formatted industry-standard Screenplay PDF document
-  static Future<Uint8List> generateScreenplayPdf(StoryProject project) async {
+  static Future<Uint8List> generateScreenplayPdf(
+    StoryProject project, {
+    required AuthorProfile author,
+  }) async {
     final pdf = pw.Document();
 
     final fontCourier = pw.Font.courier();
@@ -432,13 +444,13 @@ class ExportService {
               ),
               pw.SizedBox(height: 8),
               pw.Text(
-                project.author,
+                author.name,
                 style: pw.TextStyle(font: fontCourier, fontSize: 16),
               ),
-              if (project.authorEmail.trim().isNotEmpty) ...[
+              if (author.email.trim().isNotEmpty) ...[
                 pw.SizedBox(height: 4),
                 pw.Text(
-                  project.authorEmail.trim(),
+                  author.email.trim(),
                   style: pw.TextStyle(font: fontCourier, fontSize: 11),
                 ),
               ],
@@ -599,8 +611,11 @@ class ExportService {
   }
 
   /// Prompts user to save Final Draft file (.fdx) to their desktop
-  static Future<String?> saveFinalDraftToFile(StoryProject project) async {
-    final content = generateFinalDraftFdx(project);
+  static Future<String?> saveFinalDraftToFile(
+    StoryProject project, {
+    required AuthorProfile author,
+  }) async {
+    final content = generateFinalDraftFdx(project, author: author);
     final bytes = Uint8List.fromList(utf8.encode(content));
     final defaultFileName = '${_sanitizeFileName(project.title)}_beatwork.fdx';
 
@@ -631,8 +646,11 @@ class ExportService {
   }
 
   /// Prompts user to save Screenplay PDF to their desktop
-  static Future<String?> savePdfToFile(StoryProject project) async {
-    final pdfBytes = await generateScreenplayPdf(project);
+  static Future<String?> savePdfToFile(
+    StoryProject project, {
+    required AuthorProfile author,
+  }) async {
+    final pdfBytes = await generateScreenplayPdf(project, author: author);
     final defaultFileName =
         '${_sanitizeFileName(project.title)}_screenplay.pdf';
 
@@ -663,8 +681,11 @@ class ExportService {
   }
 
   /// Prompts user to save Fountain file to desktop
-  static Future<String?> saveFountainToFile(StoryProject project) async {
-    final content = generateFountain(project);
+  static Future<String?> saveFountainToFile(
+    StoryProject project, {
+    required AuthorProfile author,
+  }) async {
+    final content = generateFountain(project, author: author);
     final bytes = Uint8List.fromList(utf8.encode(content));
     final defaultFileName = '${_sanitizeFileName(project.title)}.fountain';
 

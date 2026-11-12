@@ -275,6 +275,7 @@ class EventPoolSidebar extends StatelessWidget {
                         onEdit: () async {
                           final updated = await EventDialog.show(
                             context,
+                            beats: provider.project.beatSheet.beats,
                             initialEvent: ev,
                             onSaveAndContinue: (event, isEditing) {
                               if (isEditing) {

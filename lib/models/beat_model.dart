@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
 
-enum StoryAct {
-  act1('Act 1', 'Exposition & Catalyst', Color(0xFF3B82F6), Color(0xFF1E3A8A)),
-  act2A(
+class StoryAct {
+  static const act1 = StoryAct(
+    'Act 1',
+    'Exposition & Catalyst',
+    Color(0xFF3B82F6),
+    Color(0xFF1E3A8A),
+  );
+  static const act2A = StoryAct(
     'Act 2A',
     'Promise of the Premise',
     Color(0xFF10B981),
     Color(0xFF064E3B),
-  ),
-  act2B(
+  );
+  static const act2B = StoryAct(
     'Act 2B',
     'Bad Guys Close In & Crisis',
     Color(0xFFF59E0B),
     Color(0xFF78350F),
-  ),
-  act3('Act 3', 'Climax & Resolution', Color(0xFF8B5CF6), Color(0xFF4C1D95));
+  );
+  static const act3 = StoryAct(
+    'Act 3',
+    'Climax & Resolution',
+    Color(0xFF8B5CF6),
+    Color(0xFF4C1D95),
+  );
+  static const values = [act1, act2A, act2B, act3];
 
   final String title;
   final String subtitle;

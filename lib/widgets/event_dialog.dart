@@ -9,12 +9,14 @@ import '../theme/app_theme.dart';
 class EventDialog extends StatefulWidget {
   final StoryEvent? initialEvent;
   final String? initialBeatId;
+  final List<BeatDefinition> beats;
   final void Function(StoryEvent event, bool isEditing)? onSaveAndContinue;
 
   const EventDialog({
     super.key,
     this.initialEvent,
     this.initialBeatId,
+    this.beats = BeatDefinition.saveTheCatBeats,
     this.onSaveAndContinue,
   });
 
@@ -22,6 +24,7 @@ class EventDialog extends StatefulWidget {
     BuildContext context, {
     StoryEvent? initialEvent,
     String? initialBeatId,
+    List<BeatDefinition> beats = BeatDefinition.saveTheCatBeats,
     void Function(StoryEvent event, bool isEditing)? onSaveAndContinue,
   }) {
     return showDialog<StoryEvent>(
@@ -29,6 +32,7 @@ class EventDialog extends StatefulWidget {
       builder: (context) => EventDialog(
         initialEvent: initialEvent,
         initialBeatId: initialBeatId,
+        beats: beats,
         onSaveAndContinue: onSaveAndContinue,
       ),
     );
@@ -185,7 +189,7 @@ class _EventDialogState extends State<EventDialog> {
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'Events represent things that happen in the story. You can create them freely and drag them into Save the Cat beats.',
+                      'Events represent things that happen in the story. You can create them freely and drag them into beats.',
                       style: TextStyle(
                         fontSize: 12.5,
                         color: AppTheme.textSecondary,
@@ -252,7 +256,7 @@ class _EventDialogState extends State<EventDialog> {
                           value: null,
                           child: Text('Story Event Pool (Unassigned inbox)'),
                         ),
-                        ...BeatDefinition.saveTheCatBeats.map(
+                        ...widget.beats.map(
                           (b) => DropdownMenuItem<String?>(
                             value: b.id,
                             child: Text(

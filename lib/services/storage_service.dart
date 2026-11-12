@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/story_project.dart';
+import '../models/author_profile.dart';
 import 'project_codec.dart';
 
 class RecentDocument {
@@ -40,6 +41,29 @@ class StorageService {
   static Future<Directory> _getMetadataDirectory() async {
     if (overrideDirectory != null) return overrideDirectory!;
     return getApplicationSupportDirectory();
+  }
+
+  static Future<AuthorProfile> loadAuthorProfile() async {
+    final file = File(
+      '${(await _getMetadataDirectory()).path}${Platform.pathSeparator}author_profile.json',
+    );
+    if (!await file.exists()) return const AuthorProfile();
+    final json = jsonDecode(await file.readAsString());
+    if (json is! Map<String, dynamic>) {
+      throw const FormatException('Invalid author profile.');
+    }
+    return AuthorProfile.fromJson(json);
+  }
+
+  static Future<void> saveAuthorProfile(AuthorProfile author) async {
+    final directory = await _getMetadataDirectory();
+    await directory.create(recursive: true);
+    final file = File(
+      '${directory.path}${Platform.pathSeparator}author_profile.json',
+    );
+    final temporary = File('${file.path}.tmp');
+    await temporary.writeAsString(jsonEncode(author.toJson()), flush: true);
+    await temporary.rename(file.path);
   }
 
   static Future<Directory> _getDocumentsDirectory() async {
@@ -396,7 +420,6 @@ class StorageService {
               title: data['title'] as String,
               logline: data['logline'] as String? ?? '',
               genre: data['genre'] as String? ?? 'Feature Film',
-              author: data['author'] as String? ?? StoryProject.defaultAuthor,
               eventCount: (data['events'] as List<dynamic>?)?.length ?? 0,
               sceneCount: (data['scenes'] as List<dynamic>?)?.length ?? 0,
               isSample: data['isSample'] as bool? ?? false,

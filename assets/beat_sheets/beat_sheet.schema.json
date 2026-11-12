@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BeatWork beat sheet",
+  "description": "A version 1 beat sheet template. Acts and beats are ordered. IDs must be unique across acts and across all beats; the loader also checks rules that JSON Schema cannot express.",
+  "type": "object",
+  "required": ["version", "id", "name", "timeline_label", "mode", "acts"],
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "Format version."
+    },
+    "id": {
+      "$ref": "#/$defs/nonEmptyString",
+      "description": "Unique sheet identifier."
+    },
+    "name": {
+      "$ref": "#/$defs/nonEmptyString",
+      "description": "Name shown when choosing a sheet."
+    },
+    "timeline_label": {
+      "$ref": "#/$defs/nonEmptyString",
+      "description": "Label shown on the script timeline."
+    },
+    "mode": {
+      "enum": ["fixed", "estimated"],
+      "description": "Fixed beats use explicit page guidance; estimated beats are expanded using the target length."
+    },
+    "acts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/act" }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "mode": { "const": "fixed" } },
+        "required": ["mode"]
+      },
+      "then": {
+        "properties": {
+          "acts": {
+            "items": { "$ref": "#/$defs/fixedAct" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "mode": { "const": "estimated" } },
+        "required": ["mode"]
+      },
+      "then": {
+        "required": [
+          "pages_per_beat",
+          "minimum_beats_per_act",
+          "repeat_name",
+          "repeat_summary",
+          "repeat_guidance"
+        ],
+        "properties": {
+          "pages_per_beat": {
+            "$ref": "#/$defs/positiveInteger",
+            "description": "Estimated pages or minutes per beat."
+          },
+          "minimum_beats_per_act": {
+            "$ref": "#/$defs/positiveInteger",
+            "description": "Each act must contain exactly this many anchor beats."
+          },
+          "repeat_name": {
+            "$ref": "#/$defs/nonEmptyString",
+            "description": "Base name for additional development beats."
+          },
+          "repeat_summary": { "$ref": "#/$defs/nonEmptyString" },
+          "repeat_guidance": { "$ref": "#/$defs/nonEmptyString" },
+          "acts": {
+            "items": { "$ref": "#/$defs/estimatedAct" }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "positiveInteger": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1000
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{6}$",
+      "description": "Six-digit RGB hex string without #; quote it in YAML."
+    },
+    "act": {
+      "type": "object",
+      "required": ["id", "title", "subtitle", "color", "dark_color", "beats"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString",
+          "description": "Unique among act IDs in this sheet."
+        },
+        "title": { "$ref": "#/$defs/nonEmptyString" },
+        "subtitle": { "$ref": "#/$defs/nonEmptyString" },
+        "color": { "$ref": "#/$defs/color" },
+        "dark_color": { "$ref": "#/$defs/color" },
+        "beats": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/beat" }
+        }
+      }
+    },
+    "beat": {
+      "type": "object",
+      "required": ["id", "name", "summary", "guidance"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString",
+          "description": "Unique across all beats in the sheet, including generated development beats."
+        },
+        "name": { "$ref": "#/$defs/nonEmptyString" },
+        "summary": {
+          "$ref": "#/$defs/nonEmptyString",
+          "description": "Short hint displayed on the beat card."
+        },
+        "guidance": {
+          "$ref": "#/$defs/nonEmptyString",
+          "description": "Longer writing hint displayed in the beat workspace."
+        }
+      }
+    },
+    "fixedAct": {
+      "properties": {
+        "beats": {
+          "items": { "$ref": "#/$defs/fixedBeat" }
+        }
+      }
+    },
+    "estimatedAct": {
+      "description": "The number of anchor beats must equal the sheet's minimum_beats_per_act; additional beats are inserted before the final anchor.",
+      "properties": {
+        "beats": {
+          "items": { "$ref": "#/$defs/beat" }
+        }
+      }
+    },
+    "fixedBeat": {
+      "type": "object",
+      "required": ["target_page", "percentage", "icon"],
+      "properties": {
+        "target_page": {
+          "type": "string",
+          "pattern": "^Pages? 0*[1-9][0-9]*( - 0*[1-9][0-9]*)?$",
+          "description": "Page N or Pages N - N; the ending page must not precede the starting page."
+        },
+        "percentage": {
+          "$ref": "#/$defs/nonEmptyString",
+          "description": "Display text for the beat's position in the story."
+        },
+        "icon": {
+          "enum": [
+            "movie_creation_outlined",
+            "lightbulb_outline",
+            "home_work_outlined",
+            "bolt",
+            "question_mark_rounded",
+            "door_front_door_outlined",
+            "favorite_border",
+            "sports_esports_outlined",
+            "hourglass_top_outlined",
+            "warning_amber_rounded",
+            "heart_broken_outlined",
+            "nights_stay_outlined",
+            "wb_incandescent_outlined",
+            "military_tech_outlined",
+            "play_arrow_rounded",
+            "task_alt_outlined",
+            "verified_outlined"
+          ]
+        }
+      }
+    }
+  }
+}

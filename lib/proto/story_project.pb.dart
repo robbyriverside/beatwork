@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from proto/story_project.proto.
+// Generated from story_project.proto.
 
 // @dart = 3.3
 
@@ -23,12 +23,14 @@ class StoryProjectDocument extends $pb.GeneratedMessage {
     $core.String? title,
     $core.String? logline,
     $core.String? genre,
-    $core.String? author,
+    @$core.Deprecated('This field is deprecated.') $core.String? author,
     $core.bool? isSample,
     $core.Iterable<StoryEventDocument>? events,
     $core.Iterable<SceneDocument>? scenes,
     $fixnum.Int64? lastModifiedMicros,
-    $core.String? authorEmail,
+    @$core.Deprecated('This field is deprecated.') $core.String? authorEmail,
+    $core.String? beatSheetYaml,
+    $core.int? targetPageCount,
   }) {
     final result = StoryProjectDocument._();
     if (id != null) result.id = id;
@@ -42,6 +44,8 @@ class StoryProjectDocument extends $pb.GeneratedMessage {
     if (lastModifiedMicros != null)
       result.lastModifiedMicros = lastModifiedMicros;
     if (authorEmail != null) result.authorEmail = authorEmail;
+    if (beatSheetYaml != null) result.beatSheetYaml = beatSheetYaml;
+    if (targetPageCount != null) result.targetPageCount = targetPageCount;
     return result;
   }
 
@@ -70,6 +74,8 @@ class StoryProjectDocument extends $pb.GeneratedMessage {
         subBuilder: SceneDocument.$_createMessage)
     ..aInt64(9, _omitFieldNames ? '' : 'lastModifiedMicros')
     ..aOS(10, _omitFieldNames ? '' : 'authorEmail')
+    ..aOS(11, _omitFieldNames ? '' : 'beatSheetYaml')
+    ..aI(12, _omitFieldNames ? '' : 'targetPageCount')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -131,12 +137,17 @@ class StoryProjectDocument extends $pb.GeneratedMessage {
   @$pb.TagNumber(4)
   void clearGenre() => $_clearField(4);
 
+  /// Legacy fields are read for compatibility but ignored and not written.
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(5)
   $core.String get author => $_getSZ(4);
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(5)
   set author($core.String value) => $_setString(4, value);
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(5)
   $core.bool hasAuthor() => $_has(4);
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(5)
   void clearAuthor() => $_clearField(5);
 
@@ -164,14 +175,36 @@ class StoryProjectDocument extends $pb.GeneratedMessage {
   @$pb.TagNumber(9)
   void clearLastModifiedMicros() => $_clearField(9);
 
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(10)
   $core.String get authorEmail => $_getSZ(9);
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(10)
   set authorEmail($core.String value) => $_setString(9, value);
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(10)
   $core.bool hasAuthorEmail() => $_has(9);
+  @$core.Deprecated('This field is deprecated.')
   @$pb.TagNumber(10)
   void clearAuthorEmail() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.String get beatSheetYaml => $_getSZ(10);
+  @$pb.TagNumber(11)
+  set beatSheetYaml($core.String value) => $_setString(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasBeatSheetYaml() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearBeatSheetYaml() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.int get targetPageCount => $_getIZ(11);
+  @$pb.TagNumber(12)
+  set targetPageCount($core.int value) => $_setSignedInt32(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasTargetPageCount() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearTargetPageCount() => $_clearField(12);
 }
 
 class StoryEventDocument extends $pb.GeneratedMessage {

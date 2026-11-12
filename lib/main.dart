@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:io';
+import 'models/author_profile.dart';
 import 'models/story_project.dart';
 import 'services/storage_service.dart';
 import 'state/story_provider.dart';
@@ -11,11 +12,26 @@ import 'widgets/beat_detail_dialog.dart';
 import 'widgets/event_dialog.dart';
 import 'widgets/event_pool_sidebar.dart';
 import 'widgets/script_reader_view.dart';
+import 'widgets/new_project_dialog.dart';
+import 'widgets/author_settings_dialog.dart';
 
 const _documentChannel = MethodChannel('beatwork/documents');
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  final AuthorProfile author;
+  try {
+    author = await StorageService.loadAuthorProfile();
+  } catch (error) {
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(child: Text('Could not load Author settings: $error')),
+        ),
+      ),
+    );
+    return;
+  }
   StoryProject? savedProject;
   String? documentPath;
   final launchPath = args.cast<String?>().firstWhere(
@@ -41,6 +57,7 @@ void main(List<String> args) async {
     BeatWorkApp(
       initialProject: savedProject ?? StoryProject.createSampleProject(),
       initialDocumentPath: documentPath,
+      initialAuthor: author,
     ),
   );
 }
@@ -48,18 +65,25 @@ void main(List<String> args) async {
 class BeatWorkApp extends StatelessWidget {
   final StoryProject? initialProject;
   final String? initialDocumentPath;
+  final AuthorProfile initialAuthor;
 
-  const BeatWorkApp({super.key, this.initialProject, this.initialDocumentPath});
+  const BeatWorkApp({
+    super.key,
+    this.initialProject,
+    this.initialDocumentPath,
+    this.initialAuthor = const AuthorProfile(),
+  });
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BeatWork - Save the Cat Screenplay Beats',
+      title: 'BeatWork - Screenplay Beats',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: BeatWorkHomeScreen(
         initialProject: initialProject,
         initialDocumentPath: initialDocumentPath,
+        initialAuthor: initialAuthor,
       ),
     );
   }
@@ -77,11 +101,13 @@ enum AppViewMode {
 class BeatWorkHomeScreen extends StatefulWidget {
   final StoryProject? initialProject;
   final String? initialDocumentPath;
+  final AuthorProfile initialAuthor;
 
   const BeatWorkHomeScreen({
     super.key,
     this.initialProject,
     this.initialDocumentPath,
+    this.initialAuthor = const AuthorProfile(),
   });
 
   @override
@@ -99,6 +125,7 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
       initialProject:
           widget.initialProject ?? StoryProject.createSampleProject(),
       documentPath: widget.initialDocumentPath,
+      initialAuthor: widget.initialAuthor,
     );
     _documentChannel.setMethodCallHandler(_handlePlatformMethodCall);
     if (Platform.isMacOS) {
@@ -196,7 +223,24 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
   }
 
   Future<void> _newDocument() async {
-    if (await _confirmDocumentReplacement()) _provider.newDocument();
+    if (!await _confirmDocumentReplacement()) return;
+    try {
+      final sheets = await NewProjectDialog.loadSheets();
+      if (!mounted) return;
+      final project = await showDialog<StoryProject>(
+        context: context,
+        builder: (_) => NewProjectDialog(sheets: sheets),
+      );
+      if (mounted && project != null) {
+        _provider.newDocument(project);
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not load beat sheets: $error')),
+        );
+      }
+    }
   }
 
   Future<void> _openDocument() async {
@@ -320,59 +364,9 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
   }
 
   void _openAuthorSettings(BuildContext context) {
-    final authorCtrl = TextEditingController(text: _provider.project.author);
-    final emailCtrl = TextEditingController(
-      text: _provider.project.authorEmail,
-    );
-
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.person_outline, color: AppTheme.goldAccent),
-            SizedBox(width: 8),
-            Text('Author'),
-          ],
-        ),
-        content: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                key: const ValueKey('author-name-field'),
-                controller: authorCtrl,
-                autofocus: true,
-                decoration: const InputDecoration(labelText: 'Author name'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                key: const ValueKey('author-email-field'),
-                controller: emailCtrl,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'Email'),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          OutlinedButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _provider.updateProjectMeta(
-                author: authorCtrl.text.trim(),
-                authorEmail: emailCtrl.text.trim(),
-              );
-              Navigator.of(ctx).pop();
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+      builder: (_) => AuthorSettingsDialog(provider: _provider),
     );
   }
 
@@ -389,13 +383,14 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
       context: context,
       applicationName: 'BeatWork',
       applicationVersion: appVersion,
-      applicationLegalese: 'Save the Cat! Screenwriting Workflow',
+      applicationLegalese: 'Screenwriting Workflow',
     );
   }
 
   Future<void> _createStoryEvent() async {
     final newEvent = await EventDialog.show(
       context,
+      beats: _provider.project.beatSheet.beats,
       onSaveAndContinue: (event, isEditing) {
         if (isEditing) {
           _provider.updateEvent(event);
@@ -530,51 +525,47 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                       child: const Text('Open Recent'),
                                     ),
                                   ],
-                                  builder: (context, controller, child) =>
-                                      SizedBox(
-                                        height: 56,
-                                        child: Center(
-                                          child: InkWell(
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
-                                            onTap: () => controller.isOpen
-                                                ? controller.close()
-                                                : controller.open(),
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 10,
-                                                    vertical: 6,
+                                  builder: (context, controller, child) => SizedBox(
+                                    height: 56,
+                                    child: Center(
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(6),
+                                        onTap: () => controller.isOpen
+                                            ? controller.close()
+                                            : controller.open(),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(
+                                                  6,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: AppTheme.goldAccent
+                                                      .withValues(alpha: 0.2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                  border: Border.all(
+                                                    color: AppTheme.goldAccent,
                                                   ),
-                                              child: Row(
+                                                ),
+                                                child: const Icon(
+                                                  Icons.movie_outlined,
+                                                  size: 18,
+                                                  color: AppTheme.goldAccent,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Column(
                                                 mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: [
-                                                  Container(
-                                                    padding:
-                                                        const EdgeInsets.all(6),
-                                                    decoration: BoxDecoration(
-                                                      color: AppTheme.goldAccent
-                                                          .withValues(
-                                                            alpha: 0.2,
-                                                          ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            6,
-                                                          ),
-                                                      border: Border.all(
-                                                        color:
-                                                            AppTheme.goldAccent,
-                                                      ),
-                                                    ),
-                                                    child: const Icon(
-                                                      Icons.movie_outlined,
-                                                      size: 18,
-                                                      color:
-                                                          AppTheme.goldAccent,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 8),
                                                   const Text(
                                                     'BEATWORK',
                                                     style: TextStyle(
@@ -586,12 +577,40 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                                           AppTheme.goldAccent,
                                                     ),
                                                   ),
+                                                  InkWell(
+                                                    key: const ValueKey(
+                                                      'author-display',
+                                                    ),
+                                                    onTap: () =>
+                                                        _openAuthorSettings(
+                                                          context,
+                                                        ),
+                                                    child: ConstrainedBox(
+                                                      constraints:
+                                                          const BoxConstraints(
+                                                            maxWidth: 160,
+                                                          ),
+                                                      child: Text(
+                                                        _provider.author.name,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: const TextStyle(
+                                                          fontSize: 10,
+                                                          color: AppTheme
+                                                              .textSecondary,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
                                                 ],
                                               ),
-                                            ),
+                                            ],
                                           ),
                                         ),
                                       ),
+                                    ),
+                                  ),
                                 ),
 
                                 const SizedBox(width: 16),
@@ -771,6 +790,7 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                         Expanded(
                           child: _viewMode == AppViewMode.beatSheet
                               ? BeatBoardView(
+                                  key: ValueKey(_provider.project.id),
                                   provider: _provider,
                                   onOpenBeat: (beat) {
                                     BeatDetailDialog.show(
@@ -782,6 +802,7 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                   onOpenEvent: (event) async {
                                     final updated = await EventDialog.show(
                                       context,
+                                      beats: _provider.project.beatSheet.beats,
                                       initialEvent: event,
                                       onSaveAndContinue: (next, isEditing) {
                                         if (isEditing) {

@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from proto/story_project.proto.
+// Generated from story_project.proto.
 
 // @dart = 3.3
 

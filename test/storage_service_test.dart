@@ -2,6 +2,9 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:beatwork/models/story_project.dart';
+import 'package:beatwork/models/author_profile.dart';
+import 'package:beatwork/proto/story_project.pb.dart';
+import 'package:beatwork/services/export_service.dart';
 import 'package:beatwork/services/storage_service.dart';
 import 'package:beatwork/state/story_provider.dart';
 
@@ -50,6 +53,62 @@ void main() {
       () => StorageService.openDocument(path),
       throwsA(isA<FormatException>()),
     );
+  });
+
+  test(
+    'shared author survives restarts and project changes without being stored in documents',
+    () async {
+      final provider = StoryProvider(
+        initialProject: StoryProject.createEmptyProject(),
+      );
+      addTearDown(provider.dispose);
+      await provider.updateAuthor(
+        const AuthorProfile(name: 'Writer', email: 'writer@example.com'),
+      );
+      final path = '${temporaryDirectory.path}/project.beats';
+      await StorageService.saveDocumentToPath(provider.project, path);
+      final document =
+          StoryProjectDocument.fromBuffer(
+                await File(path).readAsBytes(),
+              ).toProto3Json()
+              as Map<String, dynamic>;
+      expect(document, isNot(contains('author')));
+      expect(document, isNot(contains('authorEmail')));
+      provider.newDocument(
+        StoryProject.createEmptyProject(title: 'New project'),
+      );
+      expect(provider.author.name, 'Writer');
+      expect(await provider.openDocument(path), isTrue);
+      expect(provider.author.email, 'writer@example.com');
+      expect(
+        ExportService.generateFountain(
+          provider.project,
+          author: provider.author,
+        ),
+        contains('Author: Writer\nContact: writer@example.com'),
+      );
+      final reopened = StoryProvider(
+        initialAuthor: await StorageService.loadAuthorProfile(),
+      );
+      addTearDown(reopened.dispose);
+      expect(reopened.author.name, 'Writer');
+      expect(reopened.author.email, 'writer@example.com');
+    },
+  );
+
+  test('invalid author settings and save failures are surfaced', () async {
+    final settings = File('${temporaryDirectory.path}/author_profile.json');
+    await settings.writeAsString('not JSON');
+    expect(() => StorageService.loadAuthorProfile(), throwsFormatException);
+
+    StorageService.overrideDirectory = Directory(settings.path);
+    final provider = StoryProvider();
+    addTearDown(provider.dispose);
+    await expectLater(
+      provider.updateAuthor(const AuthorProfile(name: 'New writer')),
+      throwsA(isA<FileSystemException>()),
+    );
+    expect(provider.author.name, AuthorProfile.defaultName);
   });
 
   test('events must be in the pool and scenes unused before deletion', () {

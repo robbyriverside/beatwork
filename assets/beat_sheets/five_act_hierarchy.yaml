@@ -1,0 +1,102 @@
+# yaml-language-server: $schema=./beat_sheet.schema.json
+version: 1
+id: five_act_hierarchy
+name: Five-Act Hierarchy
+timeline_label: FIVE-ACT HIERARCHY
+mode: estimated
+pages_per_beat: 5
+minimum_beats_per_act: 3
+repeat_name: "Aftermath"
+repeat_summary: "Develop the consequences of this act's climax."
+repeat_guidance: "Explore a consequence of the decisive moment and move the act toward its resolution."
+acts:
+  - id: act1
+    title: Act I
+    subtitle: A New Pursuit
+    color: "3B82F6"
+    dark_color: "1E3A8A"
+    beats:
+      - id: act1_conflict
+        name: "Conflict: A Setback"
+        summary: A setback disrupts the protagonist's established life and creates a need for a new direction.
+        guidance: Give this act a concrete problem with stakes that can be resolved before the larger story is over.
+      - id: act1_climax
+        name: "Climax: A New Choice"
+        summary: The protagonist makes a decisive choice in response to the setback.
+        guidance: Confront the immediate problem and make the choice costly enough to change the protagonist's course.
+      - id: act1_resolution
+        name: "Resolution: The Pursuit Begins"
+        summary: The immediate setback is addressed, opening a pursuit that requires another perspective.
+        guidance: Close this act's question while creating a reason to follow the independent character in Act II.
+  - id: act2
+    title: Act II
+    subtitle: An Independent Struggle
+    color: "10B981"
+    dark_color: "064E3B"
+    beats:
+      - id: act2_conflict
+        name: "Conflict: A Separate Obstacle"
+        summary: A second character faces an independent problem while the new pursuit unfolds.
+        guidance: Establish a distinct goal and opposition, and connect the character's skills or needs to the pursuit from Act I.
+      - id: act2_climax
+        name: "Climax: Taking Control"
+        summary: The second character acts decisively to confront the immediate obstacle.
+        guidance: Give the character agency and a meaningful choice that determines the outcome of this act's conflict.
+      - id: act2_resolution
+        name: "Resolution: Paths Meet"
+        summary: The separate struggle reaches an outcome that brings the characters together.
+        guidance: Resolve the immediate obstacle and use its consequences to launch their shared work in Act III.
+  - id: act3
+    title: Act III
+    subtitle: Shared Investigation
+    color: "F59E0B"
+    dark_color: "78350F"
+    beats:
+      - id: act3_conflict
+        name: "Conflict: An Unanswered Question"
+        summary: The characters work together to uncover the truth behind a difficult question.
+        guidance: Define what they need to discover, what blocks them, and why their different perspectives matter.
+      - id: act3_climax
+        name: "Climax: A Breakthrough"
+        summary: A decisive discovery answers the act's immediate question.
+        guidance: Let the characters earn a breakthrough that changes their understanding of the larger conflict.
+      - id: act3_resolution
+        name: "Resolution: Danger Emerges"
+        summary: The discovery resolves one mystery but exposes an immediate danger.
+        guidance: Pay off the investigation while making the confrontation in Act IV unavoidable.
+  - id: act4
+    title: Act IV
+    subtitle: Confrontation
+    color: "EF4444"
+    dark_color: "7F1D1D"
+    beats:
+      - id: act4_conflict
+        name: "Conflict: The Immediate Threat"
+        summary: The danger revealed by the investigation threatens the characters and their goals.
+        guidance: Give the confrontation a clear immediate objective and make its consequences personal.
+      - id: act4_climax
+        name: "Climax: The Decisive Confrontation"
+        summary: The characters make their most consequential stand against the threat.
+        guidance: Resolve the immediate danger through choices and actions established by the earlier acts.
+      - id: act4_resolution
+        name: "Resolution: The Cost"
+        summary: The threat is addressed, leaving consequences that demand a final reckoning.
+        guidance: Close the confrontation while carrying unresolved personal or public consequences into Act V.
+  - id: act5
+    title: Act V
+    subtitle: Final Reckoning
+    color: "8B5CF6"
+    dark_color: "4C1D95"
+    beats:
+      - id: act5_conflict
+        name: "Conflict: Unfinished Business"
+        summary: The characters face the remaining consequences of the earlier conflicts.
+        guidance: Establish a final question that can be resolved independently of the immediate danger already overcome.
+      - id: act5_climax
+        name: "Climax: The Final Choice"
+        summary: A decisive action addresses the remaining conflict.
+        guidance: Let the characters' accumulated experiences shape their final choice and its cost.
+      - id: act5_resolution
+        name: "Resolution: A Changed Future"
+        summary: The final conflict is resolved, revealing the new state of the characters' lives.
+        guidance: Close the story's principal threads and suggest what the characters carry forward beyond the ending.

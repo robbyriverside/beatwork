@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../models/beat_model.dart';
 import '../models/story_project.dart';
 import '../services/export_service.dart';
 import '../state/story_provider.dart';
@@ -54,6 +53,7 @@ class _ExportDialogState extends State<ExportDialog>
     try {
       final path = await ExportService.saveFinalDraftToFile(
         widget.provider.project,
+        author: widget.provider.author,
       );
       setState(() {
         _isExporting = false;
@@ -81,7 +81,10 @@ class _ExportDialogState extends State<ExportDialog>
     });
 
     try {
-      final path = await ExportService.savePdfToFile(widget.provider.project);
+      final path = await ExportService.savePdfToFile(
+        widget.provider.project,
+        author: widget.provider.author,
+      );
       setState(() {
         _isExporting = false;
         if (path != null) {
@@ -110,6 +113,7 @@ class _ExportDialogState extends State<ExportDialog>
     try {
       final path = await ExportService.saveFountainToFile(
         widget.provider.project,
+        author: widget.provider.author,
       );
       setState(() {
         _isExporting = false;
@@ -134,9 +138,11 @@ class _ExportDialogState extends State<ExportDialog>
     final collected = widget.provider.project.getCollectedTimeline();
     final fdxPreview = ExportService.generateFinalDraftFdx(
       widget.provider.project,
+      author: widget.provider.author,
     );
     final fountainPreview = ExportService.generateFountain(
       widget.provider.project,
+      author: widget.provider.author,
     );
 
     return Dialog(
@@ -178,7 +184,7 @@ class _ExportDialogState extends State<ExportDialog>
               ),
               const SizedBox(height: 6),
               Text(
-                'Collects all ${collected.length} scenes across your 15 Save the Cat beat timelines into industry-standard screenwriting formats.',
+                'Collects all ${collected.length} scenes across your ${widget.provider.project.beatSheet.name} beat timelines into industry-standard screenwriting formats.',
                 style: const TextStyle(
                   fontSize: 12.5,
                   color: AppTheme.textSecondary,
@@ -459,12 +465,12 @@ class _ExportDialogState extends State<ExportDialog>
         children: [
           _statRow('Project Title', widget.provider.project.title),
           _statRow('Genre / Format', widget.provider.project.genre),
-          _statRow('Author', widget.provider.project.author),
+          _statRow('Author', widget.provider.author.name),
           const Divider(color: AppTheme.border),
           _statRow('Total Scenes on Timeline', '${collected.length} scenes'),
           _statRow(
             'Beats with Scenes',
-            '$beatsWithScenes of ${BeatDefinition.saveTheCatBeats.length} beats active',
+            '$beatsWithScenes of ${widget.provider.project.beatSheet.beats.length} beats active',
           ),
           _statRow('Events Assigned to Beats', '$eventsAssigned events'),
           _statRow('Events in Unassigned Pool', '$eventsInPool events'),

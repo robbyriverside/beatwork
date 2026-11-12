@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:beatwork/models/beat_model.dart';
+import 'package:beatwork/models/author_profile.dart';
+import 'package:beatwork/proto/story_project.pb.dart';
 import 'package:beatwork/models/scene_model.dart';
 import 'package:beatwork/models/story_event.dart';
 import 'package:beatwork/models/story_project.dart';
@@ -31,7 +33,10 @@ void main() {
         'fun_and_games': 5,
       };
       for (final entry in estimates.entries) {
-        expect(BeatDefinition.getById(entry.key).estimatedSceneCount, entry.value);
+        expect(
+          BeatDefinition.getById(entry.key).estimatedSceneCount,
+          entry.value,
+        );
       }
       for (final beat in BeatDefinition.saveTheCatBeats) {
         expect(beat.estimatedSceneCount, greaterThanOrEqualTo(1));
@@ -90,57 +95,83 @@ void main() {
   });
 
   group('Story Project & Scene Versioning Tests', () {
-    test('unused scenes survive serialization and are excluded from exports', () {
-      final project = StoryProject.createSampleProject();
-      final scene = project.getScenesForBeat('opening_image').first;
-      final text = scene.activeVersion.scriptContent;
-      scene.isUnused = true;
+    test(
+      'unused scenes survive serialization and are excluded from exports',
+      () {
+        final project = StoryProject.createSampleProject();
+        final scene = project.getScenesForBeat('opening_image').first;
+        final text = scene.activeVersion.scriptContent;
+        scene.isUnused = true;
 
-      final decoded = ProjectCodec.decode(ProjectCodec.encode(project));
-      final loaded = decoded.scenes.singleWhere((item) => item.id == scene.id);
-      expect(loaded.isUnused, isTrue);
-      expect(Scene.fromJson(scene.toJson()).isUnused, isTrue);
-      expect(scene.copyWith().isUnused, isTrue);
-      expect(decoded.getCollectedTimeline().any((entry) => entry.scene.id == scene.id), isFalse);
-      expect(ExportService.generateFountain(decoded).contains(text), isFalse);
-      loaded.isUnused = false;
-      expect(decoded.getCollectedTimeline().any((entry) => entry.scene.id == scene.id), isTrue);
-    });
+        final decoded = ProjectCodec.decode(ProjectCodec.encode(project));
+        final loaded = decoded.scenes.singleWhere(
+          (item) => item.id == scene.id,
+        );
+        expect(loaded.isUnused, isTrue);
+        expect(Scene.fromJson(scene.toJson()).isUnused, isTrue);
+        expect(scene.copyWith().isUnused, isTrue);
+        expect(
+          decoded.getCollectedTimeline().any(
+            (entry) => entry.scene.id == scene.id,
+          ),
+          isFalse,
+        );
+        expect(
+          ExportService.generateFountain(
+            decoded,
+            author: const AuthorProfile(),
+          ).contains(text),
+          isFalse,
+        );
+        loaded.isUnused = false;
+        expect(
+          decoded.getCollectedTimeline().any(
+            (entry) => entry.scene.id == scene.id,
+          ),
+          isTrue,
+        );
+      },
+    );
 
-    test('Default author is Anonymous and saved authors are preserved', () {
-      expect(StoryProject(id: 'project', title: 'Title').author, 'Anonymous');
-      expect(StoryProject.createEmptyProject().author, 'Anonymous');
-      expect(StoryProject.createSampleProject().author, 'Anonymous');
-      expect(
-        StoryProject.fromJson({'id': 'project', 'title': 'Title'}).author,
-        'Anonymous',
-      );
-      expect(
-        StoryProject.fromJson({
-          'id': 'project',
-          'title': 'Title',
-          'author': 'An Existing Author',
-        }).author,
-        'An Existing Author',
-      );
-      expect(
-        StoryProject.createEmptyProject(author: 'A New Author').author,
-        'A New Author',
-      );
-      expect(
-        ProjectMetadata.fromJson({'id': 'project', 'title': 'Title'}).author,
-        'Anonymous',
-      );
+    test('legacy project authors are ignored and not resaved', () {
+      final legacyJson = StoryProject.fromJson({
+        'id': 'old',
+        'title': 'Old',
+        'author': 'Writer',
+        'authorEmail': 'writer@example.com',
+      });
+      expect(legacyJson.toJson(), isNot(contains('author')));
+      expect(legacyJson.toJson(), isNot(contains('authorEmail')));
+      final legacyBytes = <int>[
+        10,
+        3,
+        ...'old'.codeUnits,
+        18,
+        3,
+        ...'Old'.codeUnits,
+        42,
+        6,
+        ...'Writer'.codeUnits,
+        82,
+        18,
+        ...'writer@example.com'.codeUnits,
+      ];
+      final decoded = ProjectCodec.decode(legacyBytes);
+      final saved =
+          StoryProjectDocument.fromBuffer(
+                ProjectCodec.encode(decoded),
+              ).toProto3Json()
+              as Map<String, dynamic>;
+      expect(saved, isNot(contains('author')));
+      expect(saved, isNot(contains('authorEmail')));
     });
 
     test('Project Protobuf round-trip preserves nested project content', () {
       final project = StoryProject.createSampleProject();
-      project.authorEmail = 'writer@example.com';
 
       final decoded = ProjectCodec.decode(ProjectCodec.encode(project));
 
       expect(decoded.toJson(), project.toJson());
-      expect(decoded.authorEmail, 'writer@example.com');
     });
 
     test('Sample project contains pre-populated events and scenes', () {
@@ -227,20 +258,25 @@ void main() {
   group('Export Service Tests', () {
     test('Generates valid Final Draft (.fdx) XML content', () {
       final project = StoryProject.createSampleProject();
-      project.authorEmail = 'writer@example.com';
       final firstEntry = project.getCollectedTimeline().first;
       firstEntry.scene.activeVersion.summary = 'Internal scene summary';
       firstEntry.scene.activeVersion.notes = 'Internal writer note';
       final mappedEvent = project.events.first;
       firstEntry.scene.mappedEventIds.add(mappedEvent.id);
-      final fdx = ExportService.generateFinalDraftFdx(project);
+      final fdx = ExportService.generateFinalDraftFdx(
+        project,
+        author: const AuthorProfile(
+          name: 'A Writer',
+          email: 'writer@example.com',
+        ),
+      );
 
       expect(fdx.contains('<?xml version="1.0"'), true);
       expect(fdx.contains('<FinalDraft DocumentType="Script"'), true);
       expect(fdx.contains('<TitlePage>'), true);
       expect(fdx.contains('<Paragraph Type="Author">'), true);
       expect(fdx.contains('<Paragraph Type="Contact">'), true);
-      expect(fdx.contains('Anonymous'), true);
+      expect(fdx.contains('A Writer'), true);
       expect(fdx.contains('writer@example.com'), true);
       expect(fdx.contains('<Paragraph Type="Scene Heading">'), true);
       expect(fdx.contains('</FinalDraft>'), true);
@@ -256,17 +292,22 @@ void main() {
 
     test('Generates valid Fountain plain text content', () {
       final project = StoryProject.createSampleProject();
-      project.authorEmail = 'writer@example.com';
       final firstScene = project.getCollectedTimeline().first.scene;
       final firstEntry = project.getCollectedTimeline().first;
       firstScene.activeVersion.summary = 'Internal scene summary';
       firstScene.activeVersion.notes = 'Internal writer note';
       final mappedEvent = project.events.first;
       firstScene.mappedEventIds.add(mappedEvent.id);
-      final fountain = ExportService.generateFountain(project);
+      final fountain = ExportService.generateFountain(
+        project,
+        author: const AuthorProfile(
+          name: 'A Writer',
+          email: 'writer@example.com',
+        ),
+      );
 
       expect(fountain.contains('Title: The Chronos Cipher'), true);
-      expect(fountain.contains('Author: Anonymous'), true);
+      expect(fountain.contains('Author: A Writer'), true);
       expect(fountain.contains('Contact: writer@example.com'), true);
       expect(fountain.contains('SAVE THE CAT:'), false);
       expect(fountain.contains('BEAT ${firstEntry.beat.number}'), false);
@@ -280,7 +321,10 @@ void main() {
 
     test('Generates Screenplay PDF bytes', () async {
       final project = StoryProject.createSampleProject();
-      final pdfBytes = await ExportService.generateScreenplayPdf(project);
+      final pdfBytes = await ExportService.generateScreenplayPdf(
+        project,
+        author: const AuthorProfile(),
+      );
 
       expect(pdfBytes.isNotEmpty, true);
       // PDF header magic numbers '%PDF'
@@ -300,6 +344,7 @@ void main() {
         scene.mappedEventIds.add(project.events.first.id);
         final pdfBytes = await ExportService.generateBeatWorkTimelinePdf(
           project,
+          author: const AuthorProfile(),
         );
 
         expect(pdfBytes.take(4).toList(), [0x25, 0x50, 0x44, 0x46]);

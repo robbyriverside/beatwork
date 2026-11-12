@@ -8,6 +8,56 @@ Scenes can be marked unused in the beat timeline. They remain saved and editable
 
 When adding or editing a scene, choose a slugline prefix and time and enter a location. The location menu includes locations from events and all scene versions in the current project; you can also type a new one. New scenes default to `INT.` and `DAY`. Press Return in the scene title to move to the location field. Existing nonstandard headings are preserved until their slugline fields are edited.
 
+## Beat sheets
+
+New projects require a title and can specify a logline and genre, as well as a
+beat sheet and target length in pages (or minutes). The shared author name and
+email are configured under Settings > Author and used for all projects and
+exports. They are stored in the application's settings, not in project files.
+Legacy project author fields are ignored and omitted when a project is saved.
+The beat-sheet choice and resulting beats are saved in the project; they cannot be changed
+after creation, and later template edits do not change existing projects.
+Existing projects without a sheet use the original Save the Cat layout.
+
+The bundled [Save the Cat](assets/beat_sheets/save_the_cat.yaml) template
+preserves the original 19 beats and their page guidance. Its fixed page
+references do not scale with the target length. The
+[Five-Act Classic](assets/beat_sheets/five_act.yaml) template is a simple
+Shakespeare-inspired structure. It estimates the total number of beats as the
+target length divided by five pages/minutes, rounded up, with at least three
+beats per act. Beats are distributed as evenly as possible among the five acts,
+and extra development beats are inserted before each act's final anchor.
+The five-page average and page positions are planning estimates, not limits
+on the number or length of scenes.
+
+The [Five-Act Hierarchy](assets/beat_sheets/five_act_hierarchy.yaml) template
+uses the same estimation rule but treats each act as a complete conflict,
+climax, and resolution. Each resolution sets up the next act; the final one
+closes the story. Its interlocking pursuits, investigation, confrontation, and
+aftermath are inspired by the structure of the US film *The Girl with the
+Dragon Tattoo*.
+
+Templates are YAML files bundled under `assets/beat_sheets/`. Each version 1
+sheet has an `id`, `name`, `timeline_label`, `mode`, and ordered `acts`. Each
+act supplies an `id`, `title`, `subtitle`, six-digit RGB `color` and
+`dark_color`, and ordered `beats` with unique IDs, names, summaries and
+guidance. A `fixed` sheet additionally gives each beat a `target_page`
+(`Page N` or `Pages N - N`), `percentage`, and supported Material icon name,
+as illustrated by the Save the Cat template. An `estimated` sheet specifies
+`pages_per_beat`, `minimum_beats_per_act`, and `repeat_name`,
+`repeat_summary`, and `repeat_guidance`; each act must provide exactly that
+many anchor beats. Available bundled templates are discovered at startup for
+the new-project dialog; adding one requires rebuilding the app.
+
+The [JSON Schema](assets/beat_sheets/beat_sheet.schema.json) describes the
+YAML format for editors and validators. It checks structure, required fields,
+colors, page-label syntax, and supported fixed-beat icons. Standard JSON Schema
+cannot check all loader rules: act IDs and beat IDs must each be unique (also
+avoiding generated development beat IDs), an estimated act's anchor count must
+equal `minimum_beats_per_act`, and a page range's end cannot precede its start.
+The loader checks these rules when a template is used. Write integer fields as
+YAML integers and quote color strings, including those containing only digits.
+
 ## macOS Release Build
 
 Once you checkin your code.

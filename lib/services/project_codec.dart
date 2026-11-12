@@ -18,8 +18,8 @@ class ProjectCodec {
       title: project.title,
       logline: project.logline,
       genre: project.genre,
-      author: project.author,
-      authorEmail: project.authorEmail,
+      beatSheetYaml: project.beatSheetYaml,
+      targetPageCount: project.targetPageCount,
       isSample: project.isSample,
       events: project.events.map(
         (event) => StoryEventDocument(
@@ -61,13 +61,16 @@ class ProjectCodec {
   }
 
   static StoryProject _fromDocument(StoryProjectDocument document) {
-    return StoryProject(
+    final project = StoryProject(
       id: document.id,
       title: document.title,
       logline: document.logline,
       genre: document.genre,
-      author: document.author,
-      authorEmail: document.authorEmail,
+      beatSheetYaml: document.beatSheetYaml,
+      targetPageCount:
+          document.targetPageCount == 0 && document.beatSheetYaml.isEmpty
+          ? 110
+          : document.targetPageCount,
       isSample: document.isSample,
       events: document.events
           .map(
@@ -114,6 +117,8 @@ class ProjectCodec {
           .toList(),
       lastModified: _dateTime(document.lastModifiedMicros),
     );
+    project.beatSheet;
+    return project;
   }
 
   static DateTime _dateTime(Int64 micros) =>

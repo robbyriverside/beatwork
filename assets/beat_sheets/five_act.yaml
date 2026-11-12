@@ -1,0 +1,102 @@
+# yaml-language-server: $schema=./beat_sheet.schema.json
+version: 1
+id: five_act
+name: Five-Act Classic
+timeline_label: FIVE-ACT CLASSIC
+mode: estimated
+pages_per_beat: 5
+minimum_beats_per_act: 3
+repeat_name: "Development"
+repeat_summary: "Develop the action and its consequences."
+repeat_guidance: "Add a scene or turn that advances this act's conflict."
+acts:
+  - id: act1
+    title: Act I
+    subtitle: Exposition
+    color: "3B82F6"
+    dark_color: "1E3A8A"
+    beats:
+      - id: introduction
+        name: Introduction
+        summary: Introduce the world and its central characters.
+        guidance: Establish the setting, relationships, and situation before the conflict develops.
+      - id: disturbance
+        name: Disturbance
+        summary: An event unsettles the established situation.
+        guidance: Introduce a problem or desire that will set the action in motion.
+      - id: commitment
+        name: Commitment
+        summary: A choice or circumstance propels the story forward.
+        guidance: Show why the characters cannot simply return to their earlier situation.
+  - id: act2
+    title: Act II
+    subtitle: Rising Action
+    color: "10B981"
+    dark_color: "064E3B"
+    beats:
+      - id: pursuit
+        name: Pursuit
+        summary: Characters pursue their goals.
+        guidance: Put their plans into motion and reveal the opposition.
+      - id: complications
+        name: Complications
+        summary: Obstacles and relationships increase the tension.
+        guidance: Develop conflicts and consequences that make success harder.
+      - id: escalation
+        name: Escalation
+        summary: The stakes rise toward a turning point.
+        guidance: Force a consequential choice as the conflict intensifies.
+  - id: act3
+    title: Act III
+    subtitle: Turning Point
+    color: "F59E0B"
+    dark_color: "78350F"
+    beats:
+      - id: confrontation
+        name: Confrontation
+        summary: Opposing forces meet.
+        guidance: Bring the main conflict into focus through action and choices.
+      - id: reversal
+        name: Reversal
+        summary: A decisive turn changes the direction of the story.
+        guidance: Reveal an outcome that changes the characters' prospects.
+      - id: aftermath
+        name: Aftermath
+        summary: The turning point creates new consequences.
+        guidance: Show how the characters respond to their changed circumstances.
+  - id: act4
+    title: Act IV
+    subtitle: Falling Action
+    color: "EF4444"
+    dark_color: "7F1D1D"
+    beats:
+      - id: consequences
+        name: Consequences
+        summary: The effects of the turning point unfold.
+        guidance: Let earlier decisions constrain the characters' options.
+      - id: crisis
+        name: Crisis
+        summary: The conflict reaches a difficult crisis.
+        guidance: Bring the characters face to face with the cost of their choices.
+      - id: final_choice
+        name: Final Choice
+        summary: A choice leads toward the final outcome.
+        guidance: Set the final confrontation or resolution in motion.
+  - id: act5
+    title: Act V
+    subtitle: Resolution
+    color: "8B5CF6"
+    dark_color: "4C1D95"
+    beats:
+      - id: climax
+        name: Climax
+        summary: The central conflict reaches its decisive moment.
+        guidance: Resolve the main confrontation through the characters' actions.
+      - id: reckoning
+        name: Reckoning
+        summary: The characters face the outcome.
+        guidance: Show the immediate personal and wider consequences.
+      - id: resolution
+        name: Resolution
+        summary: The story comes to a close.
+        guidance: Establish the resulting order and bring the principal threads to rest.

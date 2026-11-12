@@ -1,0 +1,164 @@
+# yaml-language-server: $schema=./beat_sheet.schema.json
+version: 1
+id: save_the_cat
+name: "Save the Cat!"
+timeline_label: "SAVE THE CAT"
+mode: fixed
+acts:
+  - id: act1
+    title: "Act 1"
+    subtitle: "Exposition & Catalyst"
+    color: "3B82F6"
+    dark_color: "1E3A8A"
+    beats:
+      - id: "opening_image"
+        name: "Opening Image"
+        target_page: "Page 1"
+        percentage: "0% - 1%"
+        summary: "The visual starting point and snapshot of the protagonist's flawed world."
+        guidance: "Give us a snapshot of the hero's current world, flaw, and status quo before everything changes. Should contrast directly with the Final Image."
+        icon: movie_creation_outlined
+      - id: "theme_stated"
+        name: "Theme Stated"
+        target_page: "Page 5"
+        percentage: "5%"
+        summary: "The philosophical core or lesson the protagonist must learn."
+        guidance: "Usually spoken to or near the hero by a secondary character. The hero does not understand or accept it yet, but it states the true moral/internal journey."
+        icon: lightbulb_outline
+      - id: "set_up"
+        name: "Set-Up"
+        target_page: "Pages 1 - 10"
+        percentage: "1% - 10%"
+        summary: "Explore the hero's life, relationships, and the \"stasis = death\" dilemma."
+        guidance: "Introduce the main characters, the rules of this universe, and show why continuing the current way of living will result in spiritual or physical death."
+        icon: home_work_outlined
+      - id: "catalyst"
+        name: "Catalyst"
+        target_page: "Page 12"
+        percentage: "10% - 12%"
+        summary: "The inciting incident that disrupts the status quo forever."
+        guidance: "An unexpected event, telegram, murder, discovery, or offer that shakes the hero out of equilibrium. There is no going back to the old normal."
+        icon: bolt
+      - id: "debate"
+        name: "Debate"
+        target_page: "Pages 12 - 25"
+        percentage: "12% - 25%"
+        summary: "Hesitation, doubt, and weighing the risks before taking the leap."
+        guidance: "Should I stay or should I go? The hero prepares, hesitates, searches for an easy out, or tests their preparedness before accepting the call."
+        icon: question_mark_rounded
+      - id: "break_into_two"
+        name: "Break into Two"
+        target_page: "Page 25"
+        percentage: "25%"
+        summary: "The active choice to enter the upside-down, unfamiliar world."
+        guidance: "The hero makes a deliberate, proactive choice to step across the threshold into Act 2. They enter a new arena with new rules."
+        icon: door_front_door_outlined
+  - id: act2A
+    title: "Act 2A"
+    subtitle: "Promise of the Premise"
+    color: "10B981"
+    dark_color: "064E3B"
+    beats:
+      - id: "b_story"
+        name: "B Story"
+        target_page: "Page 30"
+        percentage: "30%"
+        summary: "Introduction of the love interest, mentor, or thematic ally."
+        guidance: "The secondary relationship that provides breathing room from the main plot and delivers the thematic truth the hero desperately needs to evolve."
+        icon: favorite_border
+      - id: "fun_and_games"
+        name: "Fun and Games"
+        target_page: "Pages 30 - 55"
+        percentage: "30% - 50%"
+        summary: "The \"Promise of the Premise\" – iconic trailer moments."
+        guidance: "The audience gets what was promised on the movie poster! Fish out of water adventures, training montages, initial heists, or budding romance."
+        icon: sports_esports_outlined
+      - id: "midpoint"
+        name: "Midpoint"
+        target_page: "Page 55"
+        percentage: "50%"
+        summary: "A major inflection point: false victory or false defeat; stakes escalate."
+        guidance: "A turning point where the hero gets what they thought they wanted (false victory) or suffers a severe setback (false defeat). A ticking clock starts."
+        icon: hourglass_top_outlined
+  - id: act2B
+    title: "Act 2B"
+    subtitle: "Bad Guys Close In & Crisis"
+    color: "F59E0B"
+    dark_color: "78350F"
+    beats:
+      - id: "bad_guys_close_in"
+        name: "Bad Guys Close In"
+        target_page: "Pages 55 - 75"
+        percentage: "50% - 75%"
+        summary: "External antagonists regroup while internal doubts fracture alliances."
+        guidance: "Enemies mount a counterattack, betrayal stirs from within, and the hero's unresolved flaws begin to unravel the progress they made."
+        icon: warning_amber_rounded
+      - id: "all_hope_is_lost"
+        name: "All Hope Is Lost"
+        target_page: "Page 75"
+        percentage: "75%"
+        summary: "The lowest point and the symbolic or literal \"whiff of death\"."
+        guidance: "The darkest nadir. The mentor dies, the plan fails catastrophically, the lovers split. The old way of operating is completely shattered."
+        icon: heart_broken_outlined
+      - id: "dark_night_of_the_soul"
+        name: "Dark Night of the Soul"
+        target_page: "Pages 75 - 85"
+        percentage: "75% - 85%"
+        summary: "Mourning the loss, hitting rock bottom, and discovering inner truth."
+        guidance: "The hero is isolated and ready to give up. In this silence, they finally internalize the theme and realize how they must change from within."
+        icon: nights_stay_outlined
+      - id: "break_into_three"
+        name: "Break into Three"
+        target_page: "Page 85"
+        percentage: "85%"
+        summary: "The Eureka / Epiphany moment: a new synthesis is born."
+        guidance: "Thanks to the B Story's wisdom and surviving the rock bottom, the hero devises a bold new solution that combines their outer goal with inner truth."
+        icon: wb_incandescent_outlined
+  - id: act3
+    title: "Act 3"
+    subtitle: "Climax & Resolution"
+    color: "8B5CF6"
+    dark_color: "4C1D95"
+    beats:
+      - id: "finale"
+        name: "Gather the Team"
+        target_page: "Page 85"
+        percentage: "85%"
+        summary: "The hero assembles allies and resources for the final effort."
+        guidance: "Bring the team together and prepare the people, tools, and plan needed to confront the primary antagonist."
+        icon: military_tech_outlined
+      - id: "execute_the_plan"
+        name: "Execute the Plan"
+        target_page: "Pages 85 - 90"
+        percentage: "85% - 90%"
+        summary: "The team puts its plan into action against the primary antagonist."
+        guidance: "Show the plan unfolding, the team working together, and the stakes rising as they approach their goal."
+        icon: play_arrow_rounded
+      - id: "high_tower_surprise"
+        name: "High Tower Surprise"
+        target_page: "Pages 90 - 95"
+        percentage: "90% - 95%"
+        summary: "A major reversal disrupts the plan at the moment of apparent success."
+        guidance: "Introduce a high-stakes complication that forces the hero and team to adapt rather than simply follow the plan."
+        icon: warning_amber_rounded
+      - id: "dig_down_deep"
+        name: "Dig Down Deep"
+        target_page: "Pages 95 - 98"
+        percentage: "95% - 98%"
+        summary: "The hero finds the resolve to make the final, defining choice."
+        guidance: "Push the hero to their limit, then let them draw on what they have learned and choose a new way forward."
+        icon: bolt
+      - id: "execution_of_new_plan"
+        name: "Execution of the New Plan"
+        target_page: "Pages 98 - 109"
+        percentage: "98% - 99%"
+        summary: "The hero carries out the new approach and resolves the central conflict."
+        guidance: "Pay off the final plan and the hero’s transformation as they overcome the antagonist and establish a new order."
+        icon: task_alt_outlined
+      - id: "final_image"
+        name: "Final Image"
+        target_page: "Page 110"
+        percentage: "100%"
+        summary: "The \"after\" mirror image demonstrating profound transformation."
+        guidance: "The visual opposite of the Opening Image. Proves unequivocally that the hero and their world have evolved through this ordeal."
+        icon: verified_outlined

@@ -1,6 +1,6 @@
 // This is a generated file - do not edit.
 //
-// Generated from proto/story_project.proto.
+// Generated from story_project.proto.
 
 // @dart = 3.3
 
@@ -23,7 +23,14 @@ const StoryProjectDocument$json = {
     {'1': 'title', '3': 2, '4': 1, '5': 9, '10': 'title'},
     {'1': 'logline', '3': 3, '4': 1, '5': 9, '10': 'logline'},
     {'1': 'genre', '3': 4, '4': 1, '5': 9, '10': 'genre'},
-    {'1': 'author', '3': 5, '4': 1, '5': 9, '10': 'author'},
+    {
+      '1': 'author',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '8': {'3': true},
+      '10': 'author',
+    },
     {'1': 'is_sample', '3': 6, '4': 1, '5': 8, '10': 'isSample'},
     {
       '1': 'events',
@@ -48,19 +55,35 @@ const StoryProjectDocument$json = {
       '5': 3,
       '10': 'lastModifiedMicros'
     },
-    {'1': 'author_email', '3': 10, '4': 1, '5': 9, '10': 'authorEmail'},
+    {
+      '1': 'author_email',
+      '3': 10,
+      '4': 1,
+      '5': 9,
+      '8': {'3': true},
+      '10': 'authorEmail',
+    },
+    {'1': 'beat_sheet_yaml', '3': 11, '4': 1, '5': 9, '10': 'beatSheetYaml'},
+    {
+      '1': 'target_page_count',
+      '3': 12,
+      '4': 1,
+      '5': 5,
+      '10': 'targetPageCount'
+    },
   ],
 };
 
 /// Descriptor for `StoryProjectDocument`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List storyProjectDocumentDescriptor = $convert.base64Decode(
     'ChRTdG9yeVByb2plY3REb2N1bWVudBIOCgJpZBgBIAEoCVICaWQSFAoFdGl0bGUYAiABKAlSBX'
-    'RpdGxlEhgKB2xvZ2xpbmUYAyABKAlSB2xvZ2xpbmUSFAoFZ2VucmUYBCABKAlSBWdlbnJlEhYK'
-    'BmF1dGhvchgFIAEoCVIGYXV0aG9yEhsKCWlzX3NhbXBsZRgGIAEoCFIIaXNTYW1wbGUSNAoGZX'
-    'ZlbnRzGAcgAygLMhwuYmVhdHdvcmsuU3RvcnlFdmVudERvY3VtZW50UgZldmVudHMSLwoGc2Nl'
-    'bmVzGAggAygLMhcuYmVhdHdvcmsuU2NlbmVEb2N1bWVudFIGc2NlbmVzEjAKFGxhc3RfbW9kaW'
-    'ZpZWRfbWljcm9zGAkgASgDUhJsYXN0TW9kaWZpZWRNaWNyb3MSIQoMYXV0aG9yX2VtYWlsGAog'
-    'ASgJUgthdXRob3JFbWFpbA==');
+    'RpdGxlEhgKB2xvZ2xpbmUYAyABKAlSB2xvZ2xpbmUSFAoFZ2VucmUYBCABKAlSBWdlbnJlEhoK'
+    'BmF1dGhvchgFIAEoCUICGAFSBmF1dGhvchIbCglpc19zYW1wbGUYBiABKAhSCGlzU2FtcGxlEj'
+    'QKBmV2ZW50cxgHIAMoCzIcLmJlYXR3b3JrLlN0b3J5RXZlbnREb2N1bWVudFIGZXZlbnRzEi8K'
+    'BnNjZW5lcxgIIAMoCzIXLmJlYXR3b3JrLlNjZW5lRG9jdW1lbnRSBnNjZW5lcxIwChRsYXN0X2'
+    '1vZGlmaWVkX21pY3JvcxgJIAEoA1ISbGFzdE1vZGlmaWVkTWljcm9zEiUKDGF1dGhvcl9lbWFp'
+    'bBgKIAEoCUICGAFSC2F1dGhvckVtYWlsEiYKD2JlYXRfc2hlZXRfeWFtbBgLIAEoCVINYmVhdF'
+    'NoZWV0WWFtbBIqChF0YXJnZXRfcGFnZV9jb3VudBgMIAEoBVIPdGFyZ2V0UGFnZUNvdW50');
 
 @$core.Deprecated('Use storyEventDocumentDescriptor instead')
 const StoryEventDocument$json = {

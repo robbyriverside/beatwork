@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,37 +7,203 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:beatwork/main.dart';
 import 'package:beatwork/models/beat_model.dart';
+import 'package:beatwork/models/author_profile.dart';
+import 'package:beatwork/models/beat_sheet.dart';
 import 'package:beatwork/models/story_project.dart';
 import 'package:beatwork/models/story_event.dart';
+import 'package:beatwork/services/project_codec.dart';
+import 'package:beatwork/services/storage_service.dart';
 import 'package:beatwork/state/story_provider.dart';
 import 'package:beatwork/theme/app_theme.dart';
 import 'package:beatwork/widgets/beat_card.dart';
+import 'package:beatwork/widgets/beat_board_view.dart';
 import 'package:beatwork/widgets/beat_detail_dialog.dart';
 import 'package:beatwork/widgets/event_card.dart';
 import 'package:beatwork/widgets/event_dialog.dart';
+import 'package:beatwork/widgets/new_project_dialog.dart';
 
 void main() {
-  testWidgets('Command-N starts a new project from the app window', (
+  testWidgets('Command-N chooses a five-act sheet and page estimate', (
     WidgetTester tester,
   ) async {
     tester.view.physicalSize = const Size(1400, 900);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() => tester.view.resetPhysicalSize());
-
+    final sounds = <String>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'SystemSound.play' &&
+            call.arguments == 'SystemSoundType.alert') {
+          sounds.add(call.arguments as String);
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
     await tester.pumpWidget(
-      BeatWorkApp(initialProject: StoryProject.createSampleProject()),
+      BeatWorkApp(
+        initialProject: StoryProject.createSampleProject(),
+        initialAuthor: const AuthorProfile(
+          name: 'Shared Writer',
+          email: 'writer@example.com',
+        ),
+      ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('The Chronos Cipher'), findsOneWidget);
-
     await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
     await tester.sendKeyDownEvent(LogicalKeyboardKey.keyN);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.keyN);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
     await tester.pumpAndSettle();
 
-    expect(find.text('The Chronos Cipher'), findsNothing);
+    expect(find.text('New Project'), findsOneWidget);
+    final title = find.byKey(const ValueKey('new-project-title'));
+    final logline = find.byKey(const ValueKey('new-project-logline'));
+    final genre = find.byKey(const ValueKey('new-project-genre'));
+    expect(find.byKey(const ValueKey('new-project-author')), findsNothing);
+    expect(find.text('Email'), findsNothing);
+    FocusNode focusOf(Finder field) => tester
+        .widget<EditableText>(
+          find.descendant(of: field, matching: find.byType(EditableText)),
+        )
+        .focusNode;
+    expect(focusOf(title).hasFocus, isTrue);
+    await tester.testTextInput.receiveAction(TextInputAction.next);
+    await tester.pump();
+    expect(focusOf(logline).hasFocus, isTrue);
+    expect(tester.widget<TextFormField>(title).controller!.text, isEmpty);
+    expect(find.text('Screenplay Title (required)'), findsOneWidget);
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+    expect(find.text('Enter a screenplay title.'), findsOneWidget);
+    expect(focusOf(title).hasFocus, isTrue);
+    expect(sounds, ['SystemSoundType.alert']);
+    await tester.enterText(title, '   ');
+    await tester.tap(logline);
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+    expect(find.text('Enter a screenplay title.'), findsOneWidget);
+    expect(focusOf(title).hasFocus, isTrue);
+    expect(sounds, ['SystemSoundType.alert', 'SystemSoundType.alert']);
+    expect(find.text('The Chronos Cipher'), findsOneWidget);
+    expect(
+      tester.widget<TextFormField>(genre).controller!.text,
+      'Feature Film',
+    );
+    for (final (field, value) in [
+      (title, '  A New Story  '),
+      (logline, '  A difficult journey  '),
+      (genre, '  Drama  '),
+    ]) {
+      await tester.ensureVisible(field);
+      await tester.enterText(field, value);
+    }
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('new-project-beat-sheet')),
+    );
+    await tester.tap(find.byKey(const ValueKey('new-project-beat-sheet')));
+    await tester.pumpAndSettle();
+    expect(find.text('Five-Act Classic'), findsOneWidget);
+    await tester.tap(find.text('Five-Act Hierarchy').last);
+    await tester.pumpAndSettle();
+    final pages = find.byKey(const ValueKey('new-project-page-count'));
+    await tester.enterText(pages, '0');
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+    expect(find.text('Enter a whole number from 1 to 1000.'), findsOneWidget);
+    expect(sounds, hasLength(2));
+    expect(find.text('The Chronos Cipher'), findsOneWidget);
+
+    await tester.enterText(pages, '150');
+    await tester.tap(find.text('Create'));
+    await tester.pumpAndSettle();
+    expect(find.text('FIVE-ACT HIERARCHY'), findsOneWidget);
+    expect(find.text('All 30 Beats'), findsOneWidget);
+    expect(find.widgetWithText(ChoiceChip, 'Act V'), findsOneWidget);
+    expect(find.text('Conflict: A Setback'), findsOneWidget);
+    final project = tester
+        .widget<BeatBoardView>(find.byType(BeatBoardView))
+        .provider
+        .project;
+    expect(project.title, 'A New Story');
+    expect(project.logline, 'A difficult journey');
+    expect(project.genre, 'Drama');
+    expect(find.text('Shared Writer'), findsOneWidget);
+    expect(project.toJson(), isNot(contains('author')));
+    expect(project.toJson(), isNot(contains('authorEmail')));
+    final reloaded = ProjectCodec.decode(ProjectCodec.encode(project));
+    expect(reloaded.toJson(), project.toJson());
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.keyE);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.keyE);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('event-beat-field')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Conflict: A Setback (Act I)'), findsOneWidget);
+    expect(find.textContaining('Opening Image'), findsNothing);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('BEATWORK'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('New'));
+    await tester.pumpAndSettle();
+    expect(find.text('Unsaved Project'), findsOneWidget);
   });
+
+  testWidgets(
+    'new-project settings scroll on short windows and cancel cleanly',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(800, 500);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+      StoryProject? result;
+      var completed = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: TextButton(
+                onPressed: () async {
+                  result = await showDialog<StoryProject>(
+                    context: context,
+                    builder: (_) => NewProjectDialog(
+                      sheets: [(yaml: '', sheet: BeatSheet.legacy)],
+                    ),
+                  );
+                  completed = true;
+                },
+                child: const Text('Open'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('new-project-title')),
+        'Not created',
+      );
+      final pages = find.byKey(const ValueKey('new-project-page-count'));
+      await tester.ensureVisible(pages);
+      await tester.pumpAndSettle();
+      expect(tester.widget<TextFormField>(pages).controller!.text, '110');
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(completed, isTrue);
+      expect(result, isNull);
+    },
+  );
 
   testWidgets('Command-E creates a story event and advances title focus', (
     WidgetTester tester,
@@ -329,14 +497,14 @@ void main() {
 
     await tester.tap(find.text('opening_image'));
     await tester.pumpAndSettle();
-    expect(find.text('Estimated minimum: 1 scene.'), findsOneWidget);
+    expect(find.text('Estimate: 1 scene.'), findsOneWidget);
     expect(
       find.textContaining('The beat timeline is the sequence'),
       findsNothing,
     );
     await tester.tap(find.text('Events (0)'));
     await tester.pumpAndSettle();
-    expect(find.text('Estimated minimum: 1 event.'), findsOneWidget);
+    expect(find.text('Estimate: 1 event.'), findsOneWidget);
     expect(find.textContaining('Usually 3 to 5 events'), findsNothing);
     expect(find.text('No Events In This Beat Yet'), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -344,11 +512,11 @@ void main() {
 
     await tester.tap(find.text('bad_guys_close_in'));
     await tester.pumpAndSettle();
-    expect(find.text('Estimated minimum: 4 scenes.'), findsOneWidget);
+    expect(find.text('Estimate: 4 scenes.'), findsOneWidget);
     expect(find.text('No Scenes in Beat Timeline'), findsOneWidget);
     await tester.tap(find.text('Events (0)'));
     await tester.pumpAndSettle();
-    expect(find.text('Estimated minimum: 4 events.'), findsOneWidget);
+    expect(find.text('Estimate: 4 events.'), findsOneWidget);
 
     final scenes = <String>[];
     for (var index = 0; index < 5; index++) {
@@ -359,31 +527,31 @@ void main() {
       );
       await tester.pump();
       expect(
-        find.text('Estimated minimum: ${index < 4 ? 4 : 5} events.'),
+        find.text('Estimate: ${index < 4 ? 4 : 5} events.'),
         findsOneWidget,
       );
     }
 
     provider.createScene(beatId: 'opening_image', title: 'Different beat');
     await tester.pump();
-    expect(find.text('Estimated minimum: 5 events.'), findsOneWidget);
+    expect(find.text('Estimate: 5 events.'), findsOneWidget);
 
     provider.setSceneUnused(scenes.last, true);
     provider.deleteScene(scenes.last);
     await tester.pump();
-    expect(find.text('Estimated minimum: 4 events.'), findsOneWidget);
+    expect(find.text('Estimate: 4 events.'), findsOneWidget);
     await tester.tap(find.text('Timeline (4)'));
     await tester.pumpAndSettle();
-    expect(find.text('Estimated minimum: 4 scenes.'), findsOneWidget);
+    expect(find.text('Estimate: 4 scenes.'), findsOneWidget);
 
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
     await tester.tap(find.text('dark_night_of_the_soul'));
     await tester.pumpAndSettle();
-    expect(find.text('Estimated minimum: 2 scenes.'), findsOneWidget);
+    expect(find.text('Estimate: 2 scenes.'), findsOneWidget);
     await tester.tap(find.text('Events (0)'));
     await tester.pumpAndSettle();
-    expect(find.text('Estimated minimum: 2 events.'), findsOneWidget);
+    expect(find.text('Estimate: 2 events.'), findsOneWidget);
     for (var index = 0; index < 3; index++) {
       provider.createScene(
         beatId: 'dark_night_of_the_soul',
@@ -391,16 +559,16 @@ void main() {
       );
       await tester.pump();
       expect(
-        find.text('Estimated minimum: ${index < 2 ? 2 : 3} events.'),
+        find.text('Estimate: ${index < 2 ? 2 : 3} events.'),
         findsOneWidget,
       );
     }
     await tester.tap(find.text('Timeline (3)'));
     await tester.pumpAndSettle();
-    expect(find.text('Estimated minimum: 2 scenes.'), findsOneWidget);
+    expect(find.text('Estimate: 2 scenes.'), findsOneWidget);
   });
 
-  testWidgets('estimate hints turn red below their current minimums', (
+  testWidgets('estimate hints remain advisory as counts change', (
     WidgetTester tester,
   ) async {
     tester.view.physicalSize = const Size(1800, 900);
@@ -432,8 +600,8 @@ void main() {
 
     Color? hintColor(String text) =>
         tester.widget<Text>(find.text(text)).style?.color;
-    const sceneHint = 'Estimated minimum: 2 scenes.';
-    expect(hintColor(sceneHint), AppTheme.crimsonAccent);
+    const sceneHint = 'Estimate: 2 scenes.';
+    expect(hintColor(sceneHint), AppTheme.textSecondary);
     final scenes = <String>[];
     for (var index = 0; index < 3; index++) {
       scenes.add(
@@ -445,16 +613,13 @@ void main() {
             .id,
       );
       await tester.pump();
-      expect(
-        hintColor(sceneHint),
-        index == 0 ? AppTheme.crimsonAccent : AppTheme.textSecondary,
-      );
+      expect(hintColor(sceneHint), AppTheme.textSecondary);
     }
 
     await tester.tap(find.text('Events (0)'));
     await tester.pumpAndSettle();
-    const eventHint = 'Estimated minimum: 3 events.';
-    expect(hintColor(eventHint), AppTheme.crimsonAccent);
+    const eventHint = 'Estimate: 3 events.';
+    expect(hintColor(eventHint), AppTheme.textSecondary);
     final events = <String>[];
     for (var index = 0; index < 4; index++) {
       events.add(
@@ -466,21 +631,18 @@ void main() {
             .id,
       );
       await tester.pump();
-      expect(
-        hintColor(eventHint),
-        index < 2 ? AppTheme.crimsonAccent : AppTheme.textSecondary,
-      );
+      expect(hintColor(eventHint), AppTheme.textSecondary);
     }
     provider.unassignEvent(events.last);
     provider.deleteEvent(events.last);
     provider.unassignEvent(events[2]);
     provider.deleteEvent(events[2]);
     await tester.pump();
-    expect(hintColor(eventHint), AppTheme.crimsonAccent);
+    expect(hintColor(eventHint), AppTheme.textSecondary);
     provider.setSceneUnused(scenes.last, true);
     provider.deleteScene(scenes.last);
     await tester.pump();
-    expect(hintColor('Estimated minimum: 2 events.'), AppTheme.textSecondary);
+    expect(hintColor('Estimate: 2 events.'), AppTheme.textSecondary);
 
     await tester.tap(find.text('Timeline (2)'));
     await tester.pumpAndSettle();
@@ -488,7 +650,7 @@ void main() {
     provider.setSceneUnused(scenes.first, true);
     provider.deleteScene(scenes.first);
     await tester.pump();
-    expect(hintColor(sceneHint), AppTheme.crimsonAccent);
+    expect(hintColor(sceneHint), AppTheme.textSecondary);
   });
 
   testWidgets(
@@ -1055,6 +1217,14 @@ void main() {
     tester.view.physicalSize = const Size(1400, 900);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() => tester.view.resetPhysicalSize());
+    final directory = Directory.systemTemp.createTempSync(
+      'beatwork_author_test_',
+    );
+    StorageService.overrideDirectory = directory;
+    addTearDown(() {
+      StorageService.overrideDirectory = null;
+      directory.deleteSync(recursive: true);
+    });
 
     final project = StoryProject.createSampleProject();
     await tester.pumpWidget(BeatWorkApp(initialProject: project));
@@ -1077,11 +1247,38 @@ void main() {
       find.byKey(const ValueKey('author-email-field')),
       'avery@example.com',
     );
-    await tester.tap(find.text('Save'));
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      for (
+        var i = 0;
+        i < 100 && !File('${directory.path}/author_profile.json').existsSync();
+        i++
+      ) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await tester.pump();
+      }
+    });
     await tester.pumpAndSettle();
 
-    expect(project.author, 'Avery Writer');
-    expect(project.authorEmail, 'avery@example.com');
+    expect(find.text('Avery Writer'), findsOneWidget);
+    final provider = tester
+        .widget<BeatBoardView>(find.byType(BeatBoardView))
+        .provider;
+    expect(provider.author.name, 'Avery Writer');
+    expect(provider.author.email, 'avery@example.com');
+    expect(provider.hasUnsavedChanges, isFalse);
+    provider.newDocument(StoryProject.createEmptyProject(title: 'New story'));
+    await tester.pumpAndSettle();
+    expect(find.text('Avery Writer'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('author-display')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('author-name-field')), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    final savedAuthor = await tester.runAsync(StorageService.loadAuthorProfile);
+    expect(savedAuthor!.name, 'Avery Writer');
+    expect(savedAuthor.email, 'avery@example.com');
   });
 
   testWidgets('About dialog displays the macOS marketing version', (
@@ -1350,6 +1547,10 @@ void main() {
 
     // Verify brand title and project title are visible
     expect(find.text('BEATWORK'), findsOneWidget);
+    final brand = tester.getRect(find.text('BEATWORK'));
+    final author = tester.getRect(find.text('Anonymous'));
+    expect(author.top, greaterThanOrEqualTo(brand.bottom));
+    expect(author.left, brand.left);
     expect(find.text('The Chronos Cipher'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('project-title-action')));

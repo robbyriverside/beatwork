@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../models/beat_model.dart';
+import '../models/author_profile.dart';
 import '../models/story_event.dart';
 import '../models/scene_model.dart';
 import '../models/story_project.dart';
@@ -10,6 +11,7 @@ import '../services/storage_service.dart';
 
 class StoryProvider extends ChangeNotifier {
   StoryProject _project;
+  AuthorProfile _author;
   String? _documentPath;
   bool _hasUnsavedChanges = false;
   int _changeVersion = 0;
@@ -26,13 +28,18 @@ class StoryProvider extends ChangeNotifier {
 
   static const _uuid = Uuid();
 
-  StoryProvider({StoryProject? initialProject, String? documentPath})
-    : _project = initialProject ?? StoryProject.createSampleProject(),
-      _documentPath = documentPath {
+  StoryProvider({
+    StoryProject? initialProject,
+    String? documentPath,
+    AuthorProfile initialAuthor = const AuthorProfile(),
+  }) : _project = initialProject ?? StoryProject.createSampleProject(),
+       _author = initialAuthor,
+       _documentPath = documentPath {
     refreshRecentDocuments();
   }
 
   StoryProject get project => _project;
+  AuthorProfile get author => _author;
   String? get documentPath => _documentPath;
   bool get hasUnsavedChanges => _hasUnsavedChanges;
   List<RecentDocument> get recentDocuments => _recentDocuments;
@@ -56,13 +63,20 @@ class StoryProvider extends ChangeNotifier {
     super.dispose();
   }
 
-  void newDocument() {
-    _project = StoryProject.createEmptyProject();
+  void newDocument(StoryProject project) {
+    _project = project;
     _documentPath = null;
-    _hasUnsavedChanges = false;
+    _changeVersion++;
+    _hasUnsavedChanges = true;
     _selectedBeatId = null;
     _selectedSceneId = null;
     notifyListeners();
+  }
+
+  Future<void> updateAuthor(AuthorProfile author) async {
+    await StorageService.saveAuthorProfile(author);
+    _author = author;
+    if (!_disposed) notifyListeners();
   }
 
   Future<bool> openDocument(String path) async {
@@ -129,7 +143,9 @@ class StoryProvider extends ChangeNotifier {
 
   BeatDefinition? get selectedBeat {
     if (_selectedBeatId == null) return null;
-    return BeatDefinition.getById(_selectedBeatId!);
+    return _project.beatSheet.beats
+        .where((beat) => beat.id == _selectedBeatId)
+        .firstOrNull;
   }
 
   Scene? get selectedScene {
@@ -182,7 +198,8 @@ class StoryProvider extends ChangeNotifier {
     String title = 'Untitled Screenplay',
     String logline = '',
     String genre = 'Feature Film',
-    String author = StoryProject.defaultAuthor,
+    String beatSheetYaml = '',
+    int targetPageCount = 110,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -193,7 +210,8 @@ class StoryProvider extends ChangeNotifier {
       title: title,
       logline: logline,
       genre: genre,
-      author: author,
+      beatSheetYaml: beatSheetYaml,
+      targetPageCount: targetPageCount,
     );
 
     _project = newProj;
@@ -306,18 +324,10 @@ class StoryProvider extends ChangeNotifier {
 
   // --- Project Metadata ---
 
-  void updateProjectMeta({
-    String? title,
-    String? logline,
-    String? genre,
-    String? author,
-    String? authorEmail,
-  }) {
+  void updateProjectMeta({String? title, String? logline, String? genre}) {
     if (title != null) _project.title = title;
     if (logline != null) _project.logline = logline;
     if (genre != null) _project.genre = genre;
-    if (author != null) _project.author = author;
-    if (authorEmail != null) _project.authorEmail = authorEmail;
     _project.lastModified = DateTime.now();
     _save();
     notifyListeners();
