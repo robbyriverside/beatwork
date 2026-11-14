@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
@@ -16,6 +18,7 @@ class StoryProvider extends ChangeNotifier {
   bool _hasUnsavedChanges = false;
   int _changeVersion = 0;
   Future<void> _saveQueue = Future<void>.value();
+  Timer? _autosaveTimer;
   List<RecentDocument> _recentDocuments = [];
   List<ProjectMetadata> _recentProjects = [];
   bool _isLoading = false;
@@ -60,10 +63,12 @@ class StoryProvider extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _cancelPendingAutosave();
     super.dispose();
   }
 
   void newDocument(StoryProject project) {
+    _cancelPendingAutosave();
     _project = project;
     _documentPath = null;
     _changeVersion++;
@@ -79,13 +84,19 @@ class StoryProvider extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
-  Future<bool> openDocument(String path) async {
+  Future<bool> openDocument(String path, {bool userSelected = false}) async {
     _isLoading = true;
     notifyListeners();
     try {
-      await _saveQueue;
-      _project = await StorageService.openDocument(path);
+      await _flushAutosave();
+      final project = await StorageService.openDocument(
+        path,
+        userSelected: userSelected,
+      );
+      _cancelPendingAutosave();
+      _project = project;
       _documentPath = path;
+      _changeVersion++;
       _hasUnsavedChanges = false;
       _selectedBeatId = null;
       _selectedSceneId = null;
@@ -104,32 +115,61 @@ class StoryProvider extends ChangeNotifier {
   Future<bool> saveDocument() async {
     final path = _documentPath;
     if (path == null) return false;
-    try {
-      await _saveQueue;
-      await StorageService.saveDocumentToPath(_project, path);
-      _hasUnsavedChanges = false;
-      await refreshRecentDocuments();
-      notifyListeners();
-      return true;
-    } catch (error) {
-      debugPrint('Failed to save BeatWork document: $error');
-      return false;
-    }
+    final project = _project;
+    _flushAutosave();
+    final save = _saveQueue.then((_) async {
+      if (!identical(project, _project) || _documentPath != path) return false;
+      final version = _changeVersion;
+      final snapshot = ProjectCodec.decode(ProjectCodec.encode(project));
+      try {
+        await StorageService.saveDocumentToPath(snapshot, path);
+        if (version == _changeVersion &&
+            identical(project, _project) &&
+            _documentPath == path) {
+          _cancelPendingAutosave();
+          _hasUnsavedChanges = false;
+        }
+        await refreshRecentDocuments();
+        if (!_disposed) notifyListeners();
+        return identical(project, _project) &&
+            _documentPath == path &&
+            !_hasUnsavedChanges;
+      } catch (error) {
+        debugPrint('Failed to save BeatWork document: $error');
+        return false;
+      }
+    });
+    _saveQueue = save.then((_) {});
+    return save;
   }
 
   Future<bool> saveDocumentAs({String? initialDirectory}) async {
     try {
-      await _saveQueue;
+      await _flushAutosave();
+      final project = _project;
+      final version = _changeVersion;
+      final snapshot = ProjectCodec.decode(ProjectCodec.encode(project));
       final path = await StorageService.saveDocumentAs(
-        _project,
+        snapshot,
         initialDirectory: initialDirectory,
       );
       if (path == null) return false;
+      if (!identical(project, _project)) {
+        debugPrint('Project changed while saving as $path.');
+        return false;
+      }
       _documentPath = path;
-      _hasUnsavedChanges = false;
+      if (version == _changeVersion) {
+        _cancelPendingAutosave();
+        _hasUnsavedChanges = false;
+      } else {
+        _save();
+      }
       await refreshRecentDocuments();
-      notifyListeners();
-      return true;
+      if (!_disposed) notifyListeners();
+      return identical(project, _project) &&
+          _documentPath == path &&
+          !_hasUnsavedChanges;
     } catch (error) {
       debugPrint('Failed to save BeatWork document as: $error');
       return false;
@@ -138,7 +178,7 @@ class StoryProvider extends ChangeNotifier {
 
   Future<bool> openDocumentPicker() async {
     final path = await StorageService.pickDocumentPath();
-    return path == null ? false : openDocument(path);
+    return path == null ? false : openDocument(path, userSelected: true);
   }
 
   BeatDefinition? get selectedBeat {
@@ -588,17 +628,41 @@ class StoryProvider extends ChangeNotifier {
 
   void _save() {
     _hasUnsavedChanges = true;
-    final version = ++_changeVersion;
+    _changeVersion++;
+    _cancelPendingAutosave();
+    if (_documentPath == null) return;
+    _autosaveTimer = Timer(const Duration(seconds: 1), _queueAutosave);
+  }
+
+  void _cancelPendingAutosave() {
+    _autosaveTimer?.cancel();
+    _autosaveTimer = null;
+  }
+
+  Future<void> _flushAutosave() {
+    if (_autosaveTimer != null) {
+      _cancelPendingAutosave();
+      _queueAutosave();
+    }
+    return _saveQueue;
+  }
+
+  void _queueAutosave() {
+    _autosaveTimer = null;
     final path = _documentPath;
     if (path == null) return;
+    final project = _project;
+    final version = _changeVersion;
     final snapshot = ProjectCodec.decode(ProjectCodec.encode(_project));
 
     _saveQueue = _saveQueue
         .then((_) async {
           await StorageService.saveDocumentToPath(snapshot, path);
-          if (version == _changeVersion) {
+          if (version == _changeVersion &&
+              identical(project, _project) &&
+              _documentPath == path) {
             _hasUnsavedChanges = false;
-            notifyListeners();
+            if (!_disposed) notifyListeners();
           }
         })
         .catchError((Object error) {

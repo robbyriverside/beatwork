@@ -23,6 +23,37 @@ import 'package:beatwork/widgets/event_dialog.dart';
 import 'package:beatwork/widgets/new_project_dialog.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  const accessChannel = MethodChannel('beatwork/document_access');
+  setUp(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          accessChannel,
+          (call) async => call.method == 'restore' ? false : null,
+        );
+  });
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(accessChannel, null);
+  });
+
+  testWidgets('failed startup open explains how to restore access', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      BeatWorkApp(
+        initialProject: StoryProject.createSampleProject(),
+        startupOpenFailed: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Could not open project'), findsOneWidget);
+    expect(
+      find.text('If access has expired, use Open to select the project again.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('Command-N chooses a five-act sheet and page estimate', (
     WidgetTester tester,
   ) async {
@@ -1281,6 +1312,373 @@ void main() {
     expect(savedAuthor.email, 'avery@example.com');
   });
 
+  testWidgets('scene and event changes show the dirty indicator until saved', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final directory = Directory.systemTemp.createTempSync('beatwork_dirty_');
+    StorageService.overrideDirectory = directory;
+    addTearDown(() {
+      StorageService.overrideDirectory = null;
+      directory.deleteSync(recursive: true);
+    });
+    final path = '${directory.path}/project.beats';
+    final project = StoryProject.createEmptyProject();
+    await tester.runAsync(
+      () => StorageService.saveDocumentToPath(project, path),
+    );
+    await tester.pumpWidget(
+      BeatWorkApp(initialProject: project, initialDocumentPath: path),
+    );
+    await tester.pumpAndSettle();
+    final provider = tester
+        .widget<BeatBoardView>(find.byType(BeatBoardView))
+        .provider;
+    final indicator = find.byKey(const ValueKey('project-dirty-indicator'));
+    expect(indicator, findsNothing);
+
+    Future<void> checkChange(
+      void Function() change, {
+      bool manual = false,
+    }) async {
+      change();
+      expect(provider.hasUnsavedChanges, isTrue);
+      await tester.pump();
+      expect(indicator, findsOneWidget);
+      final style = tester.widget<Text>(indicator).style!;
+      expect(style.color, Colors.black);
+      expect(style.fontWeight, FontWeight.normal);
+      expect(
+        style.fontSize,
+        greaterThan(
+          tester.widget<Text>(find.text('BEATWORK')).style!.fontSize!,
+        ),
+      );
+      expect(
+        tester.getRect(indicator).left,
+        tester.getRect(find.text('BEATWORK')).right,
+      );
+      await tester.runAsync(() async {
+        final saving = manual ? provider.saveDocument() : null;
+        for (var i = 0; i < 200 && provider.hasUnsavedChanges; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+          await tester.pump(const Duration(milliseconds: 10));
+        }
+        if (saving != null) expect(await saving, isTrue);
+      });
+      expect(provider.hasUnsavedChanges, isFalse);
+      await tester.pump();
+      expect(indicator, findsNothing);
+    }
+
+    late StoryEvent event;
+    await checkChange(() => event = provider.createEvent(title: 'Event'));
+    await checkChange(() => provider.deleteEvent(event.id), manual: true);
+    late String sceneId;
+    await checkChange(() {
+      sceneId = provider
+          .createScene(beatId: 'opening_image', title: 'Scene')
+          .id;
+    });
+    await checkChange(() => provider.setSceneUnused(sceneId, true));
+    await checkChange(() => provider.deleteScene(sceneId));
+    final saved = await tester.runAsync(
+      () => StorageService.openDocument(path),
+    );
+    expect(saved!.events, isEmpty);
+    expect(saved.scenes, isEmpty);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('save shortcut works while editing an existing scene', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final directory = Directory.systemTemp.createTempSync('beatwork_scene_');
+    StorageService.overrideDirectory = directory;
+    addTearDown(() {
+      StorageService.overrideDirectory = null;
+      directory.deleteSync(recursive: true);
+    });
+    final path = '${directory.path}/project.beats';
+    final project = StoryProject.createSampleProject();
+    final scene = project.getScenesForBeat('opening_image').first;
+    await tester.runAsync(
+      () => StorageService.saveDocumentToPath(project, path),
+    );
+    await tester.pumpWidget(
+      BeatWorkApp(initialProject: project, initialDocumentPath: path),
+    );
+    await tester.pumpAndSettle();
+    final provider = tester
+        .widget<BeatBoardView>(find.byType(BeatBoardView))
+        .provider;
+
+    await tester.tap(find.text('BEAT 01'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('scene-script-body')),
+      'Edited scene text',
+    );
+    expect(scene.activeVersion.scriptContent, 'Edited scene text');
+    expect(provider.hasUnsavedChanges, isTrue);
+    await tester.pump();
+    expect(
+      find.byKey(const ValueKey('project-dirty-indicator')),
+      findsOneWidget,
+    );
+    await tester.runAsync(() async {
+      for (var i = 0; i < 200 && provider.hasUnsavedChanges; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+    });
+    expect(provider.hasUnsavedChanges, isFalse);
+    final saved = await tester.runAsync(
+      () => StorageService.openDocument(path),
+    );
+    expect(
+      saved!
+          .getScenesForBeat('opening_image')
+          .first
+          .activeVersion
+          .scriptContent,
+      'Edited scene text',
+    );
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pump();
+    expect(find.text('Project up to date'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('scene save shortcut reports failures and stays dirty', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final directory = Directory.systemTemp.createTempSync('beatwork_scene_');
+    StorageService.overrideDirectory = directory;
+    addTearDown(() {
+      StorageService.overrideDirectory = null;
+      directory.deleteSync(recursive: true);
+    });
+    final path = '${directory.path}/blocked.beats';
+    Directory(path).createSync();
+    final project = StoryProject.createSampleProject();
+    await tester.pumpWidget(
+      BeatWorkApp(initialProject: project, initialDocumentPath: path),
+    );
+    await tester.pumpAndSettle();
+    final provider = tester
+        .widget<BeatBoardView>(find.byType(BeatBoardView))
+        .provider;
+    await tester.tap(find.text('BEAT 01'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('scene-script-body')),
+      'Unsaved scene text',
+    );
+    await tester.pump();
+
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.runAsync(() async {
+      for (
+        var i = 0;
+        i < 200 && find.text('Project was not saved.').evaluate().isEmpty;
+        i++
+      ) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await tester.pump();
+      }
+    });
+    expect(find.text('Project was not saved.'), findsOneWidget);
+    expect(provider.hasUnsavedChanges, isTrue);
+    expect(
+      find.byKey(const ValueKey('project-dirty-indicator')),
+      findsOneWidget,
+    );
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('scene editor forwards the Save As shortcut', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final provider = StoryProvider(
+      initialProject: StoryProject.createSampleProject(),
+    );
+    addTearDown(provider.dispose);
+    provider.selectBeat('opening_image');
+    var saveAsCount = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BeatDetailDialog(
+          beat: BeatDefinition.saveTheCatBeats.first,
+          provider: provider,
+          onSaveAs: () => saveAsCount++,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('scene-script-body')));
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    expect(saveAsCount, 1);
+  });
+
+  testWidgets('Open Recent retains the path when saving new Debate scenes', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1800, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final directory = Directory.systemTemp.createTempSync('beatwork_recent_');
+    StorageService.overrideDirectory = directory;
+    addTearDown(() {
+      StorageService.overrideDirectory = null;
+      directory.deleteSync(recursive: true);
+    });
+    final path = '${directory.path}/recent.beats';
+    final project = StoryProject.createEmptyProject(title: 'Recent screenplay');
+    await tester.runAsync(
+      () => StorageService.saveDocumentToPath(project, path),
+    );
+    var pickerCalls = 0;
+    const pickerChannel = MethodChannel(
+      'miguelruivo.flutter.plugins.filepicker',
+    );
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      pickerChannel,
+      (call) async {
+        if (call.method == 'save') pickerCalls++;
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        pickerChannel,
+        null,
+      ),
+    );
+    await tester.pumpWidget(
+      BeatWorkApp(initialProject: StoryProject.createEmptyProject()),
+    );
+    await tester.pumpAndSettle();
+    final provider = tester
+        .widget<BeatBoardView>(find.byType(BeatBoardView))
+        .provider;
+    await tester.runAsync(() async {
+      for (var i = 0; i < 200 && provider.recentDocuments.isEmpty; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await tester.pump();
+      }
+    });
+    await tester.tap(find.text('BEATWORK'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open Recent'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Recent screenplay'));
+    await tester.runAsync(() async {
+      for (var i = 0; i < 200 && provider.documentPath == null; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await tester.pump();
+      }
+    });
+    await tester.pumpAndSettle();
+    expect(provider.documentPath, path);
+
+    await tester.ensureVisible(find.text('BEAT 05'));
+    await tester.tap(find.text('BEAT 05'));
+    await tester.pumpAndSettle();
+
+    Future<void> addScene(String name) async {
+      await tester.tap(find.text('Add Scene to Timeline'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('new-scene-title-field')),
+        name,
+      );
+      await tester.tap(find.text('Add Scene'));
+      await tester.pump();
+      expect(provider.hasUnsavedChanges, isTrue);
+      expect(
+        find.byKey(const ValueKey('project-dirty-indicator')),
+        findsOneWidget,
+      );
+    }
+
+    await addScene('First debate scene');
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.keyS);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.runAsync(() async {
+      for (var i = 0; i < 200 && provider.hasUnsavedChanges; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await tester.pump();
+      }
+    });
+    expect(provider.hasUnsavedChanges, isFalse);
+    expect(provider.documentPath, path);
+    expect(pickerCalls, 0);
+    final firstSave = await tester.runAsync(
+      () => StorageService.openDocument(path),
+    );
+    expect(
+      firstSave!.getScenesForBeat('debate').map((scene) => scene.title),
+      contains('First debate scene'),
+    );
+    await tester.pumpAndSettle();
+
+    await addScene('Second debate scene');
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      await tester.pump(const Duration(milliseconds: 200));
+    });
+    expect(provider.hasUnsavedChanges, isTrue);
+    expect(
+      find.byKey(const ValueKey('project-dirty-indicator')),
+      findsOneWidget,
+    );
+    await tester.runAsync(() async {
+      for (var i = 0; i < 200 && provider.hasUnsavedChanges; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+        await tester.pump(const Duration(milliseconds: 10));
+      }
+    });
+    final saved = await tester.runAsync(
+      () => StorageService.openDocument(path),
+    );
+    expect(
+      saved!.getScenesForBeat('debate').map((scene) => scene.title),
+      containsAll(['First debate scene', 'Second debate scene']),
+    );
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets('About dialog displays the macOS marketing version', (
     WidgetTester tester,
   ) async {
@@ -1547,10 +1945,10 @@ void main() {
 
     // Verify brand title and project title are visible
     expect(find.text('BEATWORK'), findsOneWidget);
-    final brand = tester.getRect(find.text('BEATWORK'));
     final author = tester.getRect(find.text('Anonymous'));
-    expect(author.top, greaterThanOrEqualTo(brand.bottom));
-    expect(author.left, brand.left);
+    final settings = tester.getRect(find.byTooltip('Settings'));
+    expect(author.right, lessThanOrEqualTo(settings.left));
+    expect(author.center.dy, closeTo(settings.center.dy, 1));
     expect(find.text('The Chronos Cipher'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('project-title-action')));

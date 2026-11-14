@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/story_project.dart';
 import '../models/author_profile.dart';
@@ -33,6 +34,7 @@ class StorageService {
   static const String _projectsDirName = 'beatwork_projects';
   static const String _manifestFileName = 'manifest.json';
   static const String _sampleProjectId = 'sample-chronos-cipher';
+  static const _documentAccess = MethodChannel('beatwork/document_access');
 
   /// Optional override for testing environments
   @visibleForTesting
@@ -117,13 +119,22 @@ class StorageService {
         }
       }
     }
+    if (Platform.isMacOS) {
+      await _documentAccess.invokeMethod<void>('remember', path);
+    }
     await _recordRecentDocument(path, project);
     return path;
   }
 
-  static Future<StoryProject> openDocument(String path) async {
+  static Future<StoryProject> openDocument(
+    String path, {
+    bool userSelected = false,
+  }) async {
     if (!path.toLowerCase().endsWith('.$projectExtension')) {
       throw const FormatException('Select a BeatWork .beats project file.');
+    }
+    if (Platform.isMacOS && !userSelected) {
+      await _documentAccess.invokeMethod<bool>('restore', path);
     }
     final bytes = await File(path).readAsBytes();
     final project = ProjectCodec.decode(bytes);
@@ -131,6 +142,9 @@ class StorageService {
       throw const FormatException(
         'The selected file is not a valid BeatWork project.',
       );
+    }
+    if (Platform.isMacOS) {
+      await _documentAccess.invokeMethod<void>('remember', path);
     }
     await _recordRecentDocument(path, project);
     return project;
@@ -143,13 +157,19 @@ class StorageService {
     final targetPath = _ensureProjectExtension(path);
     final target = File(targetPath);
     await target.parent.create(recursive: true);
-    final temporary = File('$targetPath.tmp');
-    await temporary.writeAsBytes(ProjectCodec.encode(project), flush: true);
-    try {
-      await temporary.rename(targetPath);
-    } on FileSystemException {
-      if (await target.exists()) await target.delete();
-      await temporary.rename(targetPath);
+    final bytes = ProjectCodec.encode(project);
+    if (Platform.isMacOS) {
+      // The sandbox grants access to the selected file, not sibling files.
+      await target.writeAsBytes(bytes, flush: true);
+    } else {
+      final temporary = File('$targetPath.tmp');
+      await temporary.writeAsBytes(bytes, flush: true);
+      try {
+        await temporary.rename(targetPath);
+      } on FileSystemException {
+        if (await target.exists()) await target.delete();
+        await temporary.rename(targetPath);
+      }
     }
     await _recordRecentDocument(targetPath, project);
   }
@@ -163,7 +183,7 @@ class StorageService {
       for (final entry in entries) {
         final data = entry as Map<String, dynamic>;
         final path = data['path'] as String;
-        if (!await File(path).exists()) continue;
+        if (!Platform.isMacOS && !await File(path).exists()) continue;
         documents.add(
           RecentDocument(
             path: path,

@@ -6,6 +6,16 @@ The key value is that the software allows a screenwriter to assemble the beats i
 
 Scenes can be marked unused in the beat timeline. They remain saved and editable, appear at the end of the list, and can be hidden or marked used again. Unused scenes are excluded from the Script Timeline and screenplay exports. To permanently delete a scene, first mark it unused and then confirm deletion. To delete an event, first move it to the event pool.
 
+Edits to a named project are saved automatically after one second without
+changes. An asterisk after BEATWORK indicates unsaved changes and disappears
+after saving. Save writes immediately; a project without a file must be saved
+with Save or Save As. The Save and Save As keyboard shortcuts also work while
+editing a scene.
+
+On macOS, projects selected with Open or Save As retain permission for Open
+Recent across launches. For projects opened before this support was added, use
+Open and select the file once to restore access.
+
 When adding or editing a scene, choose a slugline prefix and time and enter a location. The location menu includes locations from events and all scene versions in the current project; you can also type a new one. New scenes default to `INT.` and `DAY`. Press Return in the scene title to move to the location field. Existing nonstandard headings are preserved until their slugline fields are edited.
 
 ## Beat sheets

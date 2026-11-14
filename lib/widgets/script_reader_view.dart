@@ -8,8 +8,15 @@ import 'export_dialog.dart';
 
 class ScriptReaderView extends StatefulWidget {
   final StoryProvider provider;
+  final VoidCallback? onSave;
+  final VoidCallback? onSaveAs;
 
-  const ScriptReaderView({super.key, required this.provider});
+  const ScriptReaderView({
+    super.key,
+    required this.provider,
+    this.onSave,
+    this.onSaveAs,
+  });
 
   @override
   State<ScriptReaderView> createState() => _ScriptReaderViewState();
@@ -326,6 +333,8 @@ class _ScriptReaderViewState extends State<ScriptReaderView> {
                 context,
                 beat: entry.beat,
                 provider: widget.provider,
+                onSave: widget.onSave,
+                onSaveAs: widget.onSaveAs,
               );
               if (mounted) setState(() {});
             },

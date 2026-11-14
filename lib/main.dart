@@ -34,13 +34,17 @@ void main(List<String> args) async {
   }
   StoryProject? savedProject;
   String? documentPath;
+  var startupOpenFailed = false;
   final launchPath = args.cast<String?>().firstWhere(
     (path) => path != null && path.toLowerCase().endsWith('.beats'),
     orElse: () => null,
   );
   try {
     if (launchPath != null) {
-      savedProject = await StorageService.openDocument(launchPath);
+      savedProject = await StorageService.openDocument(
+        launchPath,
+        userSelected: true,
+      );
       documentPath = launchPath;
     } else {
       final recent = await StorageService.listRecentDocuments();
@@ -51,6 +55,7 @@ void main(List<String> args) async {
     }
   } catch (error) {
     debugPrint('Could not open launch document: $error');
+    startupOpenFailed = true;
   }
 
   runApp(
@@ -58,6 +63,7 @@ void main(List<String> args) async {
       initialProject: savedProject ?? StoryProject.createSampleProject(),
       initialDocumentPath: documentPath,
       initialAuthor: author,
+      startupOpenFailed: startupOpenFailed,
     ),
   );
 }
@@ -66,12 +72,14 @@ class BeatWorkApp extends StatelessWidget {
   final StoryProject? initialProject;
   final String? initialDocumentPath;
   final AuthorProfile initialAuthor;
+  final bool startupOpenFailed;
 
   const BeatWorkApp({
     super.key,
     this.initialProject,
     this.initialDocumentPath,
     this.initialAuthor = const AuthorProfile(),
+    this.startupOpenFailed = false,
   });
 
   @override
@@ -84,6 +92,7 @@ class BeatWorkApp extends StatelessWidget {
         initialProject: initialProject,
         initialDocumentPath: initialDocumentPath,
         initialAuthor: initialAuthor,
+        startupOpenFailed: startupOpenFailed,
       ),
     );
   }
@@ -102,12 +111,14 @@ class BeatWorkHomeScreen extends StatefulWidget {
   final StoryProject? initialProject;
   final String? initialDocumentPath;
   final AuthorProfile initialAuthor;
+  final bool startupOpenFailed;
 
   const BeatWorkHomeScreen({
     super.key,
     this.initialProject,
     this.initialDocumentPath,
     this.initialAuthor = const AuthorProfile(),
+    this.startupOpenFailed = false,
   });
 
   @override
@@ -128,6 +139,26 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
       initialAuthor: widget.initialAuthor,
     );
     _documentChannel.setMethodCallHandler(_handlePlatformMethodCall);
+    if (widget.startupOpenFailed) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Could not open project'),
+            content: const Text(
+              'If access has expired, use Open to select the project again.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      });
+    }
     if (Platform.isMacOS) {
       _documentChannel.invokeMethod<void>('ready').catchError((_) {});
     }
@@ -135,7 +166,7 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
 
   Future<Object?> _handlePlatformMethodCall(MethodCall call) async {
     if (call.method == 'openDocument' && call.arguments is String) {
-      await _openRecentDocument(call.arguments as String);
+      await _openRecentDocument(call.arguments as String, userSelected: true);
       return null;
     } else if (call.method == 'showEventPool') {
       _provider.setEventPoolOpen(true);
@@ -247,18 +278,26 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
     final path = await StorageService.pickDocumentPath();
     if (path == null) return;
     if (!await _confirmDocumentReplacement()) return;
-    if (!await _provider.openDocument(path) && mounted) {
+    if (!await _provider.openDocument(path, userSelected: true) && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not open the selected project.')),
       );
     }
   }
 
-  Future<void> _openRecentDocument(String path) async {
+  Future<void> _openRecentDocument(
+    String path, {
+    bool userSelected = false,
+  }) async {
     if (!await _confirmDocumentReplacement()) return;
-    if (!await _provider.openDocument(path) && mounted) {
+    if (!await _provider.openDocument(path, userSelected: userSelected) &&
+        mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open the recent project.')),
+        const SnackBar(
+          content: Text(
+            'Could not open the project. If access has expired, select it again using Open.',
+          ),
+        ),
       );
     }
   }
@@ -561,50 +600,31 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                                 ),
                                               ),
                                               const SizedBox(width: 8),
-                                              Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text(
-                                                    'BEATWORK',
-                                                    style: TextStyle(
-                                                      fontSize: 13,
-                                                      fontWeight:
-                                                          FontWeight.w900,
-                                                      letterSpacing: 1.2,
-                                                      color:
-                                                          AppTheme.goldAccent,
-                                                    ),
-                                                  ),
-                                                  InkWell(
-                                                    key: const ValueKey(
-                                                      'author-display',
-                                                    ),
-                                                    onTap: () =>
-                                                        _openAuthorSettings(
-                                                          context,
-                                                        ),
-                                                    child: ConstrainedBox(
-                                                      constraints:
-                                                          const BoxConstraints(
-                                                            maxWidth: 160,
-                                                          ),
-                                                      child: Text(
-                                                        _provider.author.name,
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        style: const TextStyle(
-                                                          fontSize: 10,
-                                                          color: AppTheme
-                                                              .textSecondary,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
+                                              const Text(
+                                                'BEATWORK',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w900,
+                                                  letterSpacing: 1.2,
+                                                  color: AppTheme.goldAccent,
+                                                ),
                                               ),
+                                              if (_provider.hasUnsavedChanges)
+                                                Semantics(
+                                                  label: 'Unsaved changes',
+                                                  child: const Text(
+                                                    '*',
+                                                    key: ValueKey(
+                                                      'project-dirty-indicator',
+                                                    ),
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.normal,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
                                             ],
                                           ),
                                         ),
@@ -742,6 +762,24 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
+                                    InkWell(
+                                      key: const ValueKey('author-display'),
+                                      onTap: () => _openAuthorSettings(context),
+                                      child: ConstrainedBox(
+                                        constraints: const BoxConstraints(
+                                          maxWidth: 160,
+                                        ),
+                                        child: Text(
+                                          _provider.author.name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppTheme.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                     PopupMenuButton<String>(
                                       tooltip: 'Settings',
                                       icon: const Icon(Icons.settings_outlined),
@@ -797,6 +835,9 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                       context,
                                       beat: beat,
                                       provider: _provider,
+                                      onSave: () => _saveDocument(),
+                                      onSaveAs: () =>
+                                          _saveDocument(saveAs: true),
                                     );
                                   },
                                   onOpenEvent: (event) async {
@@ -833,7 +874,11 @@ class _BeatWorkHomeScreenState extends State<BeatWorkHomeScreen> {
                                     }
                                   },
                                 )
-                              : ScriptReaderView(provider: _provider),
+                              : ScriptReaderView(
+                                  provider: _provider,
+                                  onSave: () => _saveDocument(),
+                                  onSaveAs: () => _saveDocument(saveAs: true),
+                                ),
                         ),
 
                         // Collapsible Story Event Pool Sidebar (docked on right)

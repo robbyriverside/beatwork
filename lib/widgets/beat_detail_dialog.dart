@@ -15,23 +15,34 @@ import 'slugline_fields.dart';
 class BeatDetailDialog extends StatefulWidget {
   final BeatDefinition beat;
   final StoryProvider provider;
+  final VoidCallback? onSave;
+  final VoidCallback? onSaveAs;
 
   const BeatDetailDialog({
     super.key,
     required this.beat,
     required this.provider,
+    this.onSave,
+    this.onSaveAs,
   });
 
   static Future<void> show(
     BuildContext context, {
     required BeatDefinition beat,
     required StoryProvider provider,
+    VoidCallback? onSave,
+    VoidCallback? onSaveAs,
   }) {
     provider.selectBeat(beat.id);
     return showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (context) => BeatDetailDialog(beat: beat, provider: provider),
+      builder: (context) => BeatDetailDialog(
+        beat: beat,
+        provider: provider,
+        onSave: onSave,
+        onSaveAs: onSaveAs,
+      ),
     );
   }
 
@@ -141,6 +152,19 @@ class _BeatDetailDialogState extends State<BeatDetailDialog>
               meta: Platform.isMacOS,
               control: !Platform.isMacOS,
             ): _addEventToBeat,
+            if (widget.onSave != null)
+              SingleActivator(
+                LogicalKeyboardKey.keyS,
+                meta: Platform.isMacOS,
+                control: !Platform.isMacOS,
+              ): widget.onSave!,
+            if (widget.onSaveAs != null)
+              SingleActivator(
+                LogicalKeyboardKey.keyS,
+                meta: Platform.isMacOS,
+                control: !Platform.isMacOS,
+                shift: true,
+              ): widget.onSaveAs!,
           },
           child: Focus(
             autofocus: true,
